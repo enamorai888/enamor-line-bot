@@ -1,5 +1,5 @@
 // api/shopify-products.js
-// 使用 Storefront API（shpss_ token）— 永不過期，不需要 OAuth 流程
+// 使用 Admin API REST（shpat_ token）
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
   const shop = process.env.SHOPIFY_DOMAIN;
-  const token = process.env.SHOPIFY_STOREFRONT_TOKEN; // shpss_...
+  const token = process.env.SHOPIFY_ADMIN_TOKEN; // shpat_...
 
   if (!shop || !token) {
     return res.status(500).json({ error: 'Shopify env vars not set', products: [] });
@@ -19,52 +19,30 @@ export default async function handler(req, res) {
   const { query = '' } = req.query;
   if (!query.trim()) return res.status(200).json({ products: [] });
 
-  const graphqlQuery = `
-    query SearchProducts($query: String!) {
-      search(query: $query, first: 6, types: [PRODUCT]) {
-        edges {
-          node {
-            ... on Product {
-              title
-              handle
-              description(truncateAt: 150)
-              tags
-              priceRange {
-                minVariantPrice {
-                  amount
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-
   try {
-    const r = await fetch(`https://${shop}/api/2026-01/graphql.json`, {
-      method: 'POST',
+    // Admin REST API 搜尋商品
+    const url = `https://${shop}/admin/api/2026-01/products.json?limit=6&title=${encodeURIComponent(query)}`;
+
+    const r = await fetch(url, {
       headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Storefront-Access-Token': token
-      },
-      body: JSON.stringify({
-        query: graphqlQuery,
-        variables: { query }
-      })
+        'X-Shopify-Access-Token': token,
+        'Content-Type': 'application/json'
+      }
     });
 
-    if (!r.ok) throw new Error(`Storefront API error: ${r.status}`);
+    if (!r.ok) {
+      const err = await r.text();
+      console.error('Admin API error:', r.status, err);
+      return res.status(200).json({ products: [] });
+    }
 
     const data = await r.json();
-    const edges = data?.data?.search?.edges || [];
-
-    const products = edges.map(({ node: p }) => ({
+    const products = (data.products || []).map(p => ({
       title: p.title,
       url: `https://${shop}/products/${p.handle}`,
-      price: p.priceRange?.minVariantPrice?.amount || '0',
-      tags: p.tags?.join(', ') || '',
-      description: p.description || ''
+      price: p.variants?.[0]?.price || '0',
+      tags: p.tags || '',
+      description: (p.body_html || '').replace(/<[^>]+>/g, '').slice(0, 150)
     }));
 
     return res.status(200).json({ products });
