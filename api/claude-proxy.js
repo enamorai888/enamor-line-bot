@@ -2,15 +2,12 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://enamorshop.com');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
-
   if (req.method !== 'POST') {
     return res.status(405).end();
   }
-
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -22,6 +19,14 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify(req.body)
     });
     const data = await response.json();
+
+    // 修復 AI 把 URL 換行輸出的問題
+    if (data.content && data.content[0] && data.content[0].text) {
+      data.content[0].text = data.content[0].text
+        .replace(/(https?:\/\/[^\s\n]+)\n([a-zA-Z0-9\-._~/?#@!$&'*+,;=%]+)/g, '$1$2')
+        .replace(/(https?:\/\/[^\s\n]+)\n([a-zA-Z0-9\-._~/?#@!$&'*+,;=%]+)/g, '$1$2');
+    }
+
     return res.status(200).json(data);
   } catch (e) {
     return res.status(500).json({ error: e.message });
