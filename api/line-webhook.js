@@ -142,6 +142,12 @@ module.exports = async function handler(req, res) {
       await replyToLine(replyToken, quickReply);
       continue;
     }
+    // 第一則訊息固定回歡迎語
+    if (messages.length === 0) {
+      messages.push({ role: 'user', content: '__init__' });
+      await replyToLine(replyToken, `EnamoR 恩娜茉兒 您好 🌸\n我是 EnamoR 客服，很高興為您服務！\n有什麼可以幫您的嗎？無論是商品諮詢、尺寸建議還是其他問題，都歡迎隨時詢問唷💕\n請輸入數字選擇服務：\n1️⃣ 尺寸建議\n2️⃣ 退換貨政策\n3️⃣ 免運說明\n4️⃣ 客服時間\n5️⃣ 訂單查詢`);
+      continue;
+    }
     messages.push({ role: 'user', content: userText });
 
     try {
