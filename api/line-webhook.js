@@ -155,6 +155,7 @@ async function getSystemPrompt() {
 // ── Session 管理 ───────────────────────────────────────────────────────
 const sessions = new Map();
 const humanRequestSessions = new Map(); // 記錄正在等待問題類型的用戶
+const contactSessions = new Map(); // 記錄正在收集聯絡資訊的狀態 { caseType, history, step, phone }
 const ratingSessionUsers = new Set(); // 記錄正在等待評分的用戶
 const closingPendingSessions = new Set(); // 已送出關懷語，等待確認是否真的結束
 const ratingPendingSessions = new Set();  // 已送出評分邀請，等待評分中
@@ -386,12 +387,31 @@ module.exports = async function handler(req, res) {
         const history = messages.slice(-6)
           .filter(m => m.role === 'user' && m.content !== '__init__')
           .map(m => m.content).join('\n');
-        await notifySheet(userId, '真人客服請求', `類型：${caseType}\n\n近期對話：\n${history}`);
-        await replyToLine(replyToken, `已收到您的請求 🙏\n類型：${caseType}\n\n人工客服將於工作時間（週一～週五 9:00–17:00）與您聯繫，請耐心等候。\n\n在等待期間如有其他問題，歡迎繼續詢問 😊`);
-        ratingSessionUsers.add(userId);
-        await replyToLine(replyToken, `很高興能為您服務\n請為這次服務評分，您的回饋對我們的優化非常有幫助\n\n1. 😞 不滿意\n2. 😐 尚可\n3. 🙂 算滿意\n4. 😍 非常滿意\n\n（直接輸入數字即可）`);
+        contactSessions.set(userId, { caseType, history, step: 'phone', phone: '' });
+        await replyToLine(replyToken, '請輸入您的訂單手機號碼');
       } else {
         await replyToLine(replyToken, '請輸入數字選擇問題類型：\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
+      }
+      continue;
+    }
+
+    // ── 聯絡資訊收集流程 ─────────────────────────────────────────────
+    if (contactSessions.has(userId)) {
+      const cs = contactSessions.get(userId);
+      if (cs.step === 'phone') {
+        cs.phone = userText;
+        cs.step = 'name';
+        await replyToLine(replyToken, '謝謝！請輸入您的 LINE 顯示名稱');
+      } else if (cs.step === 'name') {
+        const lineName = userText;
+        contactSessions.delete(userId);
+        await notifySheet(userId, '真人客服請求',
+          `類型：${cs.caseType}\n手機：${cs.phone}\nLINE名稱：${lineName}\n\n近期對話：\n${cs.history}`,
+          'human_handoff'
+        );
+        await replyToLine(replyToken, `已收到您的請求\n類型：${cs.caseType}\n手機：${cs.phone}\nLINE：${lineName}\n\n人工客服將於工作時間（週一～週五 9:00–17:00）與您聯繫，請耐心等候。\n如為非服務時間，工作日會盡快回覆您。\n客服信箱：service@enamor.com.tw`);
+        ratingSessionUsers.add(userId);
+        await replyToLine(replyToken, `很高興能為您服務\n請為這次服務評分，您的回饋對我們的優化非常有幫助\n\n1. 😞 不滿意\n2. 😐 尚可\n3. 🙂 算滿意\n4. 😍 非常滿意\n\n（直接輸入數字即可）`);
       }
       continue;
     }
