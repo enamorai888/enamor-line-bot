@@ -316,7 +316,7 @@ module.exports = async function handler(req, res) {
           .map(m => m.content).join('\n');
         await notifySheet(userId, '真人客服請求', `類型：${caseType}\n\n近期對話：\n${history}`);
         await replyToLine(replyToken,
-          `已收到您的請求 🙏\n問題類型：${caseType}\n\n客服將於工作時間（週一～週五 9:00–17:00）與您聯繫，請稍候。`
+          `已收到您的請求 🙏\n問題類型：${caseType}\n\n客服將於工作時間（週一～週五 9:00–17:00）與您聯繫，請耐心等候。`
         );
       } else {
         await replyToLine(replyToken, '請輸入數字選擇問題類型：\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
@@ -325,7 +325,8 @@ module.exports = async function handler(req, res) {
     }
 
     // ── 主動要求真人 ──────────────────────────────────────────────────
-    if (['真人', '人工', '真人客服'].includes(userText)) {
+    const HUMAN_TRIGGERS = ['真人', '人工', '真人客服', '客服', '克服', '找人', '找客服'];
+    if (HUMAN_TRIGGERS.some(w => userText === w || userText.startsWith(w))) {
       humanRequestSessions.set(userId, true);
       await replyToLine(replyToken, '好的，請問是哪類問題？\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
       continue;
