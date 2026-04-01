@@ -30,6 +30,7 @@ const SYSTEM_PROMPT = `你是 EnamoR 的客服，名字是「EnamoR 客服」，
 - 已拆封退貨、試穿後退貨、超過7天退貨`;
 
 const sessions = new Map();
+const humanRequestSessions = new Map(); // 記錄正在等待問題類型的用戶
 
 function getSession(userId) {
   if (!sessions.has(userId)) {
@@ -116,6 +117,26 @@ module.exports = async function handler(req, res) {
     const replyToken = event.replyToken;
     const messages = getSession(userId);
 
+    // 真人客服流程
+    if (humanRequestSessions.has(userId)) {
+      const typeMap = { '1': '🔄 退換貨', '2': '📦 商品問題', '3': '📋 訂單問題', '4': '❓ 其他' };
+      const caseType = typeMap[userText];
+      if (caseType) {
+        humanRequestSessions.delete(userId);
+        const history = messages.slice(-6).filter(m => m.role === 'user' && m.content !== '__init__').map(m => m.content).join('\n');
+        await notifySheet(userId, '真人客服請求', `類型：${caseType}\n\n近期對話：\n${history}`);
+        await replyToLine(replyToken, `已收到您的請求 🙏\n類型：${caseType}\n\n客服將於工作時間（週一～週五 9~17時）與您聯繫，請稍候。`);
+      } else {
+        await replyToLine(replyToken, '請輸入數字選擇問題類型：\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
+      }
+      continue;
+    }
+
+    if (userText === '真人' || userText === '人工' || userText === '真人客服') {
+      humanRequestSessions.set(userId, true);
+      await replyToLine(replyToken, '好的，請問是哪類問題？\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
+      continue;
+    }
     // 數字快捷選單
     const QUICK_MENU = `請輸入數字選擇服務：\n1️⃣ 尺寸建議\n2️⃣ 退換貨政策\n3️⃣ 免運說明\n4️⃣ 客服時間\n5️⃣ 訂單查詢`;
 
@@ -163,6 +184,11 @@ module.exports = async function handler(req, res) {
       messages.push({ role: 'assistant', content: reply });
       if (messages.length > 20) messages.splice(0, 4);
 
+      // 第3則 AI 對話後附上轉真人提示
+      const aiCount = messages.filter(m => m.role === 'assistant').length;
+      if (aiCount === 3) {
+        reply += '\n\n────\n如需真人客服，請輸入「真人」';
+      }
       await replyToLine(replyToken, reply);
     } catch (e) {
       console.error('handler error:', e);
