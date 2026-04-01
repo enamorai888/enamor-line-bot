@@ -4,42 +4,121 @@ const CHANNEL_SECRET = process.env.LINE_CHANNEL_SECRET;
 const CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
 const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 const SHEET_URL = process.env.SHEET_URL || '';
+const SHEET_READER_URL = 'https://enamor-line-bot.vercel.app/api/sheet-reader';
 
-const SYSTEM_PROMPT = `你是 EnamoR 的客服，名字是「EnamoR 客服」，台灣女性內著品牌。不要自稱「小助手」、「依戀」或其他名稱，統一自稱「EnamoR 客服」。用親切溫暖的繁體中文，語氣有質感但簡潔，不超過150字。
+// ── System Prompt 預設（Sheet 載入失敗時備用）──────────────────────────
+const SYSTEM_DEFAULT = `你是 EnamoR 的專屬顧問，台灣女性內著精品品牌。以優雅、簡潔、有溫度的繁體中文回覆，語氣像精品門市的資深顧問，不超過 150 字。
+
+【核心語氣原則】
+- 不說「當然！」「絕對！」「作為AI」「非常感謝您的來訊」
+- 不過度道歉，直接給解答
+- 推薦商品時要有說服力，點出材質與穿著感受
+- 句子精煉，避免重複用語
 
 【退換貨政策】
-- 7天鑑賞期內未拆封可退：登入官網>會員中心>訂單查詢申請
+- 7天鑑賞期內未拆封可退：官網 > 會員中心 > 訂單查詢申請，取得7-11退貨便代號，3天內至IBON操作
 - 已拆封：貼身衣物基於衛生考量無法退換
 - 試穿後：無法退換
-- 換貨：可換顏色/尺寸，已拆封不接受
+- 換貨：可換顏色/尺寸，已拆封不接受；換款式須退貨後重新下單
+- 退貨與換貨不能同時申請
 
 【出貨時間】
-- 現貨：1~3個工作天出貨
+- 現貨：1~3個工作天
 - 預購A1：約14天；A2：約7天；B：以商品頁為準
-- 超商/宅配：出貨後2~4個工作天
+- 超商/宅配：出貨後2~4工作天
 
-【其他常見】
+【常見問題】
 - 免運：折扣後滿899（外島除外）
-- 萊卡M號適合褲子M~XL；L號適合XL~3L
+- 黑名單：前筆未取貨被鎖，完成取貨過鑑賞期後自動解除
+- 生日購物金：壽星當月1日自動發送
+- 紅利金：訂單完成後自動發放
 - 客服時間：週一~週五 09:00~12:00 / 13:00~17:00
+- 萊卡M號適合褲子M~XL；L號適合XL~3L
 
-【需要人工】回覆最後加 ###NEED_HUMAN###：
+【商品推薦 — 重要】
+- 若 system prompt 內有【熱賣商品】清單，優先從中推薦
+- 推薦格式：商品名稱 👉 連結（LINE 純文字，直接貼出完整網址）
+- 例：ZERO-TEX 萊卡無縫內褲（低腰）👉 https://enamorshop.com/products/201-seml
+- 嚴禁自行編造商品名稱或連結
+- LINE 不支援 Markdown，禁止使用 [文字](連結) 格式，連結必須直接貼出完整網址
+
+【轉人工條件】回覆末尾加 ###NEED_HUMAN###：
 - 訂單查詢、退換貨進度、商品瑕疵、客人持續不滿、說要找真人
 
-【政策直接擋，不需人工】
+【政策直接擋回，不需人工】
 - 已拆封退貨、試穿後退貨、超過7天退貨`;
 
+// ── Sheet 快取（10分鐘）────────────────────────────────────────────────
+let sheetCache = null;
+let sheetCacheTime = 0;
+const CACHE_TTL = 10 * 60 * 1000;
+
+async function getSystemPrompt() {
+  const now = Date.now();
+  if (sheetCache && now - sheetCacheTime < CACHE_TTL) {
+    return sheetCache;
+  }
+  try {
+    const r = await fetch(SHEET_READER_URL);
+    const res = await r.json();
+    if (!res.success || !res.data) return SYSTEM_DEFAULT;
+
+    const data = res.data;
+    const parts = [];
+
+    if (data['FAQ設定'] && data['FAQ設定'].length) {
+      const lines = data['FAQ設定'].map(row => {
+        const vals = Object.values(row).filter(v => v && v.toString().trim());
+        return vals.join(' | ');
+      }).filter(l => l.trim());
+      if (lines.length) parts.push('【FAQ設定】\n' + lines.join('\n'));
+    }
+
+    if (data['客服FAQ'] && data['客服FAQ'].length) {
+      const lines = data['客服FAQ'].map(row => {
+        const vals = Object.values(row).filter(v => v && v.toString().trim());
+        return vals.join(' | ');
+      }).filter(l => l.trim());
+      if (lines.length) parts.push('【客服FAQ】\n' + lines.join('\n'));
+    }
+
+    if (data['熱賣商品'] && data['熱賣商品'].length) {
+      const prodLines = data['熱賣商品']
+        .filter(row => row['是否顯示'] === true || row['是否顯示'] === 'TRUE')
+        .map(row => {
+          const name = row['商品名稱'] || '';
+          const url = row['商品連結'] || '';
+          const discount = row['折扣說明'] || '';
+          const note = row['備註'] || '';
+          return `${name} | ${url}${discount ? ' | ' + discount : ''}${note ? ' | ' + note : ''}`;
+        }).filter(l => l.trim());
+      if (prodLines.length) parts.push('【熱賣商品】（推薦時直接貼出完整連結網址，LINE 不支援 Markdown）\n' + prodLines.join('\n'));
+    }
+
+    const prompt = parts.length > 0
+      ? SYSTEM_DEFAULT + '\n\n=== Google Sheet 即時資料 ===\n' + parts.join('\n\n')
+      : SYSTEM_DEFAULT;
+
+    sheetCache = prompt;
+    sheetCacheTime = now;
+    return prompt;
+  } catch (e) {
+    console.error('Sheet fetch error:', e.message);
+    return SYSTEM_DEFAULT;
+  }
+}
+
+// ── Session 管理 ───────────────────────────────────────────────────────
 const sessions = new Map();
-const humanRequestSessions = new Map(); // 記錄正在等待問題類型的用戶
+const humanRequestSessions = new Map();
 
 function getSession(userId) {
-  if (!sessions.has(userId)) {
-    sessions.set(userId, []);
-  }
+  if (!sessions.has(userId)) sessions.set(userId, []);
   return sessions.get(userId);
 }
 
-async function callClaude(messages) {
+// ── Claude API ─────────────────────────────────────────────────────────
+async function callClaude(messages, systemPrompt) {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -50,7 +129,7 @@ async function callClaude(messages) {
     body: JSON.stringify({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 400,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: messages.slice(-12)
     })
   });
@@ -58,6 +137,7 @@ async function callClaude(messages) {
   return data.content?.[0]?.text || '抱歉，我現在無法回覆，請稍後再試。';
 }
 
+// ── LINE 回覆 ──────────────────────────────────────────────────────────
 async function replyToLine(replyToken, text) {
   const res = await fetch('https://api.line.me/v2/bot/message/reply', {
     method: 'POST',
@@ -74,6 +154,7 @@ async function replyToLine(replyToken, text) {
   console.log('replyToLine result:', JSON.stringify(data));
 }
 
+// ── 案件寫入 Sheet ─────────────────────────────────────────────────────
 async function notifySheet(userId, userMsg, botReply) {
   if (!SHEET_URL) return;
   await fetch(SHEET_URL, {
@@ -89,19 +170,33 @@ async function notifySheet(userId, userMsg, botReply) {
   }).catch(() => {});
 }
 
+// ── 快捷選單內容 ───────────────────────────────────────────────────────
+const QUICK_MENU = `請輸入數字選擇服務：\n1️⃣ 尺寸建議\n2️⃣ 退換貨政策\n3️⃣ 免運說明\n4️⃣ 客服時間\n5️⃣ 訂單查詢`;
+
+const QUICK_REPLIES = {
+  '1': '尺寸建議：\n・萊卡系列 M號適合褲子 M～XL；L號適合 XL～3L\n・建議參考商品頁尺寸表，或告訴我您平時穿的尺寸，我幫您建議 😊',
+  '2': '退換貨政策：\n・7天鑑賞期內未拆封可退\n・登入官網 > 會員中心 > 訂單查詢申請退貨\n・已拆封貼身衣物基於衛生考量無法退換\n・試穿後無法退換\n・換貨可換顏色/尺寸，已拆封不接受\n\n詳情：https://enamorshop.com/pages/return_policy',
+  '3': '免運說明：\n・折扣後金額滿 NT$899 免運（外島除外）',
+  '4': '客服時間：\n週一～週五 09:00–12:00 / 13:00–17:00\n\n非服務時間可留言，將於下個工作日回覆 💌',
+  '5': '訂單查詢需人工協助，請提供手機號碼與訂單編號後四碼，客服將於工作時間回覆。###NEED_HUMAN###'
+};
+
+// ── 歡迎語 ─────────────────────────────────────────────────────────────
+const WELCOME_MESSAGE = `EnamoR 恩娜茉兒，您好 🌸
+
+我是 EnamoR AI 客服，很高興為您服務。
+商品諮詢、尺寸建議或訂單問題，歡迎直接告訴我 💕
+
+${QUICK_MENU}`;
+
+// ── 主 Handler ─────────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
-  if (req.method === 'GET') {
-    return res.status(200).send('EnamoR LINE Bot OK');
-  }
-  if (req.method !== 'POST') {
-    return res.status(405).send('Method Not Allowed');
-  }
+  if (req.method === 'GET') return res.status(200).send('EnamoR LINE Bot OK');
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   const signature = req.headers['x-line-signature'];
   const rawBody = JSON.stringify(req.body);
-  const hmac = crypto.createHmac('sha256', CHANNEL_SECRET)
-    .update(rawBody).digest('base64');
-
+  const hmac = crypto.createHmac('sha256', CHANNEL_SECRET).update(rawBody).digest('base64');
   if (signature !== hmac) {
     console.log('Signature mismatch');
     return res.status(401).send('Invalid signature');
@@ -117,67 +212,67 @@ module.exports = async function handler(req, res) {
     const replyToken = event.replyToken;
     const messages = getSession(userId);
 
-    // 真人客服流程
+    // 1. 正在等待問題類型選擇（真人客服流程）
     if (humanRequestSessions.has(userId)) {
       const typeMap = { '1': '🔄 退換貨', '2': '📦 商品問題', '3': '📋 訂單問題', '4': '❓ 其他' };
       const caseType = typeMap[userText];
       if (caseType) {
         humanRequestSessions.delete(userId);
-        const history = messages.slice(-6).filter(m => m.role === 'user' && m.content !== '__init__').map(m => m.content).join('\n');
+        const history = messages.slice(-6)
+          .filter(m => m.role === 'user' && m.content !== '__init__')
+          .map(m => m.content).join('\n');
         await notifySheet(userId, '真人客服請求', `類型：${caseType}\n\n近期對話：\n${history}`);
-        await replyToLine(replyToken, `已收到您的請求 🙏\n類型：${caseType}\n\n客服將於工作時間（週一～週五 9~17時）與您聯繫，請稍候。`);
+        await replyToLine(replyToken,
+          `已收到您的請求 🙏\n問題類型：${caseType}\n\n客服將於工作時間（週一～週五 9:00–17:00）與您聯繫，請稍候。`
+        );
       } else {
         await replyToLine(replyToken, '請輸入數字選擇問題類型：\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
       }
       continue;
     }
 
-    if (userText === '真人' || userText === '人工' || userText === '真人客服') {
+    // 2. 主動要求真人
+    if (['真人', '人工', '真人客服'].includes(userText)) {
       humanRequestSessions.set(userId, true);
       await replyToLine(replyToken, '好的，請問是哪類問題？\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
       continue;
     }
-    // 數字快捷選單
-    const QUICK_MENU = `請輸入數字選擇服務：\n1️⃣ 尺寸建議\n2️⃣ 退換貨政策\n3️⃣ 免運說明\n4️⃣ 客服時間\n5️⃣ 訂單查詢`;
 
-    const QUICK_REPLIES = {
-      '1': '尺寸建議：\n・萊卡系列 M號適合褲子 M～XL；L號適合 XL～3L\n・建議參考商品頁尺寸表，或告訴我您平時穿的尺寸，我幫您建議 😊',
-      '2': '退換貨政策：\n・7天鑑賞期內未拆封可退\n・登入官網 > 會員中心 > 訂單查詢申請退貨\n・已拆封貼身衣物基於衛生考量無法退換\n・試穿後無法退換\n・換貨可換顏色/尺寸，已拆封不接受\n\n詳情：https://enamorshop.com/pages/return_policy',
-      '3': '免運說明：\n・折扣後金額滿 NT$899 免運（外島除外）',
-      '4': '客服時間：\n週一～週五 09:00–12:00 / 13:00–17:00\n\n非服務時間可留言，我們將於下個工作日回覆 💌',
-      '5': '訂單查詢需要人工協助，請提供您的手機號碼與訂單編號後四碼，客服將於工作時間回覆您。###NEED_HUMAN###'
-    };
-
+    // 3. 選單
     if (userText === '0' || userText.toLowerCase() === 'menu' || userText === '選單') {
       await replyToLine(replyToken, QUICK_MENU);
       continue;
     }
 
+    // 4. 數字快捷
     if (QUICK_REPLIES[userText]) {
       let quickReply = QUICK_REPLIES[userText];
       const needHuman = quickReply.includes('###NEED_HUMAN###');
       quickReply = quickReply.replace('###NEED_HUMAN###', '').trim();
-      if (needHuman) {
-        await notifySheet(userId, userText, quickReply);
-      }
+      if (needHuman) await notifySheet(userId, userText, quickReply);
       await replyToLine(replyToken, quickReply);
       continue;
     }
-    // 第一則訊息固定回歡迎語
+
+    // 5. 第一則訊息：歡迎語
     if (messages.length === 0) {
       messages.push({ role: 'user', content: '__init__' });
-      await replyToLine(replyToken, `EnamoR 恩娜茉兒 您好 🌸\n我是 EnamoR 客服，很高興為您服務！\n有什麼可以幫您的嗎？無論是商品諮詢、尺寸建議還是其他問題，都歡迎隨時詢問唷💕\n請輸入數字選擇服務：\n1️⃣ 尺寸建議\n2️⃣ 退換貨政策\n3️⃣ 免運說明\n4️⃣ 客服時間\n5️⃣ 訂單查詢`);
+      await replyToLine(replyToken, WELCOME_MESSAGE);
       continue;
     }
+
+    // 6. AI 回覆（含動態 system prompt）
     messages.push({ role: 'user', content: userText });
 
     try {
-      let reply = await callClaude(messages);
+      const systemPrompt = await getSystemPrompt();
+      let reply = await callClaude(messages, systemPrompt);
+
       const needHuman = reply.includes('###NEED_HUMAN###');
       reply = reply.replace('###NEED_HUMAN###', '').trim();
 
       if (needHuman) {
-        reply += '\n\n已通知客服，將於工作時間（週一~週五 9~17時）回覆您。';
+        reply += '\n\n已通知客服，將於工作時間（週一～週五 9:00–17:00）回覆您。';
         await notifySheet(userId, userText, reply);
       }
 
@@ -189,12 +284,13 @@ module.exports = async function handler(req, res) {
       if (aiCount === 3) {
         reply += '\n\n────\n如需真人客服，請輸入「真人」';
       }
+
       await replyToLine(replyToken, reply);
     } catch (e) {
       console.error('handler error:', e);
       try {
         await replyToLine(replyToken, '抱歉，系統暫時無法回覆，請稍後再試。');
-      } catch (e2) {}
+      } catch {}
     }
   }
 
