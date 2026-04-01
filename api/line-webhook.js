@@ -126,7 +126,8 @@ async function getSystemPrompt() {
 
 // ── Session 管理 ───────────────────────────────────────────────────────
 const sessions = new Map();
-const humanRequestSessions = new Map();
+const humanRequestSessions = new Map(); // 記錄正在等待問題類型的用戶
+const ratingSessionUsers = new Set(); // 記錄正在等待評分的用戶
 const closingPendingSessions = new Set(); // 已送出關懷語，等待確認是否真的結束
 const ratingPendingSessions = new Set();  // 已送出評分邀請，等待評分中
 
@@ -349,6 +350,18 @@ module.exports = async function handler(req, res) {
       continue;
     }
 
+    // 評分回覆處理
+    if (ratingSessionUsers.has(userId)) {
+      const ratingMap = { '1': '😞 不滿意', '2': '😐 尚可', '3': '🙂 算滿意', '4': '😍 非常滿意' };
+      if (ratingMap[userText]) {
+        ratingSessionUsers.delete(userId);
+        await notifySheet(userId, '服務評分', `評分：${ratingMap[userText]}`);
+        await replyToLine(replyToken, '感謝您的回饋 💕');
+      } else {
+        await replyToLine(replyToken, '請輸入 1～4 的數字進行評分 🙏');
+      }
+      continue;
+    }
     // ── 真人客服流程：等待問題類型 ────────────────────────────────────
     if (humanRequestSessions.has(userId)) {
       const typeMap = { '1': '🔄 退換貨', '2': '📦 商品問題', '3': '📋 訂單問題', '4': '❓ 其他' };
@@ -359,9 +372,9 @@ module.exports = async function handler(req, res) {
           .filter(m => m.role === 'user' && m.content !== '__init__')
           .map(m => m.content).join('\n');
         await notifySheet(userId, '真人客服請求', `類型：${caseType}\n\n近期對話：\n${history}`);
-        await replyToLine(replyToken,
-          `已收到您的請求 🙏\n問題類型：${caseType}\n\n客服將於工作時間（週一～週五 9:00–17:00）與您聯繫，請耐心等候。`
-        );
+        await replyToLine(replyToken, `已收到您的請求 🙏\n類型：${caseType}\n\n人工客服將於工作時間（週一～週五 9:00–17:00）與您聯繫，請耐心等候。\n\n在等待期間如有其他問題，歡迎繼續詢問 😊`);
+        ratingSessionUsers.add(userId);
+        await replyToLine(replyToken, `很高興能幫到您 🌸\n請為這次服務評分，您的回饋對我們的優化非常有幫助 🙏\n1️⃣ 😞 不滿意\n2️⃣ 😐 尚可\n3️⃣ 🙂 算滿意\n4️⃣ 😍 非常滿意\n（直接輸入數字即可）`);
       } else {
         await replyToLine(replyToken, '請輸入數字選擇問題類型：\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
       }
