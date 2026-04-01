@@ -27,6 +27,7 @@ const SYSTEM_DEFAULT = `你是 EnamoR 的專屬顧問，台灣女性內著精品
 - 預購類型說明：
   A1「生產製程中」：約14個工作天
   A2「長銷熱賣補貨」：約7個工作天
+- 萊卡（Lycra）抗菌無縫系列：預購類型為 A1，約 14 個工作天
   B「流行性商品」：以商品頁標示時間為準
 - 若客人問特定商品是哪個類型，回答「我可以協助您判斷，請告訴我商品名稱」
 - 超商/宅配：出貨後2~4工作天
@@ -163,7 +164,6 @@ function buildProductContext(products) {
   return '\n\n【目前相關商品，請優先推薦並直接附上完整網址，LINE 不支援 Markdown】\n' + lines.join('\n');
 }
 
-// 判斷是否為商品相關問題（才去查 Shopify）
 function isProductQuery(text) {
   const keywords = ['推薦', '商品', '內褲', '內衣', '睡衣', '背心', '褲', '衣', '款式', '材質', '尺寸', '彈性', '涼感', '無痕', '塑身', '高腰', '中腰', '低腰', '莫代爾', '萊卡', '想買', '有沒有', '哪款'];
   return keywords.some(k => text.includes(k));
@@ -252,23 +252,10 @@ const QUICK_REPLIES = {
 };
 
 // ── 歡迎語 ─────────────────────────────────────────────────────────────
-const WELCOME_MESSAGE = `EnamoR 恩娜茉兒，您好 🌸
-
-我是 EnamoR AI 客服，很高興為您服務。
-商品諮詢、尺寸建議或訂單問題，歡迎直接告訴我 💕
-
-${QUICK_MENU}`;
+const WELCOME_MESSAGE = `EnamoR 恩娜茉兒，您好 🌸\n\n我是 EnamoR AI 客服，很高興為您服務。\n商品諮詢、尺寸建議或訂單問題，歡迎直接告訴我 💕\n\n${QUICK_MENU}`;
 
 // ── 評分訊息 ───────────────────────────────────────────────────────────
-const RATING_MESSAGE = `很高興能幫到您 🌸
-請為這次服務評分，您的回饋對我們的優化非常有幫助 🙏
-
-1️⃣ 😞 不滿意
-2️⃣ 😐 尚可
-3️⃣ 🙂 算滿意
-4️⃣ 😍 非常滿意
-
-（直接輸入數字即可）`;
+const RATING_MESSAGE = `很高興能幫到您 🌸\n請為這次服務評分，您的回饋對我們的優化非常有幫助 🙏\n\n1️⃣ 😞 不滿意\n2️⃣ 😐 尚可\n3️⃣ 🙂 算滿意\n4️⃣ 😍 非常滿意\n\n（直接輸入數字即可）`;
 
 const RATING_MAP = {
   '1': '😞 不滿意',
@@ -280,7 +267,6 @@ const RATING_MAP = {
   '🙂': '🙂 算滿意',
   '😍': '😍 非常滿意'
 };
-
 
 // ── 主 Handler ─────────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
@@ -313,7 +299,6 @@ module.exports = async function handler(req, res) {
         await saveRating(userId, ratingLabel);
         await replyToLine(replyToken, `感謝您的評分 💕\n期待下次再為您服務 🌸`);
       } else {
-        // 不是評分表情，當作新對話繼續
         ratingPendingSessions.delete(userId);
         messages.push({ role: 'user', content: userText });
         const systemPrompt = await getSystemPrompt();
@@ -334,7 +319,6 @@ module.exports = async function handler(req, res) {
         ratingPendingSessions.add(userId);
         await replyToLine(replyToken, RATING_MESSAGE);
       } else {
-        // 客人還有問題，繼續正常對話
         messages.push({ role: 'user', content: userText });
         const systemPrompt = await getSystemPrompt();
         let reply = await callClaude(messages, systemPrompt);
@@ -350,18 +334,19 @@ module.exports = async function handler(req, res) {
       continue;
     }
 
-    // 評分回覆處理
+    // ── 評分回覆處理（轉人工後觸發）────────────────────────────────
     if (ratingSessionUsers.has(userId)) {
       const ratingMap = { '1': '😞 不滿意', '2': '😐 尚可', '3': '🙂 算滿意', '4': '😍 非常滿意' };
       if (ratingMap[userText]) {
         ratingSessionUsers.delete(userId);
-        await notifySheet(userId, '服務評分', `評分：${ratingMap[userText]}`);
+        await saveRating(userId, ratingMap[userText]);
         await replyToLine(replyToken, '感謝您的回饋 💕');
       } else {
         await replyToLine(replyToken, '請輸入 1～4 的數字進行評分 🙏');
       }
       continue;
     }
+
     // ── 真人客服流程：等待問題類型 ────────────────────────────────────
     if (humanRequestSessions.has(userId)) {
       const typeMap = { '1': '🔄 退換貨', '2': '📦 商品問題', '3': '📋 訂單問題', '4': '❓ 其他' };
@@ -418,7 +403,6 @@ module.exports = async function handler(req, res) {
     try {
       const systemPrompt = await getSystemPrompt();
 
-      // 商品相關問題 → 即時查 Shopify 附在最後一則 user 訊息
       let msgsToSend = messages.slice(-12);
       if (isProductQuery(userText)) {
         const products = await fetchShopifyProducts(userText);
@@ -448,12 +432,10 @@ module.exports = async function handler(req, res) {
       messages.push({ role: 'assistant', content: reply });
       if (messages.length > 20) messages.splice(0, 4);
 
-      // 偵測到負面情緒 → 加轉真人提示
       if (hasEmotion) {
         reply += '\n\n────\n如需真人客服協助，請輸入「真人」';
       }
 
-      // 偵測到結束語 → 加關懷句並進入等待狀態
       if (isClosing) {
         reply += '\n\n請問還有什麼需要協助的地方嗎？😊';
         closingPendingSessions.add(userId);
