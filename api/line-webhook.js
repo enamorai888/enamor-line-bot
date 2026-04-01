@@ -6,7 +6,7 @@ const CLAUDE_API_KEY = process.env.CLAUDE_API_KEY;
 const SHEET_URL = process.env.SHEET_URL || '';
 const SHEET_READER_URL = 'https://enamor-line-bot.vercel.app/api/sheet-reader';
 
-// ── System Prompt 預設（Sheet 載入失敗時備用）──────────────────────────
+// ── System Prompt ──────────────────────────────────────────────────────
 const SYSTEM_DEFAULT = `你是 EnamoR 的專屬顧問，台灣女性內著精品品牌。以優雅、簡潔、有溫度的繁體中文回覆，語氣像精品門市的資深顧問，不超過 150 字。
 
 【核心語氣原則】
@@ -46,7 +46,11 @@ const SYSTEM_DEFAULT = `你是 EnamoR 的專屬顧問，台灣女性內著精品
 - 訂單查詢、退換貨進度、商品瑕疵、客人持續不滿、說要找真人
 
 【政策直接擋回，不需人工】
-- 已拆封退貨、試穿後退貨、超過7天退貨`;
+- 已拆封退貨、試穿後退貨、超過7天退貨
+
+【對話結束偵測 — 重要】
+- 客人說「謝謝/感謝/好的謝謝/沒問題/掰掰/再見/知道了/了解了/好的/OK/收到」等明確結束語時，在回覆末尾加 ###CLOSING###
+- 只在對話明確結束時加，一般問答不加`;
 
 // ── Sheet 快取（10分鐘）────────────────────────────────────────────────
 let sheetCache = null;
@@ -55,17 +59,13 @@ const CACHE_TTL = 10 * 60 * 1000;
 
 async function getSystemPrompt() {
   const now = Date.now();
-  if (sheetCache && now - sheetCacheTime < CACHE_TTL) {
-    return sheetCache;
-  }
+  if (sheetCache && now - sheetCacheTime < CACHE_TTL) return sheetCache;
   try {
     const r = await fetch(SHEET_READER_URL);
     const res = await r.json();
     if (!res.success || !res.data) return SYSTEM_DEFAULT;
-
     const data = res.data;
     const parts = [];
-
     if (data['FAQ設定'] && data['FAQ設定'].length) {
       const lines = data['FAQ設定'].map(row => {
         const vals = Object.values(row).filter(v => v && v.toString().trim());
@@ -73,7 +73,6 @@ async function getSystemPrompt() {
       }).filter(l => l.trim());
       if (lines.length) parts.push('【FAQ設定】\n' + lines.join('\n'));
     }
-
     if (data['客服FAQ'] && data['客服FAQ'].length) {
       const lines = data['客服FAQ'].map(row => {
         const vals = Object.values(row).filter(v => v && v.toString().trim());
@@ -81,7 +80,6 @@ async function getSystemPrompt() {
       }).filter(l => l.trim());
       if (lines.length) parts.push('【客服FAQ】\n' + lines.join('\n'));
     }
-
     if (data['熱賣商品'] && data['熱賣商品'].length) {
       const prodLines = data['熱賣商品']
         .filter(row => row['是否顯示'] === true || row['是否顯示'] === 'TRUE')
@@ -92,13 +90,11 @@ async function getSystemPrompt() {
           const note = row['備註'] || '';
           return `${name} | ${url}${discount ? ' | ' + discount : ''}${note ? ' | ' + note : ''}`;
         }).filter(l => l.trim());
-      if (prodLines.length) parts.push('【熱賣商品】（推薦時直接貼出完整連結網址，LINE 不支援 Markdown）\n' + prodLines.join('\n'));
+      if (prodLines.length) parts.push('【熱賣商品】（推薦時直接貼完整網址，LINE 不支援 Markdown）\n' + prodLines.join('\n'));
     }
-
     const prompt = parts.length > 0
       ? SYSTEM_DEFAULT + '\n\n=== Google Sheet 即時資料 ===\n' + parts.join('\n\n')
       : SYSTEM_DEFAULT;
-
     sheetCache = prompt;
     sheetCacheTime = now;
     return prompt;
@@ -111,6 +107,8 @@ async function getSystemPrompt() {
 // ── Session 管理 ───────────────────────────────────────────────────────
 const sessions = new Map();
 const humanRequestSessions = new Map();
+const closingPendingSessions = new Set(); // 已送出關懷語，等待確認是否真的結束
+const ratingPendingSessions = new Set();  // 已送出評分邀請，等待評分中
 
 function getSession(userId) {
   if (!sessions.has(userId)) sessions.set(userId, []);
@@ -155,7 +153,7 @@ async function replyToLine(replyToken, text) {
 }
 
 // ── 案件寫入 Sheet ─────────────────────────────────────────────────────
-async function notifySheet(userId, userMsg, botReply) {
+async function notifySheet(userId, userMsg, botReply, type = 'human_handoff') {
   if (!SHEET_URL) return;
   await fetch(SHEET_URL, {
     method: 'POST',
@@ -163,14 +161,30 @@ async function notifySheet(userId, userMsg, botReply) {
     body: JSON.stringify({
       timestamp: new Date().toISOString(),
       source: 'LINE Bot',
-      type: 'human_handoff',
+      type,
       answers: JSON.stringify([{ q: '客人訊息', a: userMsg }]),
       summary: `LINE 用戶 ${userId}\n客人說：${userMsg}\nAI 回：${botReply}`
     })
   }).catch(() => {});
 }
 
-// ── 快捷選單內容 ───────────────────────────────────────────────────────
+// ── 評分寫入 Sheet ─────────────────────────────────────────────────────
+async function saveRating(userId, rating) {
+  if (!SHEET_URL) return;
+  await fetch(SHEET_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      timestamp: new Date().toISOString(),
+      source: 'LINE Bot',
+      type: 'rating',
+      answers: JSON.stringify([{ q: '滿意度評分', a: rating }]),
+      summary: `LINE 用戶 ${userId} 評分：${rating}`
+    })
+  }).catch(() => {});
+}
+
+// ── 快捷選單 ───────────────────────────────────────────────────────────
 const QUICK_MENU = `請輸入數字選擇服務：\n1️⃣ 尺寸建議\n2️⃣ 退換貨政策\n3️⃣ 免運說明\n4️⃣ 客服時間\n5️⃣ 訂單查詢`;
 
 const QUICK_REPLIES = {
@@ -188,6 +202,22 @@ const WELCOME_MESSAGE = `EnamoR 恩娜茉兒，您好 🌸
 商品諮詢、尺寸建議或訂單問題，歡迎直接告訴我 💕
 
 ${QUICK_MENU}`;
+
+// ── 評分訊息 ───────────────────────────────────────────────────────────
+const RATING_MESSAGE = `很高興能幫到您 🌸
+請為這次服務評分，您的回饋對我們的優化非常有幫助 🙏
+
+😞 不滿意
+😐 尚可
+🙂 算滿意
+😍 非常滿意`;
+
+const RATING_MAP = {
+  '😞': '不滿意',
+  '😐': '尚可',
+  '🙂': '算滿意',
+  '😍': '非常滿意'
+};
 
 // ── 主 Handler ─────────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
@@ -212,7 +242,52 @@ module.exports = async function handler(req, res) {
     const replyToken = event.replyToken;
     const messages = getSession(userId);
 
-    // 1. 正在等待問題類型選擇（真人客服流程）
+    // ── 評分收集中 ────────────────────────────────────────────────────
+    if (ratingPendingSessions.has(userId)) {
+      const ratingLabel = RATING_MAP[userText];
+      if (ratingLabel) {
+        ratingPendingSessions.delete(userId);
+        await saveRating(userId, ratingLabel);
+        await replyToLine(replyToken, `感謝您的評分 💕\n期待下次再為您服務 🌸`);
+      } else {
+        // 不是評分表情，當作新對話繼續
+        ratingPendingSessions.delete(userId);
+        messages.push({ role: 'user', content: userText });
+        const systemPrompt = await getSystemPrompt();
+        let reply = await callClaude(messages, systemPrompt);
+        reply = reply.replace('###CLOSING###', '').replace('###NEED_HUMAN###', '').trim();
+        messages.push({ role: 'assistant', content: reply });
+        await replyToLine(replyToken, reply);
+      }
+      continue;
+    }
+
+    // ── 結束關懷後，等待確認是否真的結束 ─────────────────────────────
+    if (closingPendingSessions.has(userId)) {
+      closingPendingSessions.delete(userId);
+      const endingWords = ['沒了', '不用', '不用了', '沒有', '沒其他', '謝謝', '感謝', '好', 'OK', 'ok', '掰', '再見', '拜拜'];
+      const isReallyDone = endingWords.some(w => userText.includes(w));
+      if (isReallyDone) {
+        ratingPendingSessions.add(userId);
+        await replyToLine(replyToken, RATING_MESSAGE);
+      } else {
+        // 客人還有問題，繼續正常對話
+        messages.push({ role: 'user', content: userText });
+        const systemPrompt = await getSystemPrompt();
+        let reply = await callClaude(messages, systemPrompt);
+        const isClosing = reply.includes('###CLOSING###');
+        reply = reply.replace('###CLOSING###', '').replace('###NEED_HUMAN###', '').trim();
+        messages.push({ role: 'assistant', content: reply });
+        if (isClosing) {
+          reply += '\n\n請問還有什麼需要協助的地方嗎？😊';
+          closingPendingSessions.add(userId);
+        }
+        await replyToLine(replyToken, reply);
+      }
+      continue;
+    }
+
+    // ── 真人客服流程：等待問題類型 ────────────────────────────────────
     if (humanRequestSessions.has(userId)) {
       const typeMap = { '1': '🔄 退換貨', '2': '📦 商品問題', '3': '📋 訂單問題', '4': '❓ 其他' };
       const caseType = typeMap[userText];
@@ -231,20 +306,20 @@ module.exports = async function handler(req, res) {
       continue;
     }
 
-    // 2. 主動要求真人
+    // ── 主動要求真人 ──────────────────────────────────────────────────
     if (['真人', '人工', '真人客服'].includes(userText)) {
       humanRequestSessions.set(userId, true);
       await replyToLine(replyToken, '好的，請問是哪類問題？\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
       continue;
     }
 
-    // 3. 選單
+    // ── 選單 ──────────────────────────────────────────────────────────
     if (userText === '0' || userText.toLowerCase() === 'menu' || userText === '選單') {
       await replyToLine(replyToken, QUICK_MENU);
       continue;
     }
 
-    // 4. 數字快捷
+    // ── 數字快捷 ──────────────────────────────────────────────────────
     if (QUICK_REPLIES[userText]) {
       let quickReply = QUICK_REPLIES[userText];
       const needHuman = quickReply.includes('###NEED_HUMAN###');
@@ -254,14 +329,14 @@ module.exports = async function handler(req, res) {
       continue;
     }
 
-    // 5. 第一則訊息：歡迎語
+    // ── 第一則訊息：歡迎語 ────────────────────────────────────────────
     if (messages.length === 0) {
       messages.push({ role: 'user', content: '__init__' });
       await replyToLine(replyToken, WELCOME_MESSAGE);
       continue;
     }
 
-    // 6. AI 回覆（含動態 system prompt）
+    // ── AI 回覆 ───────────────────────────────────────────────────────
     messages.push({ role: 'user', content: userText });
 
     try {
@@ -269,7 +344,8 @@ module.exports = async function handler(req, res) {
       let reply = await callClaude(messages, systemPrompt);
 
       const needHuman = reply.includes('###NEED_HUMAN###');
-      reply = reply.replace('###NEED_HUMAN###', '').trim();
+      const isClosing = reply.includes('###CLOSING###');
+      reply = reply.replace('###NEED_HUMAN###', '').replace('###CLOSING###', '').trim();
 
       if (needHuman) {
         reply += '\n\n已通知客服，將於工作時間（週一～週五 9:00–17:00）回覆您。';
@@ -283,6 +359,12 @@ module.exports = async function handler(req, res) {
       const aiCount = messages.filter(m => m.role === 'assistant').length;
       if (aiCount === 3) {
         reply += '\n\n────\n如需真人客服，請輸入「真人」';
+      }
+
+      // 偵測到結束語 → 加關懷句並進入等待狀態
+      if (isClosing) {
+        reply += '\n\n請問還有什麼需要協助的地方嗎？😊';
+        closingPendingSessions.add(userId);
       }
 
       await replyToLine(replyToken, reply);
