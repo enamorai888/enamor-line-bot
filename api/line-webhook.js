@@ -66,8 +66,11 @@ const SYSTEM_DEFAULT = `你是 EnamoR 的專屬顧問，台灣女性內著精品
 - 只在對話明確結束時加，一般問答不加
 
 【情緒偵測 — 重要】
-- 偵測到客人有負面情緒（說「不爽/生氣/很差/失望/爛/差評/投訴/太差了/不可以/怎麼這樣/什麼態度/太誇張/受不了」等）時，在回覆末尾加 ###EMOTION###
-- 只在情緒明顯時加，一般抱怨不加`;
+- 偵測到客人有負面情緒（說「不爽/生氣/很差/失望/爛/差評/投訴/太差了/不可以/怎麼這樣/什麼態度/太誇張/受不了」等）時：
+  1. 回覆開頭說「您好，我是 EnamoR 的專屬顧問！感覺您有點不開心 🙏」
+  2. 接著溫柔詢問具體問題，語氣誠懇不過度道歉
+  3. 在回覆末尾加 ###EMOTION###
+- 只在情緒明顯時觸發，一般抱怨不加`;
 
 // ── Sheet 快取（10分鐘）────────────────────────────────────────────────
 let sheetCache = null;
@@ -156,7 +159,11 @@ function buildProductContext(products) {
     const stretch = p.stretch_score ? '｜彈力：' + p.stretch_score + '/5' : '';
     return '- ' + p.title + '｜NT$' + p.price + '｜' + p.url + preorder + sizes + stretch;
   });
-  return '\n\n【目前相關商品，請優先推薦並直接附上完整網址，LINE 不支援 Markdown】\n' + lines.join('\n');
+  return '
+
+【目前相關商品，請優先推薦並直接附上完整網址，LINE 不支援 Markdown】
+' + lines.join('
+');
 }
 
 // 判斷是否為商品相關問題（才去查 Shopify）
