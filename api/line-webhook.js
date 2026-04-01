@@ -116,12 +116,6 @@ module.exports = async function handler(req, res) {
     const replyToken = event.replyToken;
     const messages = getSession(userId);
 
-    // 首次歡迎訊息（固定內容，不走 AI）
-    if (getSession(userId).length === 0) {
-      const welcome = `EnamoR 恩娜茉兒 您好 🌸\n我是 EnamoR 客服，很高興為您服務！\n有什麼可以幫您的嗎？無論是商品諮詢、尺寸建議還是其他問題，都歡迎隨時詢問唷💕\n\n請輸入數字選擇服務：\n1️⃣ 尺寸建議\n2️⃣ 退換貨政策\n3️⃣ 免運說明\n4️⃣ 客服時間\n5️⃣ 訂單查詢`;
-      await replyToLine(replyToken, welcome);
-      continue;
-    }
     // 數字快捷選單
     const QUICK_MENU = `請輸入數字選擇服務：\n1️⃣ 尺寸建議\n2️⃣ 退換貨政策\n3️⃣ 免運說明\n4️⃣ 客服時間\n5️⃣ 訂單查詢`;
 
