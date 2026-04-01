@@ -159,11 +159,7 @@ function buildProductContext(products) {
     const stretch = p.stretch_score ? '｜彈力：' + p.stretch_score + '/5' : '';
     return '- ' + p.title + '｜NT$' + p.price + '｜' + p.url + preorder + sizes + stretch;
   });
-  return '
-
-【目前相關商品，請優先推薦並直接附上完整網址，LINE 不支援 Markdown】
-' + lines.join('
-');
+  return '\n\n【目前相關商品，請優先推薦並直接附上完整網址，LINE 不支援 Markdown】\n' + lines.join('\n');
 }
 
 // 判斷是否為商品相關問題（才去查 Shopify）
