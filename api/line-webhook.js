@@ -63,7 +63,11 @@ const SYSTEM_DEFAULT = `你是 EnamoR 的專屬顧問，台灣女性內著精品
 
 【對話結束偵測 — 重要】
 - 客人說「謝謝/感謝/好的謝謝/沒問題/掰掰/再見/知道了/了解了/好的/OK/收到」等明確結束語時，在回覆末尾加 ###CLOSING###
-- 只在對話明確結束時加，一般問答不加`;
+- 只在對話明確結束時加，一般問答不加
+
+【情緒偵測 — 重要】
+- 偵測到客人有負面情緒（說「不爽/生氣/很差/失望/爛/差評/投訴/太差了/不可以/怎麼這樣/什麼態度/太誇張/受不了」等）時，在回覆末尾加 ###EMOTION###
+- 只在情緒明顯時加，一般抱怨不加`;
 
 // ── Sheet 快取（10分鐘）────────────────────────────────────────────────
 let sheetCache = null;
@@ -152,7 +156,11 @@ function buildProductContext(products) {
     const stretch = p.stretch_score ? '｜彈力：' + p.stretch_score + '/5' : '';
     return '- ' + p.title + '｜NT$' + p.price + '｜' + p.url + preorder + sizes + stretch;
   });
-  return '\n\n【目前相關商品，請優先推薦並直接附上完整網址，LINE 不支援 Markdown】\n' + lines.join('\n');
+  return '
+
+【目前相關商品，請優先推薦並直接附上完整網址，LINE 不支援 Markdown】
+' + lines.join('
+');
 }
 
 // 判斷是否為商品相關問題（才去查 Shopify）
@@ -417,7 +425,8 @@ module.exports = async function handler(req, res) {
 
       const needHuman = reply.includes('###NEED_HUMAN###');
       const isClosing = reply.includes('###CLOSING###');
-      reply = reply.replace('###NEED_HUMAN###', '').replace('###CLOSING###', '').trim();
+      const hasEmotion = reply.includes('###EMOTION###');
+      reply = reply.replace('###NEED_HUMAN###', '').replace('###CLOSING###', '').replace('###EMOTION###', '').trim();
 
       if (needHuman) {
         reply += '\n\n已通知客服，將於工作時間（週一～週五 9:00–17:00）回覆您。';
@@ -427,10 +436,9 @@ module.exports = async function handler(req, res) {
       messages.push({ role: 'assistant', content: reply });
       if (messages.length > 20) messages.splice(0, 4);
 
-      // 第3則 AI 對話後附上轉真人提示
-      const aiCount = messages.filter(m => m.role === 'assistant').length;
-      if (aiCount === 3) {
-        reply += '\n\n────\n如需真人客服，請輸入「真人」';
+      // 偵測到負面情緒 → 加轉真人提示
+      if (hasEmotion) {
+        reply += '\n\n────\n如需真人客服協助，請輸入「真人」';
       }
 
       // 偵測到結束語 → 加關懷句並進入等待狀態
