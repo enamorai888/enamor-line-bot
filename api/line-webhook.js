@@ -58,7 +58,7 @@ async function callClaude(messages) {
 }
 
 async function replyToLine(replyToken, text) {
-  await fetch('https://api.line.me/v2/bot/message/reply', {
+  const res = await fetch('https://api.line.me/v2/bot/message/reply', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -69,6 +69,8 @@ async function replyToLine(replyToken, text) {
       messages: [{ type: 'text', text }]
     })
   });
+  const data = await res.json();
+  console.log('replyToLine result:', JSON.stringify(data));
 }
 
 async function notifySheet(userId, userMsg, botReply) {
@@ -100,12 +102,13 @@ module.exports = async function handler(req, res) {
     .update(rawBody).digest('base64');
 
   if (signature !== hmac) {
+    console.log('Signature mismatch');
     return res.status(401).send('Invalid signature');
   }
 
-  res.status(200).send('OK');
-
   const events = req.body.events || [];
+
+  // 先處理所有事件，完成後再回 200
   for (const event of events) {
     if (event.type !== 'message' || event.message.type !== 'text') continue;
 
@@ -131,7 +134,12 @@ module.exports = async function handler(req, res) {
 
       await replyToLine(replyToken, reply);
     } catch (e) {
-      await replyToLine(replyToken, '抱歉，系統暫時無法回覆，請稍後再試。');
+      console.error('handler error:', e);
+      try {
+        await replyToLine(replyToken, '抱歉，系統暫時無法回覆，請稍後再試。');
+      } catch (e2) {}
     }
   }
+
+  return res.status(200).send('OK');
 };
