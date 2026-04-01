@@ -116,6 +116,32 @@ module.exports = async function handler(req, res) {
     const replyToken = event.replyToken;
     const messages = getSession(userId);
 
+    // 數字快捷選單
+    const QUICK_MENU = `請輸入數字選擇服務：\n1️⃣ 尺寸建議\n2️⃣ 退換貨政策\n3️⃣ 免運說明\n4️⃣ 客服時間\n5️⃣ 訂單查詢`;
+
+    const QUICK_REPLIES = {
+      '1': '尺寸建議：\n・萊卡系列 M號適合褲子 M～XL；L號適合 XL～3L\n・建議參考商品頁尺寸表，或告訴我您平時穿的尺寸，我幫您建議 😊',
+      '2': '退換貨政策：\n・7天鑑賞期內未拆封可退\n・登入官網 > 會員中心 > 訂單查詢申請退貨\n・已拆封貼身衣物基於衛生考量無法退換\n・試穿後無法退換\n・換貨可換顏色/尺寸，已拆封不接受\n\n詳情：https://enamorshop.com/pages/return_policy',
+      '3': '免運說明：\n・折扣後金額滿 NT$899 免運（外島除外）',
+      '4': '客服時間：\n週一～週五 09:00–12:00 / 13:00–17:00\n\n非服務時間可留言，我們將於下個工作日回覆 💌',
+      '5': '訂單查詢需要人工協助，請提供您的手機號碼與訂單編號後四碼，客服將於工作時間回覆您。###NEED_HUMAN###'
+    };
+
+    if (userText === '0' || userText.toLowerCase() === 'menu' || userText === '選單') {
+      await replyToLine(replyToken, QUICK_MENU);
+      continue;
+    }
+
+    if (QUICK_REPLIES[userText]) {
+      let quickReply = QUICK_REPLIES[userText];
+      const needHuman = quickReply.includes('###NEED_HUMAN###');
+      quickReply = quickReply.replace('###NEED_HUMAN###', '').trim();
+      if (needHuman) {
+        await notifySheet(userId, userText, quickReply);
+      }
+      await replyToLine(replyToken, quickReply);
+      continue;
+    }
     messages.push({ role: 'user', content: userText });
 
     try {
