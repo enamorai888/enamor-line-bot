@@ -108,7 +108,6 @@ module.exports = async function handler(req, res) {
 
   const events = req.body.events || [];
 
-  // 先處理所有事件，完成後再回 200
   for (const event of events) {
     if (event.type !== 'message' || event.message.type !== 'text') continue;
 
