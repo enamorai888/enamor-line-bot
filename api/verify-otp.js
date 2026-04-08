@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
   });
 
   const SHOP = process.env.SHOPIFY_DOMAIN;
-  const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
+  const TOKEN = process.env.SHOPIFY_ORDER_TOKEN;
   try {
     const ordersRes = await fetch(
       `https://${SHOP}/admin/api/2024-10/orders.json?email=${encodeURIComponent(email)}&status=open&limit=20&fields=id,name,created_at,cancelled_at,fulfillment_status,financial_status,total_price,line_items,token`,
@@ -33,7 +33,7 @@ module.exports = async function handler(req, res) {
     console.log('Shopify response:', JSON.stringify(shopifyData));
     const orders = shopifyData.orders;
     const now = new Date();
-    const cancellable = orders
+    const cancellable = (orders || [])
       .filter(o => {
         if (o.cancelled_at) return false;
         if (o.fulfillment_status === 'fulfilled') return false;
