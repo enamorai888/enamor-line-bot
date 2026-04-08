@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const orderRes = await fetch(
-      `https://${SHOP}/admin/api/2024-10/orders/${order_id}.json?fields=id,created_at,cancelled_at,fulfillment_status,financial_status,total_price`,
+      `https://${SHOP}/admin/api/2026-07/orders/${order_id}.json?fields=id,created_at,cancelled_at,fulfillment_status,financial_status,total_price`,
       { headers: { 'X-Shopify-Access-Token': TOKEN } }
     );
     const { order } = await orderRes.json();
@@ -28,7 +28,7 @@ module.exports = async function handler(req, res) {
     const isPending = order.financial_status === 'pending';
 
     const cancelRes = await fetch(
-      `https://${SHOP}/admin/api/2024-10/orders/${order_id}/cancel.json`,
+      `https://${SHOP}/admin/api/2026-07/orders/${order_id}/cancel.json`,
       {
         method: 'POST',
         headers: {
