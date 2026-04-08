@@ -1,8 +1,6 @@
 // api/send-otp.js
 import nodemailer from 'nodemailer';
 
-const otpStore = new Map();
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -14,8 +12,12 @@ export default async function handler(req, res) {
   if (!email) return res.status(400).json({ error: 'Missing email' });
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = Date.now() + 10 * 60 * 1000;
-  otpStore.set(email.toLowerCase(), { otp, expires });
+
+  // 存到 Upstash Redis，10分鐘過期
+  const redisRes = await fetch(`${process.env.KV_REST_API_URL}/set/otp:${email.toLowerCase()}/${otp}/ex/600`, {
+    headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }
+  });
+  if (!redisRes.ok) return res.status(500).json({ error: 'Failed to store OTP' });
 
   try {
     const transporter = nodemailer.createTransport({
@@ -51,5 +53,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to send email' });
   }
 }
-
-export { otpStore };
