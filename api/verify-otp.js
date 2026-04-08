@@ -1,5 +1,4 @@
-// api/verify-otp.js
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -11,7 +10,6 @@ export default async function handler(req, res) {
 
   const key = `otp:${email.toLowerCase()}`;
 
-  // 從 Redis 取 OTP
   const getRes = await fetch(`${process.env.KV_REST_API_URL}/get/${key}`, {
     headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }
   });
@@ -20,12 +18,10 @@ export default async function handler(req, res) {
   if (!result) return res.status(400).json({ error: 'otp_not_found' });
   if (result !== otp) return res.status(400).json({ error: 'otp_invalid' });
 
-  // 驗證成功，刪除 OTP
   await fetch(`${process.env.KV_REST_API_URL}/del/${key}`, {
     headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }
   });
 
-  // 查訂單
   const SHOP = process.env.SHOPIFY_DOMAIN;
   const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
   try {
@@ -56,4 +52,4 @@ export default async function handler(req, res) {
     console.error(err);
     return res.status(500).json({ error: 'Server error' });
   }
-}
+};
