@@ -1,7 +1,6 @@
-// api/send-otp.js
-import nodemailer from 'nodemailer';
+const nodemailer = require('nodemailer');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -13,7 +12,6 @@ export default async function handler(req, res) {
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  // 存到 Upstash Redis，10分鐘過期
   const redisRes = await fetch(`${process.env.KV_REST_API_URL}/set/otp:${email.toLowerCase()}/${otp}/ex/600`, {
     headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }
   });
@@ -52,4 +50,4 @@ export default async function handler(req, res) {
     console.error(err);
     return res.status(500).json({ error: 'Failed to send email' });
   }
-}
+};
