@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>取消訂單 — EnamoR</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f5;
+    --surface: #ffffff;
+    --border: #e8e2da;
+    --text: #1a1814;
+    --text-sub: #8a8278;
+    --accent: #c0392b;
+    --accent-light: #f9eeec;
+    --success: #2d6a4f;
+    --success-light: #eaf4ef;
+    --radius: 2px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 300;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px;
+  }
+  header { text-align: center; margin-bottom: 48px; }
+  .logo {
+    font-family: 'Noto Serif TC', serif;
+    font-weight: 300;
+    font-size: 22px;
+    letter-spacing: 0.15em;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .logo span {
+    display: block;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--text-sub);
+    margin-top: 6px;
+    font-weight: 300;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px;
+    width: 100%;
+    max-width: 520px;
+  }
+  .card-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: var(--text-sub);
+    line-height: 1.8;
+    margin-bottom: 28px;
+  }
+  label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--text-sub);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--text); }
+  input.otp-input {
+    font-size: 28px;
+    letter-spacing: 0.3em;
+    text-align: center;
+    font-weight: 400;
+    padding: 16px;
+  }
+  .btn {
+    width: 100%;
+    background: var(--text);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    font-weight: 400;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: opacity 0.2s;
+  }
+  .btn:hover { opacity: 0.8; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-cancel { background: var(--accent); }
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    margin-top: 10px;
+  }
+  .order-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .order-item:hover { border-color: var(--text); background: #fdfcfb; }
+  .order-item:last-child { margin-bottom: 0; }
+  .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  .order-name {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 15px;
+    font-weight: 400;
+  }
+  .order-price { font-size: 14px; }
+  .order-meta { font-size: 12px; color: var(--text-sub); margin-bottom: 8px; line-height: 1.6; }
+  .order-products { font-size: 12px; color: var(--text-sub); border-top: 1px solid var(--border); padding-top: 8px; line-height: 1.8; }
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    border-radius: 1px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .tag-pending { background: #fff8e6; color: #a0720a; border: 1px solid #f0dfa0; }
+  .tag-paid { background: var(--success-light); color: var(--success); border: 1px solid #b8dfc9; }
+  .alert {
+    border-radius: var(--radius);
+    padding: 13px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 16px;
+  }
+  .alert-error { background: var(--accent-light); color: var(--accent); border: 1px solid #f0c4be; }
+  .alert-success { background: var(--success-light); color: var(--success); border: 1px solid #b8dfc9; }
+  .empty { text-align: center; padding: 32px 0; color: var(--text-sub); font-size: 13px; line-height: 1.8; }
+  .resend-link, .back-link {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-top: 14px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .step { display: none; }
+  .step.active { display: block; }
+  footer { margin-top: 40px; font-size: 11px; color: var(--text-sub); letter-spacing: 0.1em; text-align: center; }
+  @media (max-width: 480px) { .card { padding: 28px 20px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="https://enamorshop.com" class="logo">
+    EnamoR
+    <span>ORDER CANCELLATION</span>
+  </a>
+</header>
+
+<div class="card">
+
+  <!-- Step 1: Email -->
+  <div class="step active" id="step1">
+    <h1 class="card-title">取消訂單</h1>
+    <p class="card-desc">請輸入訂單時使用的電子郵件，系統將寄送驗證碼至您的信箱。<br>下單後 12 小時內可自行取消。</p>
+    <label>電子郵件（請與下單時相符）</label>
+    <input type="email" id="emailInput" placeholder="your@email.com" autocomplete="email">
+    <div id="step1Error"></div>
+    <button class="btn" id="sendOtpBtn" onclick="sendOtp()">發送驗證碼</button>
+  </div>
+
+  <!-- Step 2: OTP -->
+  <div class="step" id="step2">
+    <h1 class="card-title">輸入驗證碼</h1>
+    <p class="card-desc" id="step2Desc"></p>
+    <label>6 位數驗證碼</label>
+    <input type="text" id="otpInput" class="otp-input" placeholder="000000" maxlength="6" inputmode="numeric">
+    <div id="step2Error"></div>
+    <button class="btn" id="verifyBtn" onclick="verifyOtp()">驗證並查詢訂單</button>
+    <span class="resend-link" onclick="resendOtp()">重新發送驗證碼</span>
+    <span class="back-link" onclick="goStep(1)">← 重新輸入 Email</span>
+  </div>
+
+  <!-- Step 3: Order list -->
+  <div class="step" id="step3">
+    <h1 class="card-title">選擇要取消的訂單</h1>
+    <p class="card-desc">點選訂單以進行取消。</p>
+    <div id="orderList"></div>
+    <span class="back-link" onclick="goStep(1); resetAll()">← 返回首頁</span>
+  </div>
+
+  <!-- Step 4: Confirm -->
+  <div class="step" id="step4">
+    <h1 class="card-title">確認取消</h1>
+    <div id="confirmDetail"></div>
+    <div id="step4Error"></div>
+    <button class="btn btn-cancel" id="confirmBtn" onclick="confirmCancel()">確認取消此訂單</button>
+    <button class="btn btn-outline" onclick="goStep(3)">返回訂單列表</button>
+  </div>
+
+  <!-- Step 5: Result -->
+  <div class="step" id="step5">
+    <div id="resultContent"></div>
+    <span class="back-link" onclick="goStep(1); resetAll()">返回首頁</span>
+  </div>
+
+</div>
+
+<footer>© EnamoR 恩娜茉兒 &nbsp;·&nbsp; <a href="https://enamorshop.com" style="color:inherit;">enamorshop.com</a></footer>
+
+<script>
+const API = 'https://enamor-line-bot.vercel.app/api';
+let currentEmail = '';
+let selectedOrder = null;
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + n).classList.add('active');
+}
+
+function resetAll() {
+  currentEmail = '';
+  selectedOrder = null;
+  document.getElementById('emailInput').value = '';
+  document.getElementById('otpInput').value = '';
+  ['step1Error','step2Error','step4Error'].forEach(id => {
+    document.getElementById(id).innerHTML = '';
+  });
+}
+
+function showError(id, msg) {
+  document.getElementById(id).innerHTML = `<div class="alert alert-error">${msg}</div>`;
+}
+
+async function sendOtp() {
+  const email = document.getElementById('emailInput').value.trim();
+  if (!email || !email.includes('@')) {
+    showError('step1Error', '請輸入有效的電子郵件');
+    return;
+  }
+  const btn = document.getElementById('sendOtpBtn');
+  btn.disabled = true;
+  btn.textContent = '發送中...';
+  document.getElementById('step1Error').innerHTML = '';
+
+  try {
+    const res = await fetch(API + '/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || '發送失敗');
+
+    currentEmail = email;
+    document.getElementById('step2Desc').textContent =
+      `驗證碼已寄送至 ${email}，請於 10 分鐘內輸入。`;
+    document.getElementById('otpInput').value = '';
+    document.getElementById('step2Error').innerHTML = '';
+    goStep(2);
+    setTimeout(() => document.getElementById('otpInput').focus(), 100);
+
+  } catch (e) {
+    showError('step1Error', e.message || '發送失敗，請稍後再試');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '發送驗證碼';
+  }
+}
+
+async function resendOtp() {
+  document.getElementById('emailInput').value = currentEmail;
+  goStep(1);
+  await sendOtp();
+}
+
+async function verifyOtp() {
+  const otp = document.getElementById('otpInput').value.trim();
+  if (otp.length !== 6) {
+    showError('step2Error', '請輸入 6 位數驗證碼');
+    return;
+  }
+  const btn = document.getElementById('verifyBtn');
+  btn.disabled = true;
+  btn.textContent = '驗證中...';
+  document.getElementById('step2Error').innerHTML = '';
+
+  try {
+    const res = await fetch(API + '/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: currentEmail, otp })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      const errMap = {
+        otp_not_found: '驗證碼不存在，請重新發送',
+        otp_expired: '驗證碼已過期，請重新發送',
+        otp_invalid: '驗證碼錯誤，請重新輸入',
+      };
+      throw new Error(errMap[data.error] || '驗證失敗');
+    }
+
+    renderOrders(data.orders);
+    goStep(3);
+
+  } catch (e) {
+    showError('step2Error', e.message || '驗證失敗，請稍後再試');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '驗證並查詢訂單';
+  }
+}
+
+function renderOrders(orders) {
+  const container = document.getElementById('orderList');
+  if (!orders || orders.length === 0) {
+    container.innerHTML = '<div class="empty">目前沒有可取消的訂單。<br>訂單需在下單後 12 小時內申請取消。</div>';
+    return;
+  }
+  container.innerHTML = orders.map(o => {
+    const date = new Date(o.created_at).toLocaleString('zh-TW', {
+      month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+    const isPending = o.financial_status === 'pending';
+    const tag = isPending
+      ? '<span class="tag tag-pending">貨到付款</span>'
+      : '<span class="tag tag-paid">已付款</span>';
+    const items = o.items.map(i => `${i.title} × ${i.quantity}`).join('、');
+    const price = Math.floor(parseFloat(o.total_price));
+    const safeOrder = encodeURIComponent(JSON.stringify(o));
+    return `
+      <div class="order-item" onclick="selectOrder('${safeOrder}')">
+        <div class="order-header">
+          <span class="order-name">${o.name}${tag}</span>
+          <span class="order-price">NT$ ${price.toLocaleString()}</span>
+        </div>
+        <div class="order-meta">下單時間：${date}</div>
+        <div class="order-products">${items}</div>
+      </div>`;
+  }).join('');
+}
+
+function selectOrder(orderJson) {
+  const o = JSON.parse(decodeURIComponent(orderJson));
+  selectedOrder = o;
+  const isPending = o.financial_status === 'pending';
+  const price = Math.floor(parseFloat(o.total_price));
+  const items = o.items.map(i =>
+    `<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:13px">${i.title} × ${i.quantity}</div>`
+  ).join('');
+
+  document.getElementById('confirmDetail').innerHTML = `
+    <div class="order-item" style="margin:16px 0 4px;cursor:default">
+      <div class="order-header">
+        <span class="order-name">${o.name}</span>
+        <span class="order-price">NT$ ${price.toLocaleString()}</span>
+      </div>
+      <div style="margin-top:8px">${items}</div>
+    </div>
+    <div class="alert alert-error" style="margin-top:8px">
+      ${isPending ? '此訂單為貨到付款，取消後無需退款。' : '取消後將全額退款至原付款方式，需 3–5 個工作天。'}
+    </div>`;
+  document.getElementById('step4Error').innerHTML = '';
+  goStep(4);
+}
+
+async function confirmCancel() {
+  if (!selectedOrder) return;
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  btn.textContent = '處理中...';
+  document.getElementById('step4Error').innerHTML = '';
+
+  try {
+    const res = await fetch(API + '/cancel-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_id: selectedOrder.id, order_token: selectedOrder.token })
+    });
+    const data = await res.json();
+    const isPending = selectedOrder.financial_status === 'pending';
+
+    if (data.success) {
+      document.getElementById('resultContent').innerHTML = `
+        <div class="alert alert-success" style="margin-bottom:20px">
+          <strong>${selectedOrder.name} 已成功取消。</strong><br>
+          ${isPending ? '' : '退款將於 3–5 個工作天內退回原付款方式。'}
+        </div>
+        <p style="font-size:13px;color:var(--text-sub);line-height:1.8">
+          如有任何問題，請聯繫客服：<br>
+          <a href="mailto:service@enamorshop.com" style="color:var(--text)">service@enamorshop.com</a>
+        </p>`;
+      goStep(5);
+    } else {
+      const errMap = {
+        over_12_hours: '已超過 12 小時，無法自行取消，請聯繫客服。',
+        already_cancelled: '此訂單已取消。',
+        already_fulfilled: '訂單已出貨，請走退貨流程。',
+      };
+      showError('step4Error', errMap[data.error] || '發生錯誤，請稍後再試。');
+      btn.disabled = false;
+      btn.textContent = '確認取消此訂單';
+    }
+  } catch (e) {
+    showError('step4Error', '網路錯誤，請稍後再試。');
+    btn.disabled = false;
+    btn.textContent = '確認取消此訂單';
+  }
+}
+
+document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendOtp(); });
+document.getElementById('otpInput').addEventListener('keydown', e => { if (e.key === 'Enter') verifyOtp(); });
+</script>
+</body>
+</html>
