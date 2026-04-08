@@ -26,11 +26,10 @@ module.exports = async function handler(req, res) {
   const TOKEN = process.env.SHOPIFY_ORDER_TOKEN;
   try {
     const ordersRes = await fetch(
-      `https://${SHOP}/admin/api/2024-10/orders.json?email=${encodeURIComponent(email)}&status=open&limit=20&fields=id,name,created_at,cancelled_at,fulfillment_status,financial_status,total_price,line_items,token`,
+      `https://${SHOP}/admin/api/2024-10/orders.json?email=${encodeURIComponent(email)}&status=any&limit=20&fields=id,name,created_at,cancelled_at,fulfillment_status,financial_status,total_price,line_items,token`,
       { headers: { 'X-Shopify-Access-Token': TOKEN } }
     );
     const shopifyData = await ordersRes.json();
-    console.log('Shopify response:', JSON.stringify(shopifyData));
     const orders = shopifyData.orders;
     const now = new Date();
     const cancellable = (orders || [])
