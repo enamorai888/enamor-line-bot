@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing order_id or order_token' });
   }
 
-  const SHOP = process.env.SHOPIFY_SHOP_DOMAIN; // enamorshop.myshopify.com
+  const SHOP = process.env.SHOPIFY_DOMAIN;        // ← 改這行
   const TOKEN = process.env.SHOPIFY_ADMIN_TOKEN;
 
   try {
