@@ -13,7 +13,7 @@ module.exports = async function handler(req, res) {
 
   try {
     const orderRes = await fetch(
-      `https://${SHOP}/admin/api/2026-07/orders/${order_id}.json?fields=id,created_at,cancelled_at,fulfillment_status,financial_status,total_price`,
+      `https://${SHOP}/admin/api/2026-07/orders/${order_id}.json`,
       { headers: { 'X-Shopify-Access-Token': TOKEN } }
     );
     const { order } = await orderRes.json();
@@ -25,7 +25,30 @@ module.exports = async function handler(req, res) {
     if (hours > 12) return res.status(400).json({ error: 'over_12_hours' });
 
     const isPending = order.financial_status === 'pending';
-    const cancelBody = isPending ? {} : { refund: { shipping: { full_refund: true } } };
+
+    let cancelBody = {};
+
+    if (!isPending) {
+      // 計算退款明細
+      const refundLineItems = order.line_items.map(item => ({
+        line_item_id: item.id,
+        quantity: item.quantity,
+        restock_type: 'return'
+      }));
+
+      // 計算運費退款
+      const shippingAmount = order.shipping_lines.reduce((sum, s) => {
+        return sum + parseFloat(s.price || 0);
+      }, 0);
+
+      cancelBody = {
+        refund: {
+          shipping: { amount: shippingAmount.toFixed(2), full_refund: false },
+          refund_line_items: refundLineItems,
+          notify: true
+        }
+      };
+    }
 
     const cancelRes = await fetch(
       `https://${SHOP}/admin/api/2026-07/orders/${order_id}/cancel.json`,
@@ -41,7 +64,7 @@ module.exports = async function handler(req, res) {
 
     if (!cancelRes.ok) {
       const err = await cancelRes.json();
-      console.error('Cancel error:', err);
+      console.error('Cancel error:', JSON.stringify(err));
       return res.status(500).json({ error: 'cancel_failed' });
     }
 
