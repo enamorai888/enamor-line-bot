@@ -10,6 +10,7 @@ module.exports = async function handler(req, res) {
 
   const SHOP = process.env.SHOPIFY_DOMAIN;
   const TOKEN = process.env.SHOPIFY_ORDER_TOKEN;
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwVJj2tFDZ11CZWxsquHuhcI40NDSy3uWydiY-3TJqyiy5pxbVSfIVnkTXtWNWukZmG/exec';
 
   try {
     const orderRes = await fetch(
@@ -64,6 +65,24 @@ module.exports = async function handler(req, res) {
       console.error('Cancel error:', JSON.stringify(err));
       return res.status(500).json({ error: 'cancel_failed' });
     }
+
+    // 寫入 Google Sheet
+    const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    const paymentMethod = order.payment_gateway_names?.[0] || order.financial_status;
+    const note = isPending ? '貨到付款，無需退款' : '需人工退款';
+
+    await fetch(SHEET_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cancelled_at: now,
+        order_name: order.name,
+        email: order.email,
+        total_price: order.total_price,
+        payment_method: paymentMethod,
+        note: note
+      })
+    }).catch(e => console.error('Sheet write error:', e));
 
     return res.status(200).json({ success: true });
   } catch (err) {
