@@ -171,11 +171,11 @@ async function getSystemPrompt() {
 
 // ── Session 管理 ───────────────────────────────────────────────────────
 const sessions = new Map();
-const humanRequestSessions = new Map(); // 記錄正在等待問題類型的用戶
-const contactSessions = new Map(); // 記錄正在收集聯絡資訊的狀態 { caseType, history, step, phone }
-const ratingSessionUsers = new Set(); // 記錄正在等待評分的用戶
-const closingPendingSessions = new Set(); // 已送出關懷語，等待確認是否真的結束
-const ratingPendingSessions = new Set();  // 已送出評分邀請，等待評分中
+const humanRequestSessions = new Map();
+const contactSessions = new Map();
+const ratingSessionUsers = new Set();
+const closingPendingSessions = new Set();
+const ratingPendingSessions = new Set();
 
 function getSession(userId) {
   if (!sessions.has(userId)) sessions.set(userId, []);
@@ -284,7 +284,7 @@ async function saveRating(userId, rating) {
 }
 
 // ── 快捷選單 ───────────────────────────────────────────────────────────
-const QUICK_MENU = `請輸入數字選擇服務：\n1. 商品推薦\n2. 尺寸建議\n3. 免運說明\n4. 客服時間\n5. 訂單查詢\n6. 團購優惠\n7. 好友推薦\n8. 退換貨相關\n9. 配送相關\n10. 其他（請文字簡述）`;
+const QUICK_MENU = `請輸入數字選擇服務：\n1. 商品推薦\n2. 尺寸建議\n3. 免運說明\n4. 客服時間\n5. 訂單查詢\n6. 團購優惠\n7. 好友推薦\n8. 退換貨相關\n9. 配送相關\n10. 其他（請文字簡述）\n11. 取消訂單`;
 
 const QUICK_REPLIES = {
   '1': '__AI__',
@@ -296,7 +296,8 @@ const QUICK_REPLIES = {
   '7': '好友推薦活動說明即將上線，敬請期待！如有相關問題歡迎直接詢問。',
   '8': '我來幫您說明退換貨流程喔！7天鑑賞期內未拆封的商品可以申請退貨，登入官網 > 會員中心 > 訂單查詢申請，系統會提供 7-11 退貨便代號，3天內到 IBON 操作就完成了。\n\n需要注意的是，已拆封的貼身衣物基於衛生考量無法退換，試穿過後也是同樣的規定喔，購買前請您先確認一下。\n\n詳細說明可以參考這裡：https://enamorshop.com/pages/return_policy 有其他問題歡迎繼續問我 😊',
   '9': '現貨商品我們會在 1~3 個工作天內出貨，出貨後超商或宅配大約再 2~4 天就能收到喔！如果訂單裡有預購商品，需要等全部商品備齊後才會一起寄出。萊卡抗菌無縫系列預購約 14 天，其他預購款約 7 天。想確認特定商品的狀態，告訴我商品名稱我幫您查 😊',
-  '10': '__AI__'
+  '10': '__AI__',
+  '11': '下單後 12 小時內可自助取消訂單，點此連結操作：\nhttps://enamor-line-bot.vercel.app/cancel.html\n\n超過 12 小時或遇到問題，請輸入「真人」由客服協助。'
 };
 
 // ── 歡迎語 ─────────────────────────────────────────────────────────────
@@ -433,6 +434,13 @@ module.exports = async function handler(req, res) {
       continue;
     }
 
+    // ── 取消訂單關鍵字 ────────────────────────────────────────────────
+    const CANCEL_TRIGGERS = ['取消訂單', '取消', '不想要了', '想取消', '取消單'];
+    if (CANCEL_TRIGGERS.some(w => userText.includes(w))) {
+      await replyToLine(replyToken, '下單後 12 小時內可自助取消訂單，點此連結操作：\nhttps://enamor-line-bot.vercel.app/cancel.html\n\n超過 12 小時或遇到問題，請輸入「真人」由客服協助。');
+      continue;
+    }
+
     // ── 主動要求真人 ──────────────────────────────────────────────────
     const HUMAN_TRIGGERS = ['真人', '人工', '真人客服', '客服', '克服', '找人', '找客服'];
     if (HUMAN_TRIGGERS.some(w => userText === w || userText.startsWith(w))) {
@@ -451,7 +459,6 @@ module.exports = async function handler(req, res) {
     if (QUICK_REPLIES[userText]) {
       let quickReply = QUICK_REPLIES[userText];
       if (quickReply === '__AI__') {
-        // 走 AI 回覆
         const initMsg = userText === '1' ? '請問您想找哪類商品？例如：塑身、涼感、無痕、莫代爾……告訴我需求我來推薦。' : '請問您想詢問什麼？直接告訴我，我來協助您。';
         messages.push({ role: 'user', content: initMsg });
         await replyToLine(replyToken, initMsg);
