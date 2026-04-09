@@ -25,18 +25,15 @@ module.exports = async function handler(req, res) {
     if (hours > 12) return res.status(400).json({ error: 'over_12_hours' });
 
     const isPending = order.financial_status === 'pending';
-
     let cancelBody = {};
 
     if (!isPending) {
-      // 計算退款明細
       const refundLineItems = order.line_items.map(item => ({
         line_item_id: item.id,
         quantity: item.quantity,
-        restock_type: 'return'
+        restock_type: 'no_restock'
       }));
 
-      // 計算運費退款
       const shippingAmount = order.shipping_lines.reduce((sum, s) => {
         return sum + parseFloat(s.price || 0);
       }, 0);
