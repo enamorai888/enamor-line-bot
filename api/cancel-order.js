@@ -17,7 +17,6 @@ module.exports = async function handler(req, res) {
       { headers: { 'X-Shopify-Access-Token': TOKEN } }
     );
     const { order } = await orderRes.json();
-
     if (!order) return res.status(404).json({ error: 'Order not found' });
     if (order.cancelled_at) return res.status(400).json({ error: 'already_cancelled' });
     if (order.fulfillment_status === 'fulfilled') return res.status(400).json({ error: 'already_fulfilled' });
@@ -26,6 +25,7 @@ module.exports = async function handler(req, res) {
     if (hours > 12) return res.status(400).json({ error: 'over_12_hours' });
 
     const isPending = order.financial_status === 'pending';
+    const cancelBody = isPending ? {} : { refund: { shipping: { full_refund: true } } };
 
     const cancelRes = await fetch(
       `https://${SHOP}/admin/api/2026-07/orders/${order_id}/cancel.json`,
@@ -35,7 +35,7 @@ module.exports = async function handler(req, res) {
           'X-Shopify-Access-Token': TOKEN,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(isPending ? {} : { refund: { shipping: { full_refund: true } } })
+        body: JSON.stringify(cancelBody)
       }
     );
 
