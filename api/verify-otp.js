@@ -9,12 +9,10 @@ module.exports = async function handler(req, res) {
   if (!email || !otp) return res.status(400).json({ error: 'Missing fields' });
 
   const key = `otp:${email.toLowerCase()}`;
-
   const getRes = await fetch(`${process.env.KV_REST_API_URL}/get/${key}`, {
     headers: { Authorization: `Bearer ${process.env.KV_REST_API_TOKEN}` }
   });
   const { result } = await getRes.json();
-
   if (!result) return res.status(400).json({ error: 'otp_not_found' });
   if (result !== otp) return res.status(400).json({ error: 'otp_invalid' });
 
@@ -24,16 +22,24 @@ module.exports = async function handler(req, res) {
 
   const SHOP = process.env.SHOPIFY_DOMAIN;
   const TOKEN = process.env.SHOPIFY_ORDER_TOKEN;
+
   try {
     const ordersRes = await fetch(
-      `https://${SHOP}/admin/api/2026-07/orders.json?email=${encodeURIComponent(email)}&status=any&limit=20&fields=id,name,created_at,cancelled_at,fulfillment_status,financial_status,total_price,line_items,token`,
+      `https://${SHOP}/admin/api/2026-07/orders.json?email=${encodeURIComponent(email)}&status=any&limit=20&fields=id,name,created_at,cancelled_at,fulfillment_status,financial_status,total_price,line_items`,
       { headers: { 'X-Shopify-Access-Token': TOKEN } }
     );
+
     const shopifyData = await ordersRes.json();
-    console.log('Shopify response:', JSON.stringify(shopifyData));
-    const orders = shopifyData.orders;
+    console.log('Shopify status:', ordersRes.status);
+    console.log('Shopify response:', JSON.stringify(shopifyData).slice(0, 300));
+
+    if (!ordersRes.ok) {
+      return res.status(500).json({ error: 'shopify_error', detail: shopifyData });
+    }
+
+    const orders = shopifyData.orders || [];
     const now = new Date();
-    const cancellable = (orders || [])
+    const cancellable = orders
       .filter(o => {
         if (o.cancelled_at) return false;
         if (o.fulfillment_status === 'fulfilled') return false;
@@ -46,9 +52,9 @@ module.exports = async function handler(req, res) {
         created_at: o.created_at,
         financial_status: o.financial_status,
         total_price: o.total_price,
-        token: o.token,
         items: o.line_items.map(i => ({ title: i.title, quantity: i.quantity }))
       }));
+
     return res.status(200).json({ success: true, orders: cancellable });
   } catch (err) {
     console.error(err);
