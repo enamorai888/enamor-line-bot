@@ -1,3 +1,5 @@
+const nodemailer = require('nodemailer');
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -56,37 +58,4 @@ module.exports = async function handler(req, res) {
           'X-Shopify-Access-Token': TOKEN,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(cancelBody)
-      }
-    );
-
-    if (!cancelRes.ok) {
-      const err = await cancelRes.json();
-      console.error('Cancel error:', JSON.stringify(err));
-      return res.status(500).json({ error: 'cancel_failed' });
-    }
-
-    // 寫入 Google Sheet
-    const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
-    const paymentMethod = order.payment_gateway_names?.[0] || order.financial_status;
-    const note = isPending ? '貨到付款，無需退款' : '需人工退款';
-
-    await fetch(SHEET_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        cancelled_at: now,
-        order_name: order.name,
-        email: order.email,
-        total_price: order.total_price,
-        payment_method: paymentMethod,
-        note: note
-      })
-    }).catch(e => console.error('Sheet write error:', e));
-
-    return res.status(200).json({ success: true });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
-  }
-};
+        body: JSON.strin
