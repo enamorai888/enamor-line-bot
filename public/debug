@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnamoR — 客服排查工具</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --text: #e8e4dc;
+    --text-dim: #6b6560;
+    --accent: #c9a96e;
+    --accent-dim: rgba(201,169,110,0.12);
+    --ok: #5db87a;
+    --ok-dim: rgba(93,184,122,0.1);
+    --warn: #e0a84a;
+    --warn-dim: rgba(224,168,74,0.1);
+    --err: #e05a5a;
+    --err-dim: rgba(224,90,90,0.1);
+    --mono: 'DM Mono', monospace;
+    --sans: 'Noto Sans TC', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* ── 密碼鎖 ── */
+  #lock-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 32px; z-index: 999;
+  }
+
+  .lock-logo img, .logo img {
+    height: 28px;
+    opacity: 0.9;
+  }
+
+  .lock-title {
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  #lock-form {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 12px;
+  }
+
+  #pw-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 10px 16px;
+    width: 240px;
+    outline: none;
+    text-align: center;
+    letter-spacing: 0.1em;
+    transition: border-color 0.2s;
+  }
+  #pw-input:focus { border-color: var(--accent); }
+
+  #pw-btn {
+    background: var(--accent);
+    color: #0e0e0e;
+    border: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 9px 24px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  #pw-btn:hover { opacity: 0.85; }
+
+  #pw-error {
+    font-size: 11px;
+    color: var(--err);
+    letter-spacing: 0.05em;
+    height: 16px;
+  }
+
+  /* ── 主體 ── */
+  #app { display: none; }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .header-left {
+    display: flex; align-items: baseline; gap: 16px;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+  }
+
+  .header-tag {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    background: var(--surface2);
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+  }
+
+  .header-time {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    display: flex; flex-direction: column; gap: 24px;
+  }
+
+  /* ── 區塊 ── */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .panel-header:hover { background: var(--surface2); }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .panel-chevron {
+    font-size: 10px;
+    color: var(--text-dim);
+    transition: transform 0.2s;
+  }
+  .panel-chevron.open { transform: rotate(180deg); }
+
+  .panel-body {
+    padding: 20px;
+    display: none;
+  }
+  .panel-body.open { display: block; }
+
+  /* ── 狀態燈號 ── */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .status-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .status-dot.ok { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+  .status-dot.warn { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+  .status-dot.err { background: var(--err); box-shadow: 0 0 6px var(--err); }
+
+  .status-info { flex: 1; min-width: 0; }
+
+  .status-name {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .status-msg {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  /* ── 按鈕 ── */
+  .btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: var(--accent-dim); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-sm {
+    padding: 5px 12px;
+    font-size: 10px;
+  }
+
+  /* ── 輸入 ── */
+  .input-row {
+    display: flex; gap: 8px; margin-bottom: 12px;
+  }
+
+  input[type=text], textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 8px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    flex: 1;
+  }
+  input[type=text]:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 72px; }
+
+  /* ── 對話框 ── */
+  .chat-box {
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    height: 260px;
+    overflow-y: auto;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .msg {
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    max-width: 85%;
+    border: 1px solid var(--border);
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .msg.ai {
+    align-self: flex-start;
+    background: var(--surface);
+    color: var(--text);
+  }
+
+  .msg.system {
+    align-self: center;
+    background: transparent;
+    border-color: transparent;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── 商品結果 ── */
+  .product-grid {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .product-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 16px;
+    align-items: start;
+  }
+
+  .product-title {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .product-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+
+  .product-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 2px 6px;
+    border: 1px solid;
+    text-transform: uppercase;
+  }
+  .badge-preorder { color: var(--warn); border-color: var(--warn); background: var(--warn-dim); }
+  .badge-instock { color: var(--ok); border-color: var(--ok); background: var(--ok-dim); }
+
+  /* ── log ── */
+  .log-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    max-height: 180px;
+    overflow-y: auto;
+    line-height: 1.7;
+  }
+
+  .log-ok { color: var(--ok); }
+  .log-err { color: var(--err); }
+  .log-warn { color: var(--warn); }
+  .log-info { color: var(--accent); }
+
+  /* ── FAQ ── */
+  .faq-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .faq-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .faq-item:hover { border-color: var(--accent); }
+
+  .faq-q { color: var(--text); margin-bottom: 4px; }
+  .faq-a { color: var(--text-dim); font-size: 11px; display: none; line-height: 1.6; }
+  .faq-a.open { display: block; }
+
+  /* ── 分隔 ── */
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 16px 0;
+  }
+
+  /* ── loading ── */
+  .spinner {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 1px solid var(--text-dim);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--surface); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .lock-logo img { height: 36px; opacity: 0.92; }
+  .logo img { height: 24px; opacity: 0.92; }
+</style>
+</head>
+<body>
+
+<!-- 密碼鎖 -->
+<div id="lock-screen">
+  <div class="lock-logo"><img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-W.png" alt="EnamoR"></div>
+  <div class="lock-title">Internal Debug Console</div>
+  <div id="lock-form">
+    <input type="password" id="pw-input" placeholder="輸入密碼" autocomplete="off">
+    <button class="btn" id="pw-btn">進入</button>
+    <div id="pw-error"></div>
+  </div>
+</div>
+
+<!-- 主體 -->
+<div id="app">
+  <header>
+    <div class="header-left">
+      <div class="logo"><img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-W.png" alt="EnamoR"></div>
+      <div class="header-tag">Debug Console</div>
+    </div>
+    <div class="header-time" id="clock"></div>
+  </header>
+
+  <main>
+
+    <!-- 1. 系統狀態 -->
+    <div class="panel">
+      <div class="panel-header" onclick="togglePanel('status')">
+        <div class="panel-title">
+          <span>01</span><span>系統狀態</span>
+        </div>
+        <div class="panel-chevron open" id="chevron-status">▲</div>
+      </div>
+      <div class="panel-body open" id="body-status">
+        <div class="status-grid" id="status-grid">
+          <div class="status-card"><div class="status-dot" id="dot-claude"></div><div class="status-info"><div class="status-name">Claude API</div><div class="status-msg" id="msg-claude">未檢查</div></div></div>
+          <div class="status-card"><div class="status-dot" id="dot-sheet"></div><div class="status-info"><div class="status-name">Google Sheet FAQ</div><div class="status-msg" id="msg-sheet">未檢查</div></div></div>
+          <div class="status-card"><div class="status-dot" id="dot-shopify"></div><div class="status-info"><div class="status-name">Shopify API</div><div class="status-msg" id="msg-shopify">未檢查</div></div></div>
+          <div class="status-card"><div class="status-dot" id="dot-vercel"></div><div class="status-info"><div class="status-name">Vercel Proxy</div><div class="status-msg" id="msg-vercel">未檢查</div></div></div>
+        </div>
+        <div style="margin-top:14px;">
+          <button class="btn" id="check-btn" onclick="runAllChecks()">執行全部檢查</button>
+        </div>
+        <div class="log-box" id="status-log" style="margin-top:12px;display:none;"></div>
+      </div>
+    </div>
+
+    <!-- 2. AI 對話測試 -->
+    <div class="panel">
+      <div class="panel-header" onclick="togglePanel('chat')">
+        <div class="panel-title"><span>02</span><span>AI 對話測試</span></div>
+        <div class="panel-chevron" id="chevron-chat">▼</div>
+      </div>
+      <div class="panel-body" id="body-chat">
+        <div class="section-label">直接測試 AI 回覆（不經 LINE）</div>
+        <div class="chat-box" id="chat-box">
+          <div class="msg system">輸入問題測試 AI 回覆 ↓</div>
+        </div>
+        <div class="input-row">
+          <input type="text" id="chat-input" placeholder="輸入測試問題…" onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-sm" onclick="sendChat()">送出</button>
+          <button class="btn btn-sm" onclick="clearChat()">清除</button>
+        </div>
+        <div class="log-box" id="chat-log" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- 3. Shopify 商品查詢 -->
+    <div class="panel">
+      <div class="panel-header" onclick="togglePanel('product')">
+        <div class="panel-title"><span>03</span><span>Shopify 商品查詢</span></div>
+        <div class="panel-chevron" id="chevron-product">▼</div>
+      </div>
+      <div class="panel-body" id="body-product">
+        <div class="section-label">查看 AI 收到的商品資料</div>
+        <div class="input-row">
+          <input type="text" id="product-input" placeholder="輸入關鍵字（例：抗菌、涼感、塑身）" onkeydown="if(event.key==='Enter')searchProducts()">
+          <button class="btn btn-sm" onclick="searchProducts()">查詢</button>
+        </div>
+        <div id="product-result"></div>
+        <div class="log-box" id="product-log" style="display:none;margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <!-- 4. Google Sheet FAQ -->
+    <div class="panel">
+      <div class="panel-header" onclick="togglePanel('faq')">
+        <div class="panel-title"><span>04</span><span>Google Sheet FAQ 內容</span></div>
+        <div class="panel-chevron" id="chevron-faq">▼</div>
+      </div>
+      <div class="panel-body" id="body-faq">
+        <div class="section-label">確認 FAQ 是否正確載入</div>
+        <button class="btn btn-sm" style="margin-bottom:14px;" onclick="loadFAQ()">載入 FAQ</button>
+        <div id="faq-result"></div>
+      </div>
+    </div>
+
+    <!-- 5. AI 排查助手 -->
+    <div class="panel">
+      <div class="panel-header" onclick="togglePanel('ai-helper')">
+        <div class="panel-title"><span>05</span><span>AI 排查助手</span></div>
+        <div class="panel-chevron" id="chevron-ai-helper">▼</div>
+      </div>
+      <div class="panel-body" id="body-ai-helper">
+        <div class="section-label">描述問題或上傳截圖 → AI 給排查方向與客服話術</div>
+
+        <!-- 截圖上傳區 -->
+        <div id="drop-zone" onclick="document.getElementById('img-upload').click()"
+          style="border:1px dashed var(--border);padding:20px;text-align:center;cursor:pointer;margin-bottom:12px;transition:border-color 0.2s;background:var(--surface2);">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-dim);letter-spacing:0.15em;">
+            點擊上傳截圖（可選）
+          </div>
+          <div id="img-preview" style="margin-top:10px;"></div>
+        </div>
+        <input type="file" id="img-upload" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+
+        <!-- 問題輸入 -->
+        <textarea id="helper-input" placeholder="描述遇到的問題，例如：&#10;「折扣 badge 顯示『缺少有效 ID』，自己測試沒問題，客人有截圖」&#10;「LINE Bot 沒有回覆客人，昨天還正常」&#10;「員工問：這個商品要補什麼 tag 才會出現在抗菌系列？」"></textarea>
+
+        <div style="display:flex;gap:8px;margin-top:10px;align-items:center;">
+          <button class="btn" id="helper-btn" onclick="sendHelperQuery()">送出給 AI 分析</button>
+          <button class="btn btn-sm" onclick="clearHelper()" style="border-color:var(--border);color:var(--text-dim)">清除</button>
+          <div id="helper-thinking" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);display:none;">
+            <span class="spinner"></span>分析中…
+          </div>
+        </div>
+
+        <!-- AI 回覆 -->
+        <div id="helper-result" style="margin-top:16px;"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── 設定 ────────────────────────────────────────────────
+const PASSWORD = 'ENAMOR_DEBUG_2026'; // ← 改成你要的密碼
+const BASE = 'https://enamor-line-bot.vercel.app';
+const PROXY_TOKEN = '28447208'; // ← 改成跟 Vercel PROXY_SECRET 一樣的值
+
+// ── 密碼鎖 ──────────────────────────────────────────────
+document.getElementById('pw-btn').onclick = unlock;
+document.getElementById('pw-input').onkeydown = e => { if(e.key==='Enter') unlock(); };
+
+function unlock() {
+  const val = document.getElementById('pw-input').value;
+  if (val === PASSWORD) {
+    document.getElementById('lock-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    startClock();
+    runAllChecks();
+  } else {
+    const err = document.getElementById('pw-error');
+    err.textContent = '密碼錯誤';
+    document.getElementById('pw-input').value = '';
+    setTimeout(() => err.textContent = '', 2000);
+  }
+}
+
+// ── 時鐘 ────────────────────────────────────────────────
+function startClock() {
+  const el = document.getElementById('clock');
+  const tick = () => {
+    const now = new Date();
+    el.textContent = now.toLocaleString('zh-TW', { hour12: false });
+  };
+  tick(); setInterval(tick, 1000);
+}
+
+// ── 面板開關 ────────────────────────────────────────────
+function togglePanel(id) {
+  const body = document.getElementById('body-' + id);
+  const chevron = document.getElementById('chevron-' + id);
+  const isOpen = body.classList.toggle('open');
+  chevron.textContent = isOpen ? '▲' : '▼';
+  chevron.classList.toggle('open', isOpen);
+}
+
+// ── log 工具 ────────────────────────────────────────────
+function log(boxId, text, type = '') {
+  const box = document.getElementById(boxId);
+  box.style.display = 'block';
+  const line = document.createElement('div');
+  line.className = type ? 'log-' + type : '';
+  line.textContent = `[${new Date().toLocaleTimeString('zh-TW', {hour12:false})}] ${text}`;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setStatus(key, state, msg) {
+  document.getElementById('dot-' + key).className = 'status-dot ' + state;
+  document.getElementById('msg-' + key).textContent = msg;
+}
+
+// ── 全部狀態檢查 ────────────────────────────────────────
+async function runAllChecks() {
+  const btn = document.getElementById('check-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>檢查中…';
+  document.getElementById('status-log').style.display = 'none';
+  document.getElementById('status-log').innerHTML = '';
+
+  await checkVercel();
+  await checkClaude();
+  await checkSheet();
+  await checkShopify();
+
+  btn.disabled = false;
+  btn.textContent = '重新檢查';
+}
+
+async function checkVercel() {
+  try {
+    const r = await fetch(`${BASE}/api/claude-proxy`, { method: 'GET' });
+    // 405 = endpoint 存在但不接受 GET → 正常
+    if (r.status === 405 || r.status === 200) {
+      setStatus('vercel', 'ok', 'Endpoint 正常');
+      log('status-log', 'Vercel Proxy: OK (' + r.status + ')', 'ok');
+    } else {
+      setStatus('vercel', 'warn', 'HTTP ' + r.status);
+      log('status-log', 'Vercel Proxy: HTTP ' + r.status, 'warn');
+    }
+  } catch(e) {
+    setStatus('vercel', 'err', '無法連線');
+    log('status-log', 'Vercel Proxy: 連線失敗 — ' + e.message, 'err');
+  }
+}
+
+async function checkClaude() {
+  try {
+    const r = await fetch(`${BASE}/api/claude-proxy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+      body: JSON.stringify({ messages: [{ role: 'user', content: 'ping' }], system: '只回覆 pong', max_tokens: 10 })
+    });
+    if (r.ok) {
+      const d = await r.json();
+      const txt = d.content?.[0]?.text || '';
+      setStatus('claude', 'ok', txt.slice(0,30) || '回應正常');
+      log('status-log', 'Claude API: OK — 回覆「' + txt.slice(0,40) + '」', 'ok');
+    } else {
+      const txt = await r.text();
+      setStatus('claude', 'err', 'HTTP ' + r.status);
+      log('status-log', 'Claude API: HTTP ' + r.status + ' — ' + txt.slice(0,80), 'err');
+    }
+  } catch(e) {
+    setStatus('claude', 'err', '呼叫失敗');
+    log('status-log', 'Claude API: 失敗 — ' + e.message, 'err');
+  }
+}
+
+async function checkSheet() {
+  try {
+    const r = await fetch(`${BASE}/api/sheet-reader`);
+    if (r.ok) {
+      const d = await r.json();
+      const keys = Object.keys(d || {});
+      setStatus('sheet', 'ok', '已載入 ' + keys.length + ' 個頁籤');
+      log('status-log', 'Sheet FAQ: OK — 頁籤：' + keys.join(', '), 'ok');
+    } else {
+      setStatus('sheet', 'err', 'HTTP ' + r.status);
+      log('status-log', 'Sheet FAQ: HTTP ' + r.status, 'err');
+    }
+  } catch(e) {
+    setStatus('sheet', 'err', '連線失敗');
+    log('status-log', 'Sheet FAQ: 失敗 — ' + e.message, 'err');
+  }
+}
+
+async function checkShopify() {
+  try {
+    const r = await fetch(`${BASE}/api/shopify-products?q=抗菌`);
+    if (r.ok) {
+      const d = await r.json();
+      const count = Array.isArray(d) ? d.length : (d.products?.length || 0);
+      setStatus('shopify', 'ok', '回傳 ' + count + ' 筆商品');
+      log('status-log', 'Shopify API: OK — ' + count + ' 筆', 'ok');
+    } else {
+      setStatus('shopify', 'warn', 'HTTP ' + r.status);
+      log('status-log', 'Shopify API: HTTP ' + r.status, 'warn');
+    }
+  } catch(e) {
+    setStatus('shopify', 'err', '連線失敗');
+    log('status-log', 'Shopify API: 失敗 — ' + e.message, 'err');
+  }
+}
+
+// ── AI 對話測試 ──────────────────────────────────────────
+const chatHistory = [];
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  addMsg('user', text);
+  chatHistory.push({ role: 'user', content: text });
+
+  const thinking = addMsg('ai', '▋');
+
+  try {
+    const r = await fetch(`${BASE}/api/claude-proxy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+      body: JSON.stringify({
+        messages: chatHistory.slice(-10),
+        max_tokens: 600
+      })
+    });
+    const d = await r.json();
+    const reply = d.content?.[0]?.text || '（無回覆）';
+    thinking.textContent = reply;
+    chatHistory.push({ role: 'assistant', content: reply });
+    log('chat-log', 'tokens: ' + (d.usage?.output_tokens || '?') + ' output', 'info');
+  } catch(e) {
+    thinking.textContent = '⚠ 呼叫失敗：' + e.message;
+    thinking.style.color = 'var(--err)';
+    log('chat-log', e.message, 'err');
+  }
+
+  const box = document.getElementById('chat-box');
+  box.scrollTop = box.scrollHeight;
+}
+
+function addMsg(role, text) {
+  const box = document.getElementById('chat-box');
+  const el = document.createElement('div');
+  el.className = 'msg ' + role;
+  el.textContent = text;
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+  return el;
+}
+
+function clearChat() {
+  chatHistory.length = 0;
+  const box = document.getElementById('chat-box');
+  box.innerHTML = '<div class="msg system">對話已清除</div>';
+  document.getElementById('chat-log').style.display = 'none';
+  document.getElementById('chat-log').innerHTML = '';
+}
+
+// ── Shopify 商品查詢 ─────────────────────────────────────
+async function searchProducts() {
+  const q = document.getElementById('product-input').value.trim();
+  const result = document.getElementById('product-result');
+  const logEl = document.getElementById('product-log');
+  logEl.style.display = 'none'; logEl.innerHTML = '';
+
+  if (!q) { result.innerHTML = '<div style="font-size:11px;color:var(--text-dim)">請輸入關鍵字</div>'; return; }
+
+  result.innerHTML = '<div style="font-size:11px;color:var(--text-dim)"><span class="spinner"></span>查詢中…</div>';
+
+  try {
+    const r = await fetch(`${BASE}/api/shopify-products?q=${encodeURIComponent(q)}`);
+    const raw = await r.text();
+    log('product-log', 'HTTP ' + r.status + ' | ' + raw.length + ' bytes', r.ok ? 'ok' : 'err');
+
+    const data = JSON.parse(raw);
+    const items = Array.isArray(data) ? data : (data.products || []);
+
+    if (!items.length) {
+      result.innerHTML = '<div style="font-size:11px;color:var(--text-dim)">查無結果</div>';
+      return;
+    }
+
+    result.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'product-grid';
+
+    items.slice(0, 10).forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'product-item';
+
+      const preorder = p.preorder_type || '';
+      const badge = preorder
+        ? `<span class="product-badge badge-preorder">${preorder}</span>`
+        : `<span class="product-badge badge-instock">現貨</span>`;
+
+      const price = p.price ? `NT$ ${p.price}` : '';
+      const size = p.size_options ? `尺寸：${p.size_options}` : '';
+      const stretch = p.stretch_score ? `彈力：${p.stretch_score}` : '';
+      const meta = [price, size, stretch].filter(Boolean).join(' ｜ ');
+
+      item.innerHTML = `
+        <div>
+          <div class="product-title">${p.title || p.name || '—'}</div>
+          <div class="product-meta">${meta || '—'}</div>
+        </div>
+        <div>${badge}</div>
+      `;
+      grid.appendChild(item);
+    });
+
+    result.appendChild(grid);
+    if (items.length > 10) {
+      const more = document.createElement('div');
+      more.style.cssText = 'font-size:11px;color:var(--text-dim);margin-top:8px;';
+      more.textContent = `共 ${items.length} 筆，顯示前 10 筆`;
+      result.appendChild(more);
+    }
+
+  } catch(e) {
+    result.innerHTML = '<div style="font-size:11px;color:var(--err)">解析失敗：' + e.message + '</div>';
+    log('product-log', e.message, 'err');
+  }
+}
+
+// ── FAQ 載入 ─────────────────────────────────────────────
+// ── AI 排查助手 ──────────────────────────────────────────
+const HELPER_SYSTEM = `你是 EnamoR 恩娜茉兒品牌的 AI 排查助手，同時具備品牌決策思維。
+
+## 品牌與系統背景
+- 品牌：EnamoR 恩娜茉兒，台灣MIT女性內衣褲品牌，主力商品為 ZERO-TEX 萊卡抗菌系列
+- 網站：enamorshop.com，Shopify（Prestige 主題）
+- 核心系統：LINE Bot（Vercel）、AI 客服 Widget（enamor-chat-widget.liquid）、AkoHub 會員綁定、Klaviyo 行銷自動化
+- 折扣架構：數量折扣（3件9折、6件85折、12件8折），Upcart 購物車抽屜
+- 預購系統：A1（生產製程中）、A2（長銷補貨）、B（流行性商品），762個變體設 inventory_policy: continue
+- 商品 tag 架構：Rise:* 分組標籤、Feature:Cooling 功能標籤
+
+## 常見問題類型與排查邏輯
+- **折扣顯示錯誤**：多為 AkoHub JS 未載入完就渲染 cart（race condition），重新整理通常解決，不影響實際折扣計算
+- **LINE Bot 不回覆**：先查 Vercel 部署狀態、LINE Channel Token 是否有效、webhook URL 是否正確設定
+- **AI 答錯/答不到**：查 Google Sheet FAQ 是否有該類問題、system prompt 是否涵蓋、商品 metafield 是否開放 Storefront API
+- **商品不顯示在集合頁**：查 tag 是否正確、Smart Collection 條件、Storefront API 是否有快取
+- **預購 banner 不顯示**：查 preorder_type metafield 是否填寫、enamor-preorder-banner.liquid 是否正確 render
+
+## 思維體決策邏輯
+遇到員工提問時：
+1. 先評估問題品質（有沒有帶自己的判斷？背景清楚嗎？）
+2. 如果問題模糊，先要求補充，不直接給答案
+3. 給方向與框架，不代替決策
+4. 答案在 SOP 裡找得到的，指引去找 SOP，不重複解釋
+
+## 回覆格式
+請依以下結構回覆：
+
+**【問題診斷】**
+用一兩句說明最可能的原因
+
+**【排查步驟】**
+列出 2-4 個具體確認步驟
+
+**【客服話術】**（如為前台顯示問題）
+提供可直接複製給客人的回覆文字
+
+**【升級條件】**
+說明什麼情況需要升級給怡君本人處理
+
+回覆用繁體中文，語氣直接，不需要客套語。`;
+
+let helperImageBase64 = null;
+let helperImageType = null;
+
+function handleImageUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const result = ev.target.result;
+    helperImageBase64 = result.split(',')[1];
+    helperImageType = file.type;
+    const preview = document.getElementById('img-preview');
+    preview.innerHTML = `<img src="${result}" style="max-height:120px;max-width:100%;border:1px solid var(--border);">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--ok);margin-top:6px;">✓ ${file.name}</div>`;
+    document.getElementById('drop-zone').style.borderColor = 'var(--ok)';
+  };
+  reader.readAsDataURL(file);
+}
+
+// drag & drop
+document.addEventListener('DOMContentLoaded', () => {
+  const dz = document.getElementById('drop-zone');
+  if (!dz) return;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; });
+  dz.addEventListener('dragleave', () => { dz.style.borderColor = helperImageBase64 ? 'var(--ok)' : 'var(--border)'; });
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById('img-upload').files = dt.files;
+      handleImageUpload({ target: { files: [file] } });
+    }
+  });
+});
+
+async function sendHelperQuery() {
+  const text = document.getElementById('helper-input').value.trim();
+  if (!text && !helperImageBase64) return;
+
+  const btn = document.getElementById('helper-btn');
+  const thinking = document.getElementById('helper-thinking');
+  const result = document.getElementById('helper-result');
+
+  btn.disabled = true;
+  thinking.style.display = 'inline-flex';
+  result.innerHTML = '';
+
+  // 組 message content
+  const content = [];
+  if (helperImageBase64) {
+    content.push({ type: 'image', source: { type: 'base64', media_type: helperImageType, data: helperImageBase64 } });
+  }
+  content.push({ type: 'text', text: text || '請分析這張截圖的問題' });
+
+  try {
+    const r = await fetch(`${BASE}/api/claude-proxy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+      body: JSON.stringify({
+        system: HELPER_SYSTEM,
+        messages: [{ role: 'user', content }],
+        max_tokens: 1000
+      })
+    });
+
+    const d = await r.json();
+    const reply = d.content?.[0]?.text || '（無回覆）';
+
+    // 渲染結果
+    result.innerHTML = '';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:var(--surface2);border:1px solid var(--border);padding:20px;';
+
+    // 簡單的 markdown-like 渲染
+    const lines = reply.split('\n');
+    lines.forEach(line => {
+      const p = document.createElement('div');
+      if (line.startsWith('**【') && line.includes('】**')) {
+        p.style.cssText = 'font-family:var(--mono);font-size:11px;letter-spacing:0.1em;color:var(--accent);margin:14px 0 6px;';
+        p.textContent = line.replace(/\*\*/g, '');
+      } else if (line.startsWith('- ') || line.match(/^\d+\./)) {
+        p.style.cssText = 'font-size:12px;line-height:1.7;color:var(--text);padding-left:12px;margin:2px 0;';
+        p.textContent = line;
+      } else if (line.trim() === '') {
+        p.style.height = '4px';
+      } else {
+        p.style.cssText = 'font-size:13px;line-height:1.7;color:var(--text);margin:2px 0;';
+        p.textContent = line.replace(/\*\*/g, '');
+      }
+      box.appendChild(p);
+    });
+
+    // 複製按鈕
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn btn-sm';
+    copyBtn.textContent = '複製全文';
+    copyBtn.style.marginTop = '14px';
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(reply);
+      copyBtn.textContent = '已複製 ✓';
+      setTimeout(() => copyBtn.textContent = '複製全文', 2000);
+    };
+    box.appendChild(copyBtn);
+
+    result.appendChild(box);
+
+  } catch(e) {
+    result.innerHTML = `<div style="font-size:12px;color:var(--err);padding:12px;border:1px solid var(--err);background:var(--err-dim);">呼叫失敗：${e.message}</div>`;
+  }
+
+  btn.disabled = false;
+  thinking.style.display = 'none';
+}
+
+function clearHelper() {
+  document.getElementById('helper-input').value = '';
+  document.getElementById('helper-result').innerHTML = '';
+  document.getElementById('img-preview').innerHTML = '';
+  document.getElementById('drop-zone').style.borderColor = 'var(--border)';
+  document.getElementById('img-upload').value = '';
+  helperImageBase64 = null;
+  helperImageType = null;
+}
+
+// ── FAQ 載入 ─────────────────────────────────────────────
+async function loadFAQ() {
+  const result = document.getElementById('faq-result');
+  result.innerHTML = '<div style="font-size:11px;color:var(--text-dim)"><span class="spinner"></span>載入中…</div>';
+
+  try {
+    const r = await fetch(`${BASE}/api/sheet-reader`);
+    const data = await r.json();
+
+    result.innerHTML = '';
+    Object.entries(data).forEach(([tab, rows]) => {
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.style.marginTop = '16px';
+      label.textContent = '頁籤：' + tab + '（' + rows.length + ' 筆）';
+      result.appendChild(label);
+
+      const list = document.createElement('div');
+      list.className = 'faq-list';
+
+      rows.slice(0, 30).forEach(row => {
+        const q = row.question || row.Q || row['問題'] || JSON.stringify(row).slice(0, 60);
+        const a = row.answer || row.A || row['回覆'] || '';
+
+        const item = document.createElement('div');
+        item.className = 'faq-item';
+        item.innerHTML = `<div class="faq-q">${q}</div><div class="faq-a">${a}</div>`;
+        item.onclick = () => item.querySelector('.faq-a').classList.toggle('open');
+        list.appendChild(item);
+      });
+
+      if (rows.length > 30) {
+        const more = document.createElement('div');
+        more.style.cssText = 'font-size:11px;color:var(--text-dim);padding:6px 0;';
+        more.textContent = `…還有 ${rows.length - 30} 筆`;
+        list.appendChild(more);
+      }
+
+      result.appendChild(list);
+    });
+
+  } catch(e) {
+    result.innerHTML = '<div style="font-size:11px;color:var(--err)">載入失敗：' + e.message + '</div>';
+  }
+}
+</script>
+</body>
+</html>
