@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EnamoR 舊站會員搬移申請</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+      background: #FAFAF7;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 40px 16px 60px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 36px 28px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+    .logo {
+      font-size: 22px;
+      letter-spacing: 0.12em;
+      font-weight: 300;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+    }
+    h1 {
+      font-size: 17px;
+      font-weight: 500;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .desc {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: #444;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #1a1a1a;
+      background: #fafafa;
+      margin-bottom: 20px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #b89b8a; background: #fff; }
+    .note {
+      font-size: 12px;
+      color: #999;
+      margin-top: -16px;
+      margin-bottom: 20px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .msg {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      line-height: 1.6;
+      display: none;
+    }
+    .msg.success { background: #f0faf4; color: #2d7a4f; display: block; }
+    .msg.error   { background: #fff0f0; color: #c0392b; display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">EnamoR</div>
+    <h1>舊站會員搬移申請</h1>
+    <p class="desc">
+      請填寫以下資訊，我們將在確認後協助將您的點數與訂單紀錄搬移至新站帳號。<br/>
+      完成後會寄送通知信至您的新站 Email。
+    </p>
+
+    <label>舊站手機號碼</label>
+    <input type="tel" id="old_phone" placeholder="09xxxxxxxx" maxlength="10" />
+
+    <label>新站 Email</label>
+    <input type="email" id="new_email" placeholder="your@email.com" />
+    <p class="note">請確認與新站帳號使用的 Email 相同</p>
+
+    <label>姓名（選填）</label>
+    <input type="text" id="name" placeholder="方便客服確認身份" />
+
+    <label>備註（選填）</label>
+    <input type="text" id="note" placeholder="例：舊站帳號姓名、點數疑問等" />
+
+    <button id="submitBtn" onclick="submit()">送出申請</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <script>
+    async function submit() {
+      const phone = document.getElementById('old_phone').value.trim();
+      const email = document.getElementById('new_email').value.trim();
+      const name  = document.getElementById('name').value.trim();
+      const note  = document.getElementById('note').value.trim();
+      const btn   = document.getElementById('submitBtn');
+      const msg   = document.getElementById('msg');
+
+      if (!phone || !email) {
+        msg.className = 'msg error';
+        msg.textContent = '請填寫手機號碼與新站 Email';
+        return;
+      }
+      if (!/^09\d{8}$/.test(phone)) {
+        msg.className = 'msg error';
+        msg.textContent = '手機號碼格式不正確，請輸入 09 開頭的 10 位數字';
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        msg.className = 'msg error';
+        msg.textContent = 'Email 格式不正確';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '送出中...';
+      msg.className = 'msg';
+
+      try {
+        const res = await fetch('/api/submit-transfer', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ old_phone: phone, new_email: email, name, note })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          msg.className = 'msg success';
+          msg.innerHTML = '✅ 申請已送出！<br/>我們將在 3–5 個工作天內完成搬移，完成後會寄通知信至您的新站 Email。';
+          btn.textContent = '已送出';
+        } else {
+          throw new Error(data.error || '');
+        }
+      } catch (e) {
+        btn.disabled = false;
+        btn.textContent = '送出申請';
+        msg.className = 'msg error';
+        msg.textContent = '送出失敗，請稍後再試或聯繫客服。';
+      }
+    }
+  </script>
+</body>
+</html>
