@@ -40,7 +40,26 @@
       font-size: 14px;
       color: #666;
       line-height: 1.7;
+      margin-bottom: 16px;
+    }
+    .info-box {
+      background: #f5f0e8;
+      border-radius: 10px;
+      padding: 16px 18px;
       margin-bottom: 28px;
+      font-size: 13px;
+      color: #555;
+      line-height: 1.9;
+    }
+    .info-box .title {
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+    .info-box .footnote {
+      margin-top: 10px;
+      color: #999;
+      font-size: 12px;
     }
     label {
       display: block;
@@ -98,9 +117,16 @@
     <div class="logo">EnamoR</div>
     <h1>舊站會員搬移申請</h1>
     <p class="desc">
-      請填寫以下資訊，我們將在確認後協助將您的點數與訂單紀錄搬移至新站帳號。<br/>
-      完成後會寄送通知信至您的新站 Email。
+      請填寫以下資訊，我們將在 3–5 個工作天內完成搬移，並寄送通知信至您的新站 Email。
     </p>
+
+    <div class="info-box">
+      <div class="title">搬移說明</div>
+      <div>🎁 <strong>點數</strong>：等值轉移至新站帳號（舊站 1 點 = 新站 1 點）</div>
+      <div>⭐ <strong>會員等級</strong>：依舊站等級同步調整</div>
+      <div>📦 <strong>歷史訂單</strong>：不搬移至新站，舊站訂單紀錄保留至申請日起 3 個月</div>
+      <div class="footnote">如有疑問歡迎透過 LINE 客服詢問，搜尋 <strong>@enamorshop</strong></div>
+    </div>
 
     <label>舊站手機號碼</label>
     <input type="tel" id="old_phone" placeholder="09xxxxxxxx" maxlength="10" />
