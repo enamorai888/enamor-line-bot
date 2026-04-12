@@ -27,6 +27,7 @@
     background: var(--bg);
     color: var(--ink);
     font-family: 'DM Mono', monospace;
+    font-size: 16px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -42,14 +43,14 @@
 
   .logo {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     font-weight: 300;
     letter-spacing: 0.15em;
     color: var(--ink);
   }
 
   .subtitle {
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     color: var(--ink-light);
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -66,7 +67,7 @@
     border: none;
     padding: 0.4rem 1rem;
     font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
+    font-size: 0.77rem;
     letter-spacing: 0.08em;
     color: var(--ink-light);
     cursor: pointer;
@@ -86,14 +87,13 @@
     gap: 0;
   }
 
-  /* 左側：投遞 */
   .panel-input {
     padding: 2.5rem;
     border-right: 1px solid var(--border);
   }
 
   .panel-label {
-    font-size: 0.62rem;
+    font-size: 0.69rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--ink-light);
@@ -106,7 +106,7 @@
 
   .field label {
     display: block;
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     letter-spacing: 0.1em;
     color: var(--ink-light);
     margin-bottom: 0.5rem;
@@ -120,7 +120,7 @@
     border-radius: 2px;
     padding: 0.8rem 1rem;
     font-family: 'DM Mono', monospace;
-    font-size: 0.8rem;
+    font-size: 0.87rem;
     color: var(--ink);
     resize: vertical;
     min-height: 100px;
@@ -128,16 +128,9 @@
     line-height: 1.6;
   }
 
-  textarea:focus {
-    outline: none;
-    border-color: var(--ink);
-  }
+  textarea:focus { outline: none; border-color: var(--ink); }
 
-  .tag-group {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
+  .tag-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
   .tag-btn {
     padding: 0.35rem 0.9rem;
@@ -145,7 +138,7 @@
     border-radius: 20px;
     background: none;
     font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
+    font-size: 0.77rem;
     cursor: pointer;
     transition: all 0.15s;
     color: var(--ink-light);
@@ -153,17 +146,13 @@
 
   .tag-btn:hover { color: var(--ink); border-color: var(--ink); }
   .tag-btn.selected { color: var(--ink); font-weight: 400; }
-  .tag-btn[data-tag="管理"].selected { background: var(--tag-管理); border-color: var(--tag-管理); color: var(--ink); }
-  .tag-btn[data-tag="廣告"].selected { background: var(--tag-廣告); border-color: var(--tag-廣告); color: var(--ink); }
-  .tag-btn[data-tag="系統"].selected { background: var(--tag-系統); border-color: var(--tag-系統); color: var(--ink); }
-  .tag-btn[data-tag="品牌"].selected { background: var(--tag-品牌); border-color: var(--tag-品牌); color: var(--ink); }
-  .tag-btn[data-tag="命盤"].selected { background: var(--tag-命盤); border-color: var(--tag-命盤); color: var(--ink); }
+  .tag-btn[data-tag="管理"].selected { background: var(--tag-管理); border-color: var(--tag-管理); }
+  .tag-btn[data-tag="廣告"].selected { background: var(--tag-廣告); border-color: var(--tag-廣告); }
+  .tag-btn[data-tag="系統"].selected { background: var(--tag-系統); border-color: var(--tag-系統); }
+  .tag-btn[data-tag="品牌"].selected { background: var(--tag-品牌); border-color: var(--tag-品牌); }
+  .tag-btn[data-tag="命盤"].selected { background: var(--tag-命盤); border-color: var(--tag-命盤); }
 
-  .progress-group {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
+  .progress-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
   .prog-btn {
     padding: 0.3rem 0.8rem;
@@ -171,7 +160,7 @@
     border-radius: 2px;
     background: none;
     font-family: 'DM Mono', monospace;
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     cursor: pointer;
     transition: all 0.15s;
     color: var(--ink-light);
@@ -190,7 +179,7 @@
     border-radius: 2px;
     padding: 0.5rem 0.8rem;
     font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
+    font-size: 0.82rem;
     color: var(--ink);
   }
 
@@ -203,7 +192,7 @@
     color: var(--bg);
     border: none;
     font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
+    font-size: 0.82rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     cursor: pointer;
@@ -217,7 +206,7 @@
   .toast {
     margin-top: 1rem;
     padding: 0.7rem 1rem;
-    font-size: 0.72rem;
+    font-size: 0.79rem;
     border-radius: 2px;
     display: none;
   }
@@ -225,7 +214,7 @@
   .toast.success { background: #eef5f1; color: var(--success); border: 1px solid #c8ddd0; }
   .toast.error { background: #fdf0f0; color: #7c4a4a; border: 1px solid #ddc8c8; }
 
-  /* 右側：列表 */
+  /* 右側列表 */
   .panel-list {
     padding: 2.5rem;
     overflow-y: auto;
@@ -246,16 +235,13 @@
     border-radius: 20px;
     background: none;
     font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     cursor: pointer;
     color: var(--ink-light);
     transition: all 0.15s;
   }
 
-  .filter-btn.active, .filter-btn:hover {
-    color: var(--ink);
-    border-color: var(--ink);
-  }
+  .filter-btn.active, .filter-btn:hover { color: var(--ink); border-color: var(--ink); }
 
   .refresh-btn {
     margin-left: auto;
@@ -263,7 +249,7 @@
     border: 1px solid var(--border);
     background: none;
     font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.72rem;
     cursor: pointer;
     color: var(--ink-light);
     border-radius: 2px;
@@ -272,13 +258,14 @@
 
   .refresh-btn:hover { color: var(--ink); border-color: var(--ink); }
 
+  /* 列表項目 */
   .item {
     border: 1px solid var(--border);
     border-radius: 2px;
-    padding: 1rem 1.2rem;
     margin-bottom: 0.8rem;
     transition: border-color 0.15s;
     animation: fadeIn 0.3s ease;
+    overflow: hidden;
   }
 
   @keyframes fadeIn {
@@ -288,17 +275,24 @@
 
   .item:hover { border-color: var(--ink-light); }
 
+  .item-header {
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
   .item-meta {
     display: flex;
     gap: 0.6rem;
     align-items: center;
-    margin-bottom: 0.6rem;
   }
 
   .item-tag {
     padding: 0.15rem 0.6rem;
     border-radius: 10px;
-    font-size: 0.6rem;
+    font-size: 0.67rem;
     font-weight: 400;
     letter-spacing: 0.05em;
   }
@@ -309,37 +303,118 @@
   .item-tag[data-tag="品牌"] { background: var(--tag-品牌); }
   .item-tag[data-tag="命盤"] { background: var(--tag-命盤); }
 
-  .item-time {
-    font-size: 0.62rem;
-    color: var(--ink-light);
-  }
+  .item-time { font-size: 0.69rem; color: var(--ink-light); }
 
   .item-progress {
     margin-left: auto;
-    font-size: 0.6rem;
+    font-size: 0.67rem;
     color: var(--ink-light);
     border: 1px solid var(--border);
     padding: 0.1rem 0.5rem;
     border-radius: 2px;
   }
 
+  .item-expand-icon {
+    font-size: 0.65rem;
+    color: var(--ink-light);
+    margin-left: 0.3rem;
+    transition: transform 0.2s;
+  }
+
+  .item.expanded .item-expand-icon { transform: rotate(180deg); }
+
   .item-content {
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     line-height: 1.7;
     color: var(--ink);
   }
 
-  .item-session {
-    margin-top: 0.5rem;
-    font-size: 0.6rem;
+  .item-session { font-size: 0.67rem; color: var(--ink-light); }
+
+  /* 展開編輯區 */
+  .item-edit {
+    display: none;
+    padding: 1rem 1.2rem 1.2rem;
+    border-top: 1px solid var(--border);
+    background: #f5f5f2;
+    gap: 0.8rem;
+    flex-direction: column;
+  }
+
+  .item.expanded .item-edit { display: flex; }
+
+  .edit-label {
+    font-size: 0.67rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     color: var(--ink-light);
+    margin-bottom: 0.3rem;
+  }
+
+  .edit-textarea {
+    width: 100%;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 0.6rem 0.8rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 60px;
+    line-height: 1.6;
+  }
+
+  .edit-textarea:focus { outline: none; border-color: var(--ink); }
+
+  .edit-prog-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+  .edit-prog-btn {
+    padding: 0.25rem 0.7rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: white;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--ink-light);
+  }
+
+  .edit-prog-btn:hover, .edit-prog-btn.selected {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .edit-save-btn {
+    align-self: flex-end;
+    padding: 0.5rem 1.5rem;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: opacity 0.2s;
+  }
+
+  .edit-save-btn:hover { opacity: 0.8; }
+
+  .edit-toast {
+    font-size: 0.72rem;
+    color: var(--success);
+    display: none;
+    align-self: flex-end;
   }
 
   .empty-state {
     text-align: center;
     padding: 3rem;
     color: var(--ink-light);
-    font-size: 0.75rem;
+    font-size: 0.82rem;
     line-height: 2;
   }
 
@@ -347,7 +422,7 @@
     text-align: center;
     padding: 2rem;
     color: var(--ink-light);
-    font-size: 0.7rem;
+    font-size: 0.77rem;
   }
 
   @media (max-width: 768px) {
@@ -369,7 +444,6 @@
 </header>
 
 <main>
-  <!-- 左側：投遞 -->
   <div class="panel-input" id="panel-input">
     <div class="panel-label">新靈感</div>
 
@@ -404,11 +478,10 @@
       <input class="session-input" type="text" id="session" placeholder="例：品牌策略討論 / 命盤對話">
     </div>
 
-    <button class="submit-btn" id="submit-btn" onclick="submit()">投遞靈感</button>
+    <button class="submit-btn" id="submit-btn" onclick="submitIdea()">投遞靈感</button>
     <div class="toast" id="toast"></div>
   </div>
 
-  <!-- 右側：列表 -->
   <div class="panel-list" id="panel-list">
     <div class="list-controls">
       <button class="filter-btn active" data-filter="全部" onclick="filterItems(this)">全部</button>
@@ -427,6 +500,7 @@
 
 <script>
   const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzn4tOU-u9ULsNeR4KSoewZMP4ZNsei7iuFLeN9J9h8BCyia9iKWv5u8y73tWHEI78X/exec';
+  const PROGS = ['想法','蒐集中','待展開','執行中'];
 
   let selectedTag = '';
   let selectedProg = '想法';
@@ -462,7 +536,7 @@
     setTimeout(() => toast.style.display = 'none', 3000);
   }
 
-  async function submit() {
+  async function submitIdea() {
     const content = document.getElementById('content').value.trim();
     if (!content) { showToast('請輸入靈感內容', 'error'); return; }
     if (!selectedTag) { showToast('請選擇Tag', 'error'); return; }
@@ -511,6 +585,54 @@
     renderItems();
   }
 
+  function toggleItem(el) {
+    el.closest('.item').classList.toggle('expanded');
+  }
+
+  function selectEditProg(btn, rowIndex) {
+    btn.closest('.edit-prog-group').querySelectorAll('.edit-prog-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  }
+
+  async function saveEdit(rowIndex, itemEl) {
+    const notes = itemEl.querySelector('.edit-notes').value.trim();
+    const progBtn = itemEl.querySelector('.edit-prog-btn.selected');
+    const newProg = progBtn ? progBtn.dataset.prog : '';
+
+    const saveBtn = itemEl.querySelector('.edit-save-btn');
+    const editToast = itemEl.querySelector('.edit-toast');
+    saveBtn.disabled = true;
+    saveBtn.textContent = '儲存中…';
+
+    try {
+      await fetch(SHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'update',
+          rowIndex: rowIndex,
+          備註: notes,
+          進度: newProg
+        })
+      });
+
+      editToast.style.display = 'block';
+      editToast.textContent = '✓ 已儲存';
+      setTimeout(() => {
+        editToast.style.display = 'none';
+        loadItems();
+      }, 1500);
+    } catch(err) {
+      editToast.style.display = 'block';
+      editToast.textContent = '儲存失敗';
+      editToast.style.color = '#7c4a4a';
+    }
+
+    saveBtn.disabled = false;
+    saveBtn.textContent = '儲存';
+  }
+
   function renderItems() {
     const container = document.getElementById('items-container');
     const filtered = currentFilter === '全部' ? allItems : allItems.filter(i => i['Tag'] === currentFilter);
@@ -521,17 +643,39 @@
     }
 
     const sorted = [...filtered].reverse();
-    container.innerHTML = sorted.map(item => `
-      <div class="item">
-        <div class="item-meta">
-          <span class="item-tag" data-tag="${item['Tag']}">${item['Tag']}</span>
-          <span class="item-time">${item['時間']}</span>
-          <span class="item-progress">${item['進度']}</span>
+    container.innerHTML = sorted.map(item => {
+      const progBtns = PROGS.map(p =>
+        `<button class="edit-prog-btn${item['進度']===p?' selected':''}" data-prog="${p}" onclick="selectEditProg(this,${item._rowIndex})">${p}</button>`
+      ).join('');
+
+      return `
+      <div class="item" id="item-${item._rowIndex}">
+        <div class="item-header" onclick="toggleItem(this)">
+          <div class="item-meta">
+            <span class="item-tag" data-tag="${item['Tag']}">${item['Tag']}</span>
+            <span class="item-time">${item['時間']}</span>
+            <span class="item-progress">${item['進度']}</span>
+            <span class="item-expand-icon">▾</span>
+          </div>
+          <div class="item-content">${item['內容']}</div>
+          ${item['Session來源'] && item['Session來源'] !== '未標記' ? `<div class="item-session">↳ ${item['Session來源']}</div>` : ''}
         </div>
-        <div class="item-content">${item['內容']}</div>
-        ${item['Session來源'] && item['Session來源'] !== '未標記' ? `<div class="item-session">↳ ${item['Session來源']}</div>` : ''}
-      </div>
-    `).join('');
+        <div class="item-edit">
+          <div>
+            <div class="edit-label">備註</div>
+            <textarea class="edit-textarea edit-notes" placeholder="補充說明、後續行動、相關連結…">${item['備註']||''}</textarea>
+          </div>
+          <div>
+            <div class="edit-label">更新進度</div>
+            <div class="edit-prog-group">${progBtns}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:1rem;justify-content:flex-end;">
+            <span class="edit-toast"></span>
+            <button class="edit-save-btn" onclick="saveEdit(${item._rowIndex}, document.getElementById('item-${item._rowIndex}'))">儲存</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
   }
 
   async function loadItems() {
@@ -542,7 +686,10 @@
       const res = await fetch(SHEET_URL + '?t=' + Date.now());
       const data = await res.json();
       if (data.success) {
-        allItems = data.data.filter(i => i['內容']);
+        allItems = data.data.filter(i => i['內容']).map((item, idx) => ({
+          ...item,
+          _rowIndex: idx + 2
+        }));
         renderItems();
       } else {
         container.innerHTML = '<div class="empty-state">讀取失敗，請刷新重試</div>';
