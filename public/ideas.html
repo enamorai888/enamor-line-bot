@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnamoR 靈感投遞站</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&display=swap');
+
+  :root {
+    --bg: #FAFAF7;
+    --ink: #1a1a18;
+    --ink-light: #6b6b65;
+    --accent: #2d2d2a;
+    --tag-管理: #c8b99a;
+    --tag-廣告: #9ab5c8;
+    --tag-系統: #9ac8a8;
+    --tag-品牌: #c8a09a;
+    --tag-命盤: #b89ac8;
+    --border: #e0e0d8;
+    --success: #4a7c59;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 2rem 2.5rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+  }
+
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    color: var(--ink);
+  }
+
+  .subtitle {
+    font-size: 0.65rem;
+    color: var(--ink-light);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  nav {
+    margin-left: auto;
+    display: flex;
+    gap: 0;
+  }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    padding: 0.4rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-light);
+    cursor: pointer;
+    transition: color 0.2s;
+    border-bottom: 2px solid transparent;
+  }
+
+  .nav-btn.active, .nav-btn:hover {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  /* 左側：投遞 */
+  .panel-input {
+    padding: 2.5rem;
+    border-right: 1px solid var(--border);
+  }
+
+  .panel-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 1.5rem;
+  }
+
+  .field {
+    margin-bottom: 1.5rem;
+  }
+
+  .field label {
+    display: block;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-light);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  textarea {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 0.8rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink);
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.2s;
+    line-height: 1.6;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--ink);
+  }
+
+  .tag-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .tag-btn {
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--ink-light);
+  }
+
+  .tag-btn:hover { color: var(--ink); border-color: var(--ink); }
+  .tag-btn.selected { color: var(--ink); font-weight: 400; }
+  .tag-btn[data-tag="管理"].selected { background: var(--tag-管理); border-color: var(--tag-管理); color: var(--ink); }
+  .tag-btn[data-tag="廣告"].selected { background: var(--tag-廣告); border-color: var(--tag-廣告); color: var(--ink); }
+  .tag-btn[data-tag="系統"].selected { background: var(--tag-系統); border-color: var(--tag-系統); color: var(--ink); }
+  .tag-btn[data-tag="品牌"].selected { background: var(--tag-品牌); border-color: var(--tag-品牌); color: var(--ink); }
+  .tag-btn[data-tag="命盤"].selected { background: var(--tag-命盤); border-color: var(--tag-命盤); color: var(--ink); }
+
+  .progress-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .prog-btn {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--ink-light);
+  }
+
+  .prog-btn:hover, .prog-btn.selected {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .session-input {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 0.5rem 0.8rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink);
+  }
+
+  .session-input:focus { outline: none; border-color: var(--ink); }
+
+  .submit-btn {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 0.5rem;
+  }
+
+  .submit-btn:hover { opacity: 0.8; }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .toast {
+    margin-top: 1rem;
+    padding: 0.7rem 1rem;
+    font-size: 0.72rem;
+    border-radius: 2px;
+    display: none;
+  }
+
+  .toast.success { background: #eef5f1; color: var(--success); border: 1px solid #c8ddd0; }
+  .toast.error { background: #fdf0f0; color: #7c4a4a; border: 1px solid #ddc8c8; }
+
+  /* 右側：列表 */
+  .panel-list {
+    padding: 2.5rem;
+    overflow-y: auto;
+    max-height: calc(100vh - 80px);
+  }
+
+  .list-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-btn {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    cursor: pointer;
+    color: var(--ink-light);
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active, .filter-btn:hover {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+
+  .refresh-btn {
+    margin-left: auto;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid var(--border);
+    background: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    cursor: pointer;
+    color: var(--ink-light);
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .refresh-btn:hover { color: var(--ink); border-color: var(--ink); }
+
+  .item {
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 0.8rem;
+    transition: border-color 0.15s;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .item:hover { border-color: var(--ink-light); }
+
+  .item-meta {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    margin-bottom: 0.6rem;
+  }
+
+  .item-tag {
+    padding: 0.15rem 0.6rem;
+    border-radius: 10px;
+    font-size: 0.6rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+  }
+
+  .item-tag[data-tag="管理"] { background: var(--tag-管理); }
+  .item-tag[data-tag="廣告"] { background: var(--tag-廣告); }
+  .item-tag[data-tag="系統"] { background: var(--tag-系統); }
+  .item-tag[data-tag="品牌"] { background: var(--tag-品牌); }
+  .item-tag[data-tag="命盤"] { background: var(--tag-命盤); }
+
+  .item-time {
+    font-size: 0.62rem;
+    color: var(--ink-light);
+  }
+
+  .item-progress {
+    margin-left: auto;
+    font-size: 0.6rem;
+    color: var(--ink-light);
+    border: 1px solid var(--border);
+    padding: 0.1rem 0.5rem;
+    border-radius: 2px;
+  }
+
+  .item-content {
+    font-size: 0.78rem;
+    line-height: 1.7;
+    color: var(--ink);
+  }
+
+  .item-session {
+    margin-top: 0.5rem;
+    font-size: 0.6rem;
+    color: var(--ink-light);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--ink-light);
+    font-size: 0.75rem;
+    line-height: 2;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--ink-light);
+    font-size: 0.7rem;
+  }
+
+  @media (max-width: 768px) {
+    main { grid-template-columns: 1fr; }
+    .panel-input { border-right: none; border-bottom: 1px solid var(--border); }
+    .panel-list { max-height: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">EnamoR</div>
+  <div class="subtitle">靈感投遞站</div>
+  <nav>
+    <button class="nav-btn active" onclick="showPanel('input')">投遞</button>
+    <button class="nav-btn" onclick="showPanel('list')">列表</button>
+  </nav>
+</header>
+
+<main>
+  <!-- 左側：投遞 -->
+  <div class="panel-input" id="panel-input">
+    <div class="panel-label">新靈感</div>
+
+    <div class="field">
+      <label>內容</label>
+      <textarea id="content" placeholder="輸入靈感…"></textarea>
+    </div>
+
+    <div class="field">
+      <label>Tag</label>
+      <div class="tag-group">
+        <button class="tag-btn" data-tag="管理" onclick="selectTag(this)">管理</button>
+        <button class="tag-btn" data-tag="廣告" onclick="selectTag(this)">廣告</button>
+        <button class="tag-btn" data-tag="系統" onclick="selectTag(this)">系統</button>
+        <button class="tag-btn" data-tag="品牌" onclick="selectTag(this)">品牌</button>
+        <button class="tag-btn" data-tag="命盤" onclick="selectTag(this)">命盤</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>進度</label>
+      <div class="progress-group">
+        <button class="prog-btn selected" data-prog="想法" onclick="selectProg(this)">想法</button>
+        <button class="prog-btn" data-prog="蒐集中" onclick="selectProg(this)">蒐集中</button>
+        <button class="prog-btn" data-prog="待展開" onclick="selectProg(this)">待展開</button>
+        <button class="prog-btn" data-prog="執行中" onclick="selectProg(this)">執行中</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Session來源（選填）</label>
+      <input class="session-input" type="text" id="session" placeholder="例：品牌策略討論 / 命盤對話">
+    </div>
+
+    <button class="submit-btn" id="submit-btn" onclick="submit()">投遞靈感</button>
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <!-- 右側：列表 -->
+  <div class="panel-list" id="panel-list">
+    <div class="list-controls">
+      <button class="filter-btn active" data-filter="全部" onclick="filterItems(this)">全部</button>
+      <button class="filter-btn" data-filter="管理" onclick="filterItems(this)">管理</button>
+      <button class="filter-btn" data-filter="廣告" onclick="filterItems(this)">廣告</button>
+      <button class="filter-btn" data-filter="系統" onclick="filterItems(this)">系統</button>
+      <button class="filter-btn" data-filter="品牌" onclick="filterItems(this)">品牌</button>
+      <button class="filter-btn" data-filter="命盤" onclick="filterItems(this)">命盤</button>
+      <button class="refresh-btn" onclick="loadItems()">↻ 刷新</button>
+    </div>
+    <div id="items-container">
+      <div class="loading">載入中…</div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwnBHlQ5xipMw3XWHxujF0zBD2niP2U0fIwUxQIdkO3l1EbmF_8rcxHPcvCLZIuHp4/exec';
+
+  let selectedTag = '';
+  let selectedProg = '想法';
+  let currentFilter = '全部';
+  let allItems = [];
+
+  function selectTag(btn) {
+    document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedTag = btn.dataset.tag;
+  }
+
+  function selectProg(btn) {
+    document.querySelectorAll('.prog-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedProg = btn.dataset.prog;
+  }
+
+  function showPanel(panel) {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    if (window.innerWidth <= 768) {
+      document.getElementById('panel-input').style.display = panel === 'input' ? 'block' : 'none';
+      document.getElementById('panel-list').style.display = panel === 'list' ? 'block' : 'none';
+    }
+  }
+
+  function showToast(msg, type) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.className = `toast ${type}`;
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 3000);
+  }
+
+  async function submit() {
+    const content = document.getElementById('content').value.trim();
+    if (!content) { showToast('請輸入靈感內容', 'error'); return; }
+    if (!selectedTag) { showToast('請選擇Tag', 'error'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '投遞中…';
+
+    const now = new Date();
+    const 時間 = `${now.getFullYear().toString().slice(2)}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+
+    const payload = {
+      時間,
+      內容: content,
+      tag: selectedTag,
+      進度: selectedProg,
+      session: document.getElementById('session').value.trim() || '未標記'
+    };
+
+    try {
+      await fetch(SHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      showToast('✓ 已投遞', 'success');
+      document.getElementById('content').value = '';
+      document.getElementById('session').value = '';
+      document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
+      selectedTag = '';
+      setTimeout(() => loadItems(), 1500);
+    } catch (err) {
+      showToast('投遞失敗，請重試', 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '投遞靈感';
+  }
+
+  function filterItems(btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderItems();
+  }
+
+  function renderItems() {
+    const container = document.getElementById('items-container');
+    const filtered = currentFilter === '全部' ? allItems : allItems.filter(i => i['Tag'] === currentFilter);
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="empty-state">還沒有靈感<br>從左側投遞第一筆</div>';
+      return;
+    }
+
+    const sorted = [...filtered].reverse();
+    container.innerHTML = sorted.map(item => `
+      <div class="item">
+        <div class="item-meta">
+          <span class="item-tag" data-tag="${item['Tag']}">${item['Tag']}</span>
+          <span class="item-time">${item['時間']}</span>
+          <span class="item-progress">${item['進度']}</span>
+        </div>
+        <div class="item-content">${item['內容']}</div>
+        ${item['Session來源'] && item['Session來源'] !== '未標記' ? `<div class="item-session">↳ ${item['Session來源']}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  async function loadItems() {
+    const container = document.getElementById('items-container');
+    container.innerHTML = '<div class="loading">載入中…</div>';
+
+    try {
+      const res = await fetch(SHEET_URL + '?t=' + Date.now());
+      const data = await res.json();
+      if (data.success) {
+        allItems = data.data.filter(i => i['內容']);
+        renderItems();
+      } else {
+        container.innerHTML = '<div class="empty-state">讀取失敗，請刷新重試</div>';
+      }
+    } catch (err) {
+      container.innerHTML = '<div class="empty-state">讀取失敗<br>請確認 Apps Script 部署正確</div>';
+    }
+  }
+
+  loadItems();
+</script>
+</body>
+</html>
