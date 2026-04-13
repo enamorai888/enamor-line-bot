@@ -8,20 +8,20 @@
   @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Noto+Sans+TC:wght@300;400;500&display=swap');
 
   :root {
-    --bg: #0e0e0e;
-    --surface: #161616;
-    --surface2: #1e1e1e;
-    --border: #2a2a2a;
-    --text: #e8e4dc;
-    --text-dim: #6b6560;
-    --accent: #c9a96e;
-    --accent-dim: rgba(201,169,110,0.12);
-    --ok: #5db87a;
-    --ok-dim: rgba(93,184,122,0.1);
-    --warn: #e0a84a;
-    --warn-dim: rgba(224,168,74,0.1);
-    --err: #e05a5a;
-    --err-dim: rgba(224,90,90,0.1);
+    --bg: #FAFAF7;
+    --surface: #ffffff;
+    --surface2: #f3f1ec;
+    --border: #e0dbd2;
+    --text: #1a1814;
+    --text-dim: #8a857c;
+    --accent: #b08d5b;
+    --accent-dim: rgba(176,141,91,0.10);
+    --ok: #2e7d52;
+    --ok-dim: rgba(46,125,82,0.1);
+    --warn: #c47e0a;
+    --warn-dim: rgba(196,126,10,0.1);
+    --err: #c0392b;
+    --err-dim: rgba(192,57,43,0.1);
     --mono: 'DM Mono', monospace;
     --sans: 'Noto Sans TC', sans-serif;
   }
@@ -34,6 +34,7 @@
     font-family: var(--sans);
     font-weight: 300;
     min-height: 100vh;
+    font-size: 15px;
   }
 
   /* ── 密碼鎖 ── */
@@ -416,7 +417,7 @@
 
 <!-- 密碼鎖 -->
 <div id="lock-screen">
-  <div class="lock-logo"><img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-W.png" alt="EnamoR"></div>
+  <div class="lock-logo"><img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR"></div>
   <div class="lock-title">Internal Debug Console</div>
   <div id="lock-form">
     <input type="password" id="pw-input" placeholder="輸入密碼" autocomplete="off">
@@ -429,7 +430,7 @@
 <div id="app">
   <header>
     <div class="header-left">
-      <div class="logo"><img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-W.png" alt="EnamoR"></div>
+      <div class="logo"><img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR"></div>
       <div class="header-tag">Debug Console</div>
     </div>
     <div class="header-time" id="clock"></div>
