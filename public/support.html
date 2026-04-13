@@ -13,7 +13,7 @@
  --border: #e8e4dc;
  --border2: #d4cfc6;
  --text: #1a1814;
- --text-dim: #8a857c;
+ --text-dim: #5c4a2a;
  --accent: #b08d5b;
  --accent-light: rgba(176,141,91,0.08);
  --err: #c0392b;
@@ -23,7 +23,7 @@
  }
 
  * { box-sizing: border-box; margin: 0; padding: 0; }
- body { background: var(--bg); color: var(--text); font-family: var(--sans); font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; font-size: 115%; }
+ body { background: var(--bg); color: var(--text); font-family: var(--sans); font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; font-size: 125%; }
 
  /* ── header ── */
  header { border-bottom: 1px solid var(--border); padding: 20px 24px 16px; text-align: center; flex-shrink: 0; }
@@ -112,13 +112,13 @@
  }
 
  .tab {
- flex: 1; padding: 12px 6px; text-align: center;
- font-size: 10px; letter-spacing: 0.1em; color: var(--text-dim);
+ flex: 1; padding: 14px 6px; text-align: center;
+ font-size: 13px; letter-spacing: 0.05em; color: var(--text-dim);
  cursor: pointer; border-bottom: 2px solid transparent;
  transition: all 0.2s; user-select: none;
  }
  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
- .tab-icon { display: block; font-size: 17px; margin-bottom: 3px; }
+ .tab-icon { display: none; }
 
  main { max-width: 600px; margin: 0 auto; padding: 24px 20px 48px; width: 100%; }
 
