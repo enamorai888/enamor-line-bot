@@ -48,51 +48,79 @@ export default async function handler(req, res) {
     const { orders = [] } = await r.json();
 
     const fulfillmentLabel = {
-      null: '待出貨', unfulfilled: '待出貨', partial: '部分出貨',
-      fulfilled: '已出貨', in_progress: '備貨中', on_hold: '保留中',
-      scheduled: '預購排程中', restocked: '已退回',
+      null:        '待出貨',
+      unfulfilled: '待出貨',
+      partial:     '部分出貨',
+      fulfilled:   '已出貨',
+      in_progress: '備貨中',
+      on_hold:     '保留中',
+      scheduled:   '預購排程中',
+      restocked:   '已退回',
     };
 
     const financialLabel = {
-      pending: '待付款', authorized: '已授權', paid: '已付款',
-      partially_paid: '部分付款', refunded: '已退款',
-      partially_refunded: '部分退款', voided: '已作廢',
+      pending:            '待付款',
+      authorized:         '已授權',
+      paid:               '已付款',
+      partially_paid:     '部分付款',
+      refunded:           '已退款',
+      partially_refunded: '部分退款',
+      voided:             '已作廢',
     };
+
+    // 不可取消的 fulfillment 狀態
+    const NON_CANCELLABLE_STATUSES = new Set([
+      'fulfilled',
+      'in_progress',
+      'partial',
+      'on_hold',
+      'scheduled',
+    ]);
 
     const mapped = orders.map(o => {
       const latestFulfillment = o.fulfillments?.[o.fulfillments.length - 1];
       const tracking = latestFulfillment ? {
         company: latestFulfillment.tracking_company || null,
-        number: latestFulfillment.tracking_number || null,
-        url: latestFulfillment.tracking_url || null,
+        number:  latestFulfillment.tracking_number  || null,
+        url:     latestFulfillment.tracking_url     || null,
       } : null;
 
       const now = new Date();
       const hoursElapsed = (now - new Date(o.created_at)) / (1000 * 60 * 60);
-      const cancellable = !o.cancelled_at
-        && o.fulfillment_status !== 'fulfilled'
-        && o.fulfillment_status !== 'in_progress'
-        && hoursElapsed <= 12;
+
+      // 可取消條件：
+      // 1. 未取消（cancelled_at is null）
+      // 2. fulfillment_status 為 null 或 unfulfilled（待出貨）
+      // 3. 下單未超過 12 小時
+      const cancellable =
+        !o.cancelled_at &&
+        !NON_CANCELLABLE_STATUSES.has(o.fulfillment_status) &&
+        hoursElapsed <= 12;
 
       return {
-        id: o.id, name: o.name, created_at: o.created_at,
-        cancelled_at: o.cancelled_at || null,
+        id:                 o.id,
+        name:               o.name,
+        created_at:         o.created_at,
+        cancelled_at:       o.cancelled_at || null,
         fulfillment_status: o.fulfillment_status,
-        fulfillment_label: fulfillmentLabel[o.fulfillment_status] ?? '待出貨',
-        financial_status: o.financial_status,
-        financial_label: financialLabel[o.financial_status] ?? o.financial_status,
-        total_price: o.total_price,
+        fulfillment_label:  fulfillmentLabel[o.fulfillment_status] ?? '待出貨',
+        financial_status:   o.financial_status,
+        financial_label:    financialLabel[o.financial_status] ?? o.financial_status,
+        total_price:        o.total_price,
         items: (o.line_items || []).map(i => ({
-          title: i.title, quantity: i.quantity,
+          title:         i.title,
+          quantity:      i.quantity,
           variant_title: i.variant_title || null,
         })),
-        tracking, cancellable,
+        tracking,
+        cancellable,
       };
     });
 
     return res.status(200).json({ success: true, orders: mapped });
 
   } catch (err) {
+    console.error('Server error:', err);
     return res.status(500).json({ error: 'server_error' });
   }
 }
