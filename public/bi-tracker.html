@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnamoR BI 任務追蹤</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f9f8f6;
+  --surface: #ffffff;
+  --border: #e8e4df;
+  --border2: #f0ece8;
+  --text: #1c1917;
+  --muted: #9c9490;
+  --muted2: #c4bfbb;
+  --green: #2d6a4f;
+  --green-bg: #edf7f2;
+  --green-border: #b7dfcc;
+  --yellow: #92400e;
+  --yellow-bg: #fffbeb;
+  --yellow-border: #fde68a;
+  --blue: #1e40af;
+  --blue-bg: #eff6ff;
+  --blue-border: #bfdbfe;
+  --red: #991b1b;
+  --red-bg: #fef2f2;
+  --red-border: #fecaca;
+  --gray-bg: #f3f2f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'Noto Sans TC', sans-serif; min-height: 100vh; }
+
+/* HEADER */
+header {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex; align-items: center; gap: 14px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.logo { height: 28px; }
+.header-title { font-size: 13px; color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: .5px; }
+.spacer { flex: 1; }
+.header-stats { display: flex; gap: 20px; }
+.hstat { text-align: center; }
+.hstat-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--text); }
+.hstat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+/* LAYOUT */
+.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 28px; }
+
+/* FILTER BAR */
+.filter-bar {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.filter-lbl { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .5px; margin-right: 4px; }
+.chip {
+  padding: 4px 14px; border-radius: 20px;
+  border: 1px solid var(--border); background: #fff;
+  color: var(--muted); font-size: 12px; cursor: pointer;
+  transition: all .15s; font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--text); color: var(--text); }
+.chip.active { background: var(--text); border-color: var(--text); color: #fff; font-weight: 500; }
+.search-input {
+  margin-left: auto;
+  padding: 5px 12px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--bg);
+  font-size: 12px; font-family: 'DM Mono', monospace;
+  color: var(--text); outline: none; width: 200px;
+}
+.search-input:focus { border-color: var(--text); }
+
+/* PROGRESS OVERVIEW */
+.overview {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr));
+  gap: 12px; margin-bottom: 20px;
+}
+.ov-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 16px;
+}
+.ov-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; font-family: 'DM Mono', monospace; margin-bottom: 6px; }
+.ov-val { font-size: 22px; font-weight: 700; font-family: 'DM Mono', monospace; }
+.ov-val.done { color: var(--green); }
+.ov-val.wip { color: #b45309; }
+.ov-val.todo { color: var(--muted); }
+.ov-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ov-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.ov-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width .4s; }
+
+/* MODULE SECTION */
+.module { margin-bottom: 24px; }
+.module-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0 10px 2px; margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer; user-select: none;
+}
+.module-icon { font-size: 16px; }
+.module-title { font-size: 14px; font-weight: 600; }
+.module-badge {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 2px 8px; border-radius: 10px;
+  background: var(--gray-bg); color: var(--muted);
+  border: 1px solid var(--border);
+}
+.module-hours {
+  margin-left: auto; font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--muted);
+}
+.module-toggle { font-size: 10px; color: var(--muted2); }
+.module-body { overflow: hidden; transition: max-height .3s ease; }
+
+/* TASK TABLE */
+.task-table { width: 100%; border-collapse: collapse; }
+.task-table th {
+  padding: 7px 12px; text-align: left;
+  font-size: 10px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+  background: var(--bg); font-family: 'DM Mono', monospace;
+  border-bottom: 1px solid var(--border);
+}
+.task-table td {
+  padding: 9px 12px; font-size: 13px;
+  border-bottom: 1px solid var(--border2);
+  vertical-align: middle;
+}
+.task-row:last-child td { border-bottom: none; }
+.task-row { transition: background .1s; }
+.task-row:hover td { background: #faf9f8; }
+.task-row.done-row td { opacity: .55; }
+
+/* CHECKBOX */
+.task-check {
+  width: 16px; height: 16px; cursor: pointer;
+  accent-color: var(--green); flex-shrink: 0;
+}
+
+/* STATUS BADGE */
+.status {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-family: 'DM Mono', monospace;
+  padding: 2px 9px; border-radius: 10px; white-space: nowrap;
+  font-weight: 500;
+}
+.s-done { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.s-wip  { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+.s-todo { background: var(--gray-bg); color: var(--muted); border: 1px solid var(--border); }
+.s-blocked { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+
+/* PRIORITY */
+.pri {
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  padding: 2px 7px; border-radius: 3px;
+}
+.p-high { background: #fef2f2; color: var(--red); }
+.p-mid  { background: var(--yellow-bg); color: var(--yellow); }
+.p-low  { background: var(--blue-bg); color: var(--blue); }
+
+/* HOURS */
+.hours-cell { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.hours-cell strong { color: var(--text); font-size: 13px; }
+
+/* TASK ID */
+.task-id { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2); }
+
+/* DEP */
+.dep { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--blue); background: var(--blue-bg); padding: 1px 6px; border-radius: 3px; margin: 1px; display: inline-block; }
+
+/* NOTE CELL */
+.note-input {
+  font-size: 12px; color: var(--muted); background: transparent;
+  border: none; outline: none; width: 100%; font-family: 'Noto Sans TC', sans-serif;
+  cursor: text;
+}
+.note-input:focus { color: var(--text); }
+.note-input::placeholder { color: var(--muted2); }
+
+/* PHASE DIVIDER */
+.phase-tag {
+  display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 2px 8px; border-radius: 3px;
+  background: var(--gray-bg); color: var(--muted); border: 1px solid var(--border);
+  margin-bottom: 8px; margin-top: 4px;
+}
+
+/* TOTAL BAR */
+.total-bar {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 20px;
+  display: flex; align-items: center; gap: 24px;
+  margin-top: 8px; flex-wrap: wrap;
+}
+.total-item { display: flex; flex-direction: column; gap: 2px; }
+.total-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-family: 'DM Mono', monospace; }
+.total-val { font-size: 20px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text); }
+.export-btn {
+  margin-left: auto; padding: 8px 18px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--text); color: #fff;
+  font-size: 12px; font-family: 'DM Mono', monospace; cursor: pointer;
+  transition: all .15s;
+}
+.export-btn:hover { background: #333; }
+
+/* TOAST */
+.toast { position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none }
+.toast.show { opacity:1;transform:translateY(0) }
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
+  <span class="header-title">BI 系統 · 任務追蹤</span>
+  <div class="spacer"></div>
+  <div class="header-stats" id="headerStats"></div>
+</header>
+
+<div class="wrap">
+
+  <!-- OVERVIEW -->
+  <div class="overview" id="overview"></div>
+
+  <!-- FILTER -->
+  <div class="filter-bar">
+    <span class="filter-lbl">模組</span>
+    <div class="chip active" onclick="filterModule('all',this)">全部</div>
+    <div class="chip" onclick="filterModule('0',this)">基礎</div>
+    <div class="chip" onclick="filterModule('1',this)">M1 建設</div>
+    <div class="chip" onclick="filterModule('2',this)">M2 採購</div>
+    <div class="chip" onclick="filterModule('3a',this)">M3A 銷售</div>
+    <div class="chip" onclick="filterModule('3b',this)">M3B 廣告</div>
+    <div class="chip" onclick="filterModule('3c',this)">M3C 素材</div>
+    <div class="chip" onclick="filterModule('4',this)">M4 財務</div>
+    <div class="chip" onclick="filterModule('5',this)">M5 通知</div>
+    <div class="chip" onclick="filterModule('6',this)">M6 前端</div>
+    <span class="filter-lbl" style="margin-left:8px">狀態</span>
+    <div class="chip" onclick="filterStatus('all',this)">全部</div>
+    <div class="chip" onclick="filterStatus('todo',this)">待開始</div>
+    <div class="chip" onclick="filterStatus('wip',this)">進行中</div>
+    <div class="chip" onclick="filterStatus('done',this)">完成</div>
+    <input class="search-input" placeholder="搜尋任務..." oninput="filterSearch(this.value)">
+  </div>
+
+  <!-- MODULES -->
+  <div id="modulesArea"></div>
+
+  <!-- TOTAL -->
+  <div class="total-bar" id="totalBar"></div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────
+const MODULES = [
+  {
+    id:'0', icon:'⚡', title:'已有基礎設施', color:'#2d6a4f',
+    tasks:[
+      {id:'0-1',name:'Hermes Agent on Railway',status:'done',pri:'high',h:0,dep:[],note:'Telegram 可對話'},
+      {id:'0-2',name:'Meta Marketing API',status:'done',pri:'high',h:0,dep:[],note:'長效 token 到 2026/06/13'},
+      {id:'0-3',name:'Vercel 專案 enamor-line-bot',status:'done',pri:'high',h:0,dep:[],note:'Node.js + api/ 資料夾'},
+      {id:'0-4',name:'LINE Bot + 客服系統',status:'done',pri:'mid',h:0,dep:[],note:'含 OTP 取消流程'},
+      {id:'0-5',name:'Google Sheet 供應商對照表',status:'done',pri:'mid',h:0,dep:[],note:'Sheets API 已開通'},
+      {id:'0-6',name:'purchase.html 採購平台',status:'done',pri:'high',h:0,dep:[],note:'已推上 Vercel'},
+      {id:'0-7',name:'ideas.html 靈感投遞站',status:'wip',pri:'mid',h:2,dep:[],note:'介面完成，Hermes Skill 待部署'},
+    ]
+  },
+  {
+    id:'1', icon:'🏗️', title:'模組一：基礎建設', color:'#1e40af',
+    tasks:[
+      {id:'1-1',name:'OMS Proxy API',status:'todo',pri:'high',h:3,dep:[],note:'api/oms-proxy.js，解決 CORS，統一 token 刷新'},
+      {id:'1-2',name:'OMS 認證機制',status:'todo',pri:'high',h:1,dep:['1-1'],note:'ClientId/CheckValue 存 Vercel 環境變數'},
+      {id:'1-3',name:'Hermes 靈感捕捉 Skill 部署',status:'wip',pri:'mid',h:1,dep:[],note:'Skill 指令已寫，需在 Hermes 執行安裝'},
+      {id:'1-4',name:'Google Sheet BI 架構設計',status:'todo',pri:'mid',h:2,dep:[],note:'新增：銷售記錄、採購記錄、素材庫分頁'},
+    ]
+  },
+  {
+    id:'2', icon:'🛒', title:'模組二：採購系統', color:'#065f46',
+    tasks:[
+      {id:'2-1',name:'庫存即時查詢',status:'todo',pri:'high',h:2,dep:['1-1'],note:'OMS getStocksData，拉全倉正品庫存'},
+      {id:'2-2',name:'週銷量計算',status:'todo',pri:'high',h:3,dep:['1-1'],note:'OMS apiOrderList 近 7/14 天各 SKU 銷量'},
+      {id:'2-3',name:'已採購未到量查詢',status:'todo',pri:'high',h:2,dep:['1-1'],note:'OMS apiPurchaseHeaderList status=60'},
+      {id:'2-4',name:'動態再訂購點計算',status:'todo',pri:'high',h:2,dep:['2-2'],note:'日均銷 × 交期天數 + 安全庫存'},
+      {id:'2-5',name:'採購建議報表（OMS版）',status:'wip',pri:'high',h:4,dep:['2-1','2-2','2-3','2-4'],note:'purchase.html 升級，整合前四項'},
+      {id:'2-6',name:'低庫存警示標記',status:'todo',pri:'high',h:1,dep:['2-4'],note:'庫存 < 再訂購點 → 紅色警示'},
+      {id:'2-7',name:'採購單自動上傳 OMS',status:'todo',pri:'high',h:3,dep:['2-5'],note:'createPurchase 批次上傳，顯示成功/失敗明細'},
+      {id:'2-8',name:'採購通知推播',status:'todo',pri:'mid',h:2,dep:['2-7'],note:'上傳成功 → Hermes → WeChat'},
+      {id:'2-9',name:'到貨比對',status:'todo',pri:'mid',h:3,dep:['2-3'],note:'採購數量 vs 實際入庫，差異自動標記'},
+      {id:'2-10',name:'供應商交期追蹤',status:'todo',pri:'low',h:2,dep:['2-9'],note:'下單日 vs 到貨日，準時率 by 廠商'},
+      {id:'2-11',name:'供應商瑕疵比率',status:'todo',pri:'low',h:2,dep:['2-9'],note:'瑕疵品數 / 採購數 by 廠商'},
+      {id:'2-12',name:'採購成本趨勢',status:'todo',pri:'low',h:2,dep:['2-7'],note:'同 SKU 歷次進價記錄，用於談判'},
+    ]
+  },
+  {
+    id:'3a', icon:'📊', title:'模組三A：銷售數據層', color:'#7c3aed',
+    tasks:[
+      {id:'3-1',name:'日/週/月銷售彙整',status:'todo',pri:'high',h:4,dep:['1-1'],note:'OMS apiOrderList 按時間區間'},
+      {id:'3-2',name:'SKU 銷售排行',status:'todo',pri:'high',h:2,dep:['3-1'],note:'銷量/銷售額排名'},
+      {id:'3-3',name:'尺寸/顏色銷售比例',status:'todo',pri:'mid',h:2,dep:['3-1'],note:'同款各規格佔比分析'},
+      {id:'3-4',name:'商品生命週期標記',status:'todo',pri:'low',h:3,dep:['3-1'],note:'依銷速自動判斷導入/成長/衰退期'},
+      {id:'3-5',name:'滯銷庫存警示',status:'todo',pri:'mid',h:2,dep:['2-1','3-1'],note:'N天未動銷 → 建議促銷/清倉'},
+      {id:'3-6',name:'活動對比分析',status:'todo',pri:'mid',h:3,dep:['3-1'],note:'活動期間 vs 平日銷售對比'},
+    ]
+  },
+  {
+    id:'3b', icon:'📣', title:'模組三B：廣告分析層', color:'#b45309',
+    tasks:[
+      {id:'3-7',name:'廣告 ROAS 日報 Skill',status:'todo',pri:'high',h:3,dep:[],note:'Hermes Skill，Meta + Shopify → Gmail + Telegram，Meta token 已有可立即做'},
+      {id:'3-8',name:'ROAS 異常偵測',status:'todo',pri:'high',h:2,dep:['3-7'],note:'ROAS < 閾值連續 N 天 → 警示推播'},
+      {id:'3-9',name:'素材疲乏偵測',status:'todo',pri:'mid',h:2,dep:['3-7'],note:'CTR 下降趨勢 → 標記需換素材'},
+      {id:'3-10',name:'回購率 by 商品',status:'todo',pri:'mid',h:3,dep:['3-1'],note:'哪個品項回購率高，值得加預算'},
+    ]
+  },
+  {
+    id:'3c', icon:'🎨', title:'模組三C：素材工作流', color:'#be185d',
+    tasks:[
+      {id:'3-11',name:'品項推薦邏輯',status:'todo',pri:'mid',h:3,dep:['3-7','3-10'],note:'廣告中品項 ∩ 高回購率 → 本週推薦清單'},
+      {id:'3-12',name:'推薦清單寫入 Sheet',status:'todo',pri:'mid',h:1,dep:['3-11'],note:'自動寫入 Google Sheet 審核表'},
+      {id:'3-13',name:'你確認觸發機制',status:'todo',pri:'mid',h:1,dep:['3-12'],note:'Sheet 勾選確認 → 觸發素材生產流程'},
+      {id:'3-14',name:'EnamoR Studio 串接',status:'todo',pri:'mid',h:4,dep:['3-13'],note:'確認品項 → 帶入 Studio，產出三版位素材'},
+      {id:'3-15',name:'素材庫管理',status:'todo',pri:'low',h:3,dep:['3-14'],note:'追蹤素材狀態、表現差退場建議'},
+      {id:'3-16',name:'素材審核通過 → 投放觸發',status:'todo',pri:'low',h:2,dep:['3-15'],note:'推 Hermes → 通知投放'},
+    ]
+  },
+  {
+    id:'4', icon:'💰', title:'模組四：成本與財務分析', color:'#065f46',
+    tasks:[
+      {id:'4-1',name:'商品毛利率計算',status:'todo',pri:'mid',h:3,dep:['3-1','2-12'],note:'售價 - 進貨成本 - 廣告分攤'},
+      {id:'4-2',name:'供應商毛利率比較',status:'todo',pri:'low',h:2,dep:['4-1'],note:'毛利率 by 廠商，找最佳合作對象'},
+      {id:'4-3',name:'庫存佔用資金計算',status:'todo',pri:'mid',h:2,dep:['2-1'],note:'庫存量 × 進貨成本 = 壓金額'},
+      {id:'4-4',name:'廣告 ROAS by 商品',status:'todo',pri:'mid',h:2,dep:['3-7'],note:'廣告花費 / 帶來銷售額'},
+    ]
+  },
+  {
+    id:'5', icon:'🔔', title:'模組五：通知系統', color:'#1e40af',
+    tasks:[
+      {id:'5-1',name:'WeChat 串接方案確認',status:'todo',pri:'mid',h:2,dep:[],note:'評估 WxPusher / 企業微信 API'},
+      {id:'5-2',name:'WeChat 推播模板設計',status:'todo',pri:'mid',h:2,dep:['5-1'],note:'採購/低庫存/到貨異常/素材審核模板'},
+      {id:'5-3',name:'Vercel Cron Job',status:'todo',pri:'mid',h:3,dep:['2-6','3-5','3-8'],note:'每日自動跑庫存+銷售+ROAS 檢查'},
+      {id:'5-4',name:'異常自動告警',status:'todo',pri:'mid',h:2,dep:['5-2','5-3'],note:'超過閾值 → 自動推播'},
+    ]
+  },
+  {
+    id:'6', icon:'🖥️', title:'模組六：前端介面', color:'#374151',
+    tasks:[
+      {id:'6-1',name:'purchase.html 升級（OMS版）',status:'wip',pri:'high',h:4,dep:['2-1','2-2','2-3','2-4'],note:'加入 OMS 串接、自動採購建議、上傳'},
+      {id:'6-2',name:'sales.html',status:'todo',pri:'high',h:5,dep:['3-1','3-2'],note:'銷售總覽 + 排行 + 活動對比'},
+      {id:'6-3',name:'ads.html',status:'todo',pri:'mid',h:5,dep:['3-7','3-8'],note:'ROAS 儀表板 + 素材工作流觸發'},
+      {id:'6-4',name:'finance.html',status:'todo',pri:'low',h:4,dep:['4-1','4-2','4-3'],note:'毛利/ROAS/庫存壓金'},
+      {id:'6-5',name:'index.html 儀表板',status:'todo',pri:'mid',h:6,dep:[],note:'各模組關鍵數字一頁總覽'},
+      {id:'6-6',name:'suppliers.html',status:'todo',pri:'low',h:3,dep:[],note:'供應商對照表維護 + 交期/瑕疵率'},
+      {id:'6-7',name:'ideas.html 完成',status:'wip',pri:'mid',h:1,dep:['1-3'],note:'Hermes Skill 部署後完整串通'},
+    ]
+  },
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────
+const LS_KEY = 'enamor_bi_tracker_v1';
+let state = {};
+let filterMod = 'all';
+let filterStat = 'all';
+let searchQ = '';
+
+function loadState() {
+  try { state = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch(e) { state = {}; }
+}
+function saveState() {
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+}
+function getTaskState(id) {
+  return state[id] || {};
+}
+function setTaskStatus(id, status) {
+  if (!state[id]) state[id] = {};
+  state[id].status = status;
+  saveState();
+}
+function setTaskNote(id, note) {
+  if (!state[id]) state[id] = {};
+  state[id].note = note;
+  saveState();
+}
+
+// ── COMPUTE ───────────────────────────────────────────────────────────
+function getEffectiveStatus(task) {
+  const s = getTaskState(task.id);
+  return s.status || task.status;
+}
+function getEffectiveNote(task) {
+  const s = getTaskState(task.id);
+  return s.note !== undefined ? s.note : task.note;
+}
+function allTasks() {
+  return MODULES.flatMap(m => m.tasks);
+}
+function computeStats() {
+  const tasks = allTasks();
+  const done = tasks.filter(t => getEffectiveStatus(t) === 'done').length;
+  const wip  = tasks.filter(t => getEffectiveStatus(t) === 'wip').length;
+  const todo = tasks.filter(t => getEffectiveStatus(t) === 'todo').length;
+  const totalH = tasks.reduce((s,t) => s+t.h, 0);
+  const doneH  = tasks.filter(t => getEffectiveStatus(t) === 'done').reduce((s,t) => s+t.h, 0);
+  return { done, wip, todo, total: tasks.length, totalH, doneH, pct: Math.round(done/tasks.length*100) };
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────
+function statusBadge(s) {
+  const map = {
+    done: ['s-done','✓ 完成'],
+    wip:  ['s-wip', '⟳ 進行中'],
+    todo: ['s-todo','○ 待開始'],
+    blocked: ['s-blocked','✗ 阻塞'],
+  };
+  const [cls, label] = map[s] || map.todo;
+  return `<span class="status ${cls}">${label}</span>`;
+}
+function priBadge(p) {
+  const map = { high:['p-high','高'], mid:['p-mid','中'], low:['p-low','低'] };
+  const [cls, label] = map[p] || map.low;
+  return `<span class="pri ${cls}">${label}</span>`;
+}
+
+function renderOverview() {
+  const s = computeStats();
+  document.getElementById('overview').innerHTML = `
+    <div class="ov-card">
+      <div class="ov-lbl">完成</div>
+      <div class="ov-val done">${s.done}</div>
+      <div class="ov-sub">${s.pct}% 任務完成</div>
+      <div class="ov-bar"><div class="ov-fill" style="width:${s.pct}%"></div></div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">進行中</div>
+      <div class="ov-val wip">${s.wip}</div>
+      <div class="ov-sub">共 ${s.total} 個任務</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">待開始</div>
+      <div class="ov-val todo">${s.todo}</div>
+      <div class="ov-sub">尚未啟動</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">預估總工時</div>
+      <div class="ov-val" style="color:var(--text)">${s.totalH}h</div>
+      <div class="ov-sub">已完成 ${s.doneH}h</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">剩餘工時</div>
+      <div class="ov-val" style="color:#b45309">${s.totalH - s.doneH}h</div>
+      <div class="ov-sub">≈ ${Math.ceil((s.totalH-s.doneH)/6)} 個工作天</div>
+    </div>`;
+
+  document.getElementById('headerStats').innerHTML = `
+    <div class="hstat"><div class="hstat-val" style="color:var(--green)">${s.done}</div><div class="hstat-lbl">完成</div></div>
+    <div class="hstat"><div class="hstat-val" style="color:#b45309">${s.wip}</div><div class="hstat-lbl">進行中</div></div>
+    <div class="hstat"><div class="hstat-val">${s.pct}%</div><div class="hstat-lbl">進度</div></div>
+    <div class="hstat"><div class="hstat-val">${s.totalH-s.doneH}h</div><div class="hstat-lbl">剩餘</div></div>`;
+}
+
+function matchFilter(task, modId) {
+  if (filterMod !== 'all' && modId !== filterMod) return false;
+  if (filterStat !== 'all' && getEffectiveStatus(task) !== filterStat) return false;
+  if (searchQ) {
+    const q = searchQ.toLowerCase();
+    if (!task.name.toLowerCase().includes(q) && !task.id.includes(q) && !task.note.toLowerCase().includes(q)) return false;
+  }
+  return true;
+}
+
+function renderModules() {
+  const area = document.getElementById('modulesArea');
+  area.innerHTML = '';
+  MODULES.forEach(mod => {
+    const visibleTasks = mod.tasks.filter(t => matchFilter(t, mod.id));
+    if (visibleTasks.length === 0) return;
+
+    const modH = mod.tasks.reduce((s,t)=>s+t.h,0);
+    const modDone = mod.tasks.filter(t=>getEffectiveStatus(t)==='done').length;
+
+    const div = document.createElement('div');
+    div.className = 'module';
+    div.innerHTML = `
+      <div class="module-header" onclick="toggleModule('m${mod.id}')">
+        <span class="module-icon">${mod.icon}</span>
+        <span class="module-title">${mod.title}</span>
+        <span class="module-badge">${modDone}/${mod.tasks.length}</span>
+        <span class="module-hours">${modH}h</span>
+        <span class="module-toggle" id="toggle-m${mod.id}">▼</span>
+      </div>
+      <div class="module-body" id="m${mod.id}">
+        <table class="task-table">
+          <thead><tr>
+            <th style="width:32px"></th>
+            <th style="width:60px">編號</th>
+            <th>任務名稱</th>
+            <th style="width:90px">狀態</th>
+            <th style="width:50px">優先</th>
+            <th style="width:70px">工時</th>
+            <th style="width:120px">依賴</th>
+            <th>備註</th>
+          </tr></thead>
+          <tbody>
+            ${visibleTasks.map(t => renderTaskRow(t)).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    area.appendChild(div);
+  });
+
+  renderTotalBar();
+}
+
+function renderTaskRow(t) {
+  const st = getEffectiveStatus(t);
+  const note = getEffectiveNote(t);
+  const isDone = st === 'done';
+  const deps = t.dep.map(d => `<span class="dep">${d}</span>`).join('');
+  return `
+    <tr class="task-row ${isDone?'done-row':''}" id="row-${t.id}">
+      <td><input type="checkbox" class="task-check" ${isDone?'checked':''} onchange="toggleDone('${t.id}',this)"></td>
+      <td class="task-id">${t.id}</td>
+      <td style="font-weight:${isDone?'400':'500'}">${t.name}</td>
+      <td>
+        <select class="status-sel" onchange="changeStatus('${t.id}',this)" style="font-size:11px;border:1px solid var(--border);border-radius:5px;padding:3px 6px;background:#fff;color:var(--text);font-family:'DM Mono',monospace;cursor:pointer">
+          <option value="todo" ${st==='todo'?'selected':''}>○ 待開始</option>
+          <option value="wip"  ${st==='wip'?'selected':''}>⟳ 進行中</option>
+          <option value="done" ${st==='done'?'selected':''}>✓ 完成</option>
+          <option value="blocked" ${st==='blocked'?'selected':''}>✗ 阻塞</option>
+        </select>
+      </td>
+      <td>${priBadge(t.pri)}</td>
+      <td class="hours-cell"><strong>${t.h}</strong>h</td>
+      <td>${deps}</td>
+      <td><input class="note-input" value="${note.replace(/"/g,'&quot;')}" placeholder="備註..." onblur="saveNote('${t.id}',this.value)"></td>
+    </tr>`;
+}
+
+function renderTotalBar() {
+  const s = computeStats();
+  const remaining = s.totalH - s.doneH;
+  document.getElementById('totalBar').innerHTML = `
+    <div class="total-item"><div class="total-lbl">總任務數</div><div class="total-val">${s.total}</div></div>
+    <div class="total-item"><div class="total-lbl">預估總工時</div><div class="total-val">${s.totalH}h</div></div>
+    <div class="total-item"><div class="total-lbl">已完成工時</div><div class="total-val" style="color:var(--green)">${s.doneH}h</div></div>
+    <div class="total-item"><div class="total-lbl">剩餘工時</div><div class="total-val" style="color:#b45309">${remaining}h</div></div>
+    <div class="total-item"><div class="total-lbl">約需工作天</div><div class="total-val">${Math.ceil(remaining/6)}天</div></div>
+    <button class="export-btn" onclick="exportCSV()">⬇ 匯出 CSV</button>`;
+}
+
+// ── INTERACTIONS ──────────────────────────────────────────────────────
+function toggleDone(id, checkbox) {
+  const newStatus = checkbox.checked ? 'done' : 'todo';
+  setTaskStatus(id, newStatus);
+  rerender();
+  showToast(checkbox.checked ? `✓ ${id} 完成` : `${id} 重設為待開始`);
+}
+
+function changeStatus(id, sel) {
+  setTaskStatus(id, sel.value);
+  rerender();
+}
+
+function saveNote(id, val) {
+  setTaskNote(id, val);
+}
+
+function toggleModule(id) {
+  const body = document.getElementById(id);
+  const tog  = document.getElementById('toggle-' + id);
+  if (!body) return;
+  if (body.style.display === 'none') {
+    body.style.display = '';
+    tog.textContent = '▼';
+  } else {
+    body.style.display = 'none';
+    tog.textContent = '▶';
+  }
+}
+
+function filterModule(val, el) {
+  filterMod = val;
+  document.querySelectorAll('.filter-bar .chip').forEach(c => {
+    if (c.getAttribute('onclick') && c.getAttribute('onclick').includes('filterModule')) c.classList.remove('active');
+  });
+  el.classList.add('active');
+  rerender();
+}
+
+function filterStatus(val, el) {
+  filterStat = val;
+  document.querySelectorAll('.filter-bar .chip').forEach(c => {
+    if (c.getAttribute('onclick') && c.getAttribute('onclick').includes('filterStatus')) c.classList.remove('active');
+  });
+  el.classList.add('active');
+  rerender();
+}
+
+function filterSearch(q) {
+  searchQ = q;
+  rerender();
+}
+
+function rerender() {
+  renderOverview();
+  renderModules();
+}
+
+function exportCSV() {
+  const rows = [['編號','模組','任務名稱','狀態','優先','預估工時(h)','依賴','備註']];
+  MODULES.forEach(mod => {
+    mod.tasks.forEach(t => {
+      rows.push([t.id, mod.title, t.name, getEffectiveStatus(t), t.pri, t.h, t.dep.join(';'), getEffectiveNote(t)]);
+    });
+  });
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `EnamoR_BI任務_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('✓ CSV 已匯出');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────
+loadState();
+renderOverview();
+renderModules();
+</script>
+</body>
+</html>
