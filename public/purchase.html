@@ -123,6 +123,8 @@ tr.cancelled td{opacity:.35;text-decoration:line-through}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;z-index:500;font-size:14px;color:var(--muted);font-family:'DM Mono',monospace}
+.qty-input:focus{outline:none;border-color:var(--green)!important;box-shadow:0 0 0 2px rgba(45,122,58,.15)}
+.qty-input::-webkit-inner-spin-button{opacity:1}
 </style>
 </head>
 <body>
@@ -237,7 +239,7 @@ tr.cancelled td{opacity:.35;text-decoration:line-through}
 <script>
 const SUPPLIER_SHEET_ID = '1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
 const SHEETS_API_KEY    = 'AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
-const OPS_SCRIPT_URL    = 'https://script.google.com/macros/s/AKfycbwdkuoLUYznhhSUsZ8P1h_PoI-cZqJET4WKj3W1gmB9kQxHr7pkh-fjWx9XRJXqR41opQ/exec';
+const OPS_SCRIPT_URL    = 'https://script.google.com/macros/s/AKfycbwt-EG0wX_fXSqPYuBfs1EfPpoCt08tkUYvsghADkQt41CNkVbKxn1qSA9aNAkuE8C54A/exec';
 const SKIP = new Set(['999999','Discount','SHIPFEE']);
 
 let supplierMap = {};
@@ -440,12 +442,16 @@ function renderVendorTables(areaId, data, filter, showCheck, showName=false) {
       : ``;
     let checkCol = showCheck ? `<th style="width:40px;text-align:center">採購</th>` : '';
     let shopeeCol = isSplit ? `<th style="text-align:center">蝦皮欠貨</th>` : '';
+    let finalHeader = showCheck
+      ? `<th style="text-align:center;color:#666">系統建議</th><th style="text-align:center;font-weight:700;color:var(--green)">實際採購量</th>`
+      : `<th style="text-align:center;color:#aaa;font-size:9px">系統建議</th><th style="text-align:center;font-weight:700">實際採購量</th>`;
 
+    const activeTotal = activeRows.reduce((s,r)=>s+(r.finalQty!==undefined?r.finalQty:r.totalQty),0);
     div.innerHTML=`
       <div class="vendor-head">
         <span class="vbadge">${v.id}</span>
         <h3>${v.vendorName||v.id}</h3>
-        <span class="vtotal">確認 ${activeRows.length}/${rows.length} 筆 · ${total} 件</span>
+        <span class="vtotal">確認 ${activeRows.length}/${rows.length} 筆 · ${activeTotal} 件</span>
         ${!showCheck && !showName ? `<button class="btn-dl" onclick="exportVendorInquiry('${v.id}')">⬇ ${todayStr()}_${v.id}.xlsx</button>` : ''}
       </div>
       <table><thead><tr>
@@ -454,7 +460,7 @@ function renderVendorTables(areaId, data, filter, showCheck, showName=false) {
         ${extraCols}
         <th style="text-align:center">建議採購量</th>
         ${shopeeCol}
-        <th style="text-align:center;font-weight:700">應採購量</th>
+        ${finalHeader}
       </tr></thead>
       <tbody>${rows.map(r=>renderRow(r,showCheck,showName,isSplit)).join('')}</tbody></table>`;
     area.appendChild(div);
@@ -472,6 +478,17 @@ function renderRow(r, showCheck, showName, isSplit) {
   const shopeeCol = isSplit
     ? `<td class="qty-shopee">${r.shopeeQty||0}</td>`
     : '';
+  // Tab2: 可編輯數量; Tab3/其他: 顯示 finalQty
+  const finalQty = r.finalQty !== undefined ? r.finalQty : r.totalQty;
+  const qtyCell = showCheck
+    ? `<td class="qty-td" style="padding:4px 8px">
+        <input type="number" class="qty-input" 
+          value="${finalQty}" min="1"
+          style="width:64px;text-align:center;font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--green);border:1px solid var(--border);border-radius:5px;padding:3px 6px;background:#fff"
+          onchange="updateQty('${r.barcode}','${r.vendorId}',this.value)"
+          onclick="this.select()">
+       </td>`
+    : `<td class="qty-td">${finalQty}</td>`;
   return `<tr class="${cls}">
     ${chk}
     <td class="code-td">${r.vendorSku}</td>
@@ -480,7 +497,8 @@ function renderRow(r, showCheck, showName, isSplit) {
     ${nameCols}
     <td class="qty-sm">${r.qty}</td>
     ${shopeeCol}
-    <td class="qty-td">${r.totalQty}</td>
+    <td class="qty-sm" style="color:#aaa">${r.totalQty}</td>
+    ${qtyCell}
   </tr>`;
 }
 
@@ -500,6 +518,36 @@ async function toggleRow(barcode, vendorId, checkbox) {
   } catch(e) {}
   updateCancelledCount();
   renderVendorTables('tables2', cloudData, currentFilter2, true);
+}
+
+function updateQty(barcode, vendorId, val) {
+  const qty = parseInt(val) || 1;
+  const item = cloudData.find(r=>r.barcode===barcode&&r.vendorId===vendorId);
+  if (item) item.finalQty = qty;
+  // sync to sheet
+  try {
+    fetch(OPS_SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      body: JSON.stringify({action:'updateQty', barcode, vendorId, finalQty: qty}),
+      headers:{'Content-Type':'application/json'}
+    });
+  } catch(e){}
+  updateTotals();
+}
+
+function updateTotals() {
+  // re-render summary cards for tab3 if visible
+  const active = cloudData.filter(r=>r.checked);
+  const vendors = getVendors(active);
+  const totalQty = active.reduce((s,r)=>s+(r.finalQty!==undefined?r.finalQty:r.totalQty),0);
+  const sum3 = document.getElementById('sum3');
+  if (sum3 && sum3.closest('#tab3').classList.contains('active')) {
+    sum3.innerHTML=`
+      <div class="card"><div class="card-lbl">確認採購廠商</div><div class="card-val">${vendors.length}</div></div>
+      <div class="card"><div class="card-lbl">確認採購 SKU</div><div class="card-val">${active.length}</div></div>
+      <div class="card"><div class="card-lbl">合計採購量</div><div class="card-val">${totalQty}</div></div>
+      <div class="card"><div class="card-lbl">取消項目</div><div class="card-val" style="color:var(--red)">${cloudData.length-active.length}</div><div class="card-sub">廠商斷貨</div></div>`;
+  }
 }
 
 function updateCancelledCount() {
@@ -591,9 +639,9 @@ function exportFinal() {
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),'總採購彙整');
   getVendors(active).forEach(v=>{
     const rows=active.filter(r=>r.vendorId===v.id);
-    const data=[['廠商貨號','廠商顏色說明','尺寸說明','商品條碼','商品名稱','建議採購量','蝦皮欠貨量','應採購量','備註']];
-    rows.forEach(r=>data.push([r.vendorSku,r.vendorColor,r.vendorSize,r.barcode,r.productName,r.qty,r.shopeeQty,r.totalQty,'']));
-    data.push(['','','','','合計','','',rows.reduce((s,r)=>s+r.totalQty,0),'']);
+    const data=[['廠商貨號','廠商顏色說明','尺寸說明','商品條碼','商品名稱','建議採購量','蝦皮欠貨量','系統建議量','實際採購量','備註']];
+    rows.forEach(r=>{const fq=r.finalQty!==undefined?r.finalQty:r.totalQty;data.push([r.vendorSku,r.vendorColor,r.vendorSize,r.barcode,r.productName,r.qty,r.shopeeQty,r.totalQty,fq,'']);});
+    data.push(['','','','','合計','','','',rows.reduce((s,r)=>s+(r.finalQty!==undefined?r.finalQty:r.totalQty),0),'']);
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),v.id);
   });
   XLSX.writeFile(wb,`${todayStr()}_正式採購單.xlsx`);
