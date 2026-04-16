@@ -3,14 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EnamoR 採購單產生平台</title>
+<title>EnamoR 採購平台</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
   --bg:#f7f7f5;--surface:#fff;--surface2:#f3f3f0;--border:#e2dedd;
-  --green:#2d7a3a;--green-light:#f0f7f1;--red:#c0392b;
-  --text:#1a1a1a;--muted:#888;--accent:#1a1a1a;
+  --green:#2d7a3a;--green-light:#f0f7f1;--green-border:#b7dfcc;
+  --red:#c0392b;--red-light:#fef2f2;
+  --orange:#e67e22;--orange-light:#fff8f0;
+  --text:#1a1a1a;--muted:#888;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh}
@@ -26,6 +28,18 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;d
 
 .wrap{max-width:1180px;margin:0 auto;padding:24px 28px}
 
+/* TAB NAVIGATOR */
+.tab-nav{display:flex;gap:0;margin-bottom:24px;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.tab-btn{flex:1;padding:14px 12px;text-align:center;cursor:pointer;border:none;background:transparent;font-family:'Noto Sans TC',sans-serif;font-size:13px;color:var(--muted);transition:all .2s;border-right:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px}
+.tab-btn:last-child{border-right:none}
+.tab-btn.active{background:var(--green-light);color:var(--green);font-weight:600}
+.tab-btn .tab-num{width:20px;height:20px;border-radius:50%;background:var(--border);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Mono',monospace}
+.tab-btn.active .tab-num{background:var(--green)}
+.tab-btn.done .tab-num{background:var(--green)}
+.tab-btn.done{color:var(--green)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
 /* SHEET STATUS */
 .sheet-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .sheet-bar .lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
@@ -33,15 +47,6 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;d
 .sheet-info.ok{color:var(--green)}.sheet-info.err{color:var(--red)}
 .btn-xs{padding:4px 12px;border-radius:5px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn-xs:hover{border-color:var(--green);color:var(--green)}
-
-/* STEPS */
-.steps{display:flex;margin-bottom:20px}
-.step{flex:1;padding:9px 12px;background:#fff;border:1px solid var(--border);font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px;font-family:'DM Mono',monospace}
-.step:first-child{border-radius:6px 0 0 6px}.step:last-child{border-radius:0 6px 6px 0}.step+.step{border-left:none}
-.step.active{background:var(--green-light);border-color:var(--green);color:var(--green)}
-.step.done{background:var(--green-light);border-color:var(--green);color:var(--green)}
-.sn{width:18px;height:18px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;flex-shrink:0}
-.step.active .sn,.step.done .sn{background:var(--green)}
 
 /* UPLOAD */
 .upload-zone{border:2px dashed var(--border);border-radius:10px;padding:36px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;position:relative;max-width:520px;margin-bottom:20px}
@@ -61,62 +66,70 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;d
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
 .card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
 .card-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-family:'DM Mono',monospace;margin-bottom:5px}
-.card-val{font-size:24px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
+.card-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text)}
 .card-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* MODE TOGGLE */
+.mode-bar{background:var(--orange-light);border:1px solid #fde8c8;border-radius:8px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.mode-bar label{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px}
 
 /* VENDOR TABS */
 .vtabs{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
 .vtab{padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace}
 .vtab:hover{border-color:var(--text);color:var(--text)}
 .vtab.active{background:var(--text);border-color:var(--text);color:#fff;font-weight:600}
-.vtab .badge{display:inline-flex;align-items:center;justify-content:center;margin-left:4px;background:rgba(255,255,255,.2);border-radius:9px;padding:0 6px;font-size:10px}
-.vtab:not(.active) .badge{background:rgba(0,0,0,.07);color:var(--muted)}
+.vtab .badge{display:inline-flex;align-items:center;justify-content:center;margin-left:4px;background:rgba(0,0,0,.1);border-radius:9px;padding:0 6px;font-size:10px}
 
 /* VENDOR BLOCK */
 .vendor-block{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}
 .vendor-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
-.vbadge{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:4px;background:#f3f3f0;border:1px solid var(--border);color:var(--text);font-weight:600}
+.vbadge{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:600}
 .vendor-head h3{font-size:14px;font-weight:600}
 .vtotal{margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}
 .btn-dl{padding:6px 14px;border-radius:5px;border:1px solid var(--green);background:#fff;color:var(--green);font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:500}
 .btn-dl:hover{background:var(--green);color:#fff}
 
 table{width:100%;border-collapse:collapse}
-th{padding:8px 14px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}
-td{padding:9px 14px;font-size:13px;border-bottom:1px solid var(--border)}
+th{padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}
+td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--border)}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#fafaf9}
+tr:hover td{background:#faf9f8}
+tr.cancelled td{opacity:.35;text-decoration:line-through}
 .qty-td{font-family:'DM Mono',monospace;font-weight:700;font-size:14px;text-align:center;color:var(--green)}
+.qty-sm{font-family:'DM Mono',monospace;font-size:12px;text-align:center;color:var(--muted)}
+.qty-shopee{font-family:'DM Mono',monospace;font-size:12px;text-align:center;color:var(--orange)}
 .code-td{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
 .color-td{font-size:13px}
 .size-td{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:3px;display:inline-block;border:1px solid var(--border)}
+.check-td{text-align:center}
+.row-check{width:16px;height:16px;cursor:pointer;accent-color:var(--green)}
 
-/* GLOBAL EXPORT */
-.export-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:4px}
+/* STEP 2 SPECIAL */
+.step2-info{background:var(--green-light);border:1px solid var(--green-border);border-radius:8px;padding:14px 18px;margin-bottom:18px;font-size:13px;color:var(--green)}
+.cancelled-count{font-family:'DM Mono',monospace;font-weight:700;color:var(--red)}
+
+/* EXPORT BAR */
+.export-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:4px}
 .export-info h3{font-size:13px;font-weight:600;margin-bottom:3px}
 .export-info p{font-size:12px;color:var(--muted)}
-.btn{padding:9px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px}
+.btn{padding:9px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px;white-space:nowrap}
 .btn-primary{background:var(--text);color:#fff}
 .btn-primary:hover{background:#333}
+.btn-green{background:var(--green);color:#fff}
+.btn-green:hover{background:#256132}
 .btn-secondary{background:#fff;color:var(--muted);border:1px solid var(--border)}
 .btn-secondary:hover{border-color:var(--text);color:var(--text)}
-
 .hidden{display:none!important}
-.note{background:#fff8f0;border-left:3px solid #e67e22;border-radius:0 6px 6px 0;padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--muted)}
-.note strong{color:#e67e22}
-
-/* TOAST */
-.toast{position:fixed;bottom:22px;right:22px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
-
-@media(max-width:640px){.wrap{padding:16px}.export-bar{flex-direction:column;align-items:flex-start}}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;z-index:500;font-size:14px;color:var(--muted);font-family:'DM Mono',monospace}
 </style>
 </head>
 <body>
 
 <header>
   <img class="logo-img" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
-  <span class="header-title">採購單產生平台</span>
+  <span class="header-title">採購平台</span>
   <div class="spacer"></div>
   <div class="dot" id="dot"></div>
   <span class="dot-label" id="dotLabel">待上傳</span>
@@ -124,23 +137,32 @@ tr:hover td{background:#fafaf9}
 
 <div class="wrap">
 
-  <!-- SHEET STATUS -->
+  <!-- SUPPLIER BAR -->
   <div class="sheet-bar">
     <span class="lbl">供應商對照表</span>
-    <span class="sheet-info loading" id="sheetInfo">讀取中...</span>
+    <span class="sheet-info" id="supplierInfo">讀取中...</span>
     <div class="spacer"></div>
     <button class="btn-xs" onclick="loadSupplierSheet()">↺ 重新載入</button>
   </div>
 
-  <!-- STEPS -->
-  <div class="steps">
-    <div class="step active" id="step1"><div class="sn">1</div>上傳採購建議報表</div>
-    <div class="step" id="step2"><div class="sn">2</div>比對 &amp; 預覽</div>
-    <div class="step" id="step3"><div class="sn">3</div>匯出各供應商報表</div>
+  <!-- TAB NAV -->
+  <div class="tab-nav">
+    <button class="tab-btn active" id="tab1btn" onclick="switchTab(1)">
+      <span class="tab-num" id="t1num">1</span>
+      上傳採購建議報表
+    </button>
+    <button class="tab-btn" id="tab2btn" onclick="switchTab(2)">
+      <span class="tab-num" id="t2num">2</span>
+      廠商詢價 &amp; 確認
+    </button>
+    <button class="tab-btn" id="tab3btn" onclick="switchTab(3)">
+      <span class="tab-num" id="t3num">3</span>
+      下載正式採購單
+    </button>
   </div>
 
-  <!-- UPLOAD -->
-  <div id="uploadArea">
+  <!-- TAB 1: 上傳 + 詢價單 -->
+  <div class="tab-panel active" id="tab1">
     <div class="upload-zone" id="zone1" onclick="document.getElementById('f1').click()">
       <input type="file" id="f1" accept=".xlsx,.xls" onchange="handleFile(this)">
       <div style="font-size:32px;margin-bottom:8px;opacity:.4">📊</div>
@@ -148,282 +170,452 @@ tr:hover td{background:#fafaf9}
       <p>拖拽或點擊上傳 xlsx</p>
       <div class="file-ok" id="f1ok">✓ 已載入</div>
     </div>
-    <div id="progWrap" class="prog-wrap hidden">
-      <div class="prog-lbl" id="progLbl">比對中...</div>
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    <div id="prog1" class="prog-wrap hidden">
+      <div class="prog-lbl" id="prog1lbl">比對中...</div>
+      <div class="prog-bar"><div class="prog-fill" id="prog1fill" style="width:0%"></div></div>
     </div>
-  </div>
-
-  <!-- RESULT -->
-  <div id="resultArea" class="hidden">
-    <div class="note"><strong>提醒：</strong>999999 / Discount / SHIPFEE 等系統條碼已自動排除。建議採購量已無條件進位為整數。</div>
-    <div class="summary-grid" id="summaryCards"></div>
-    <div class="vtabs" id="vtabs"></div>
-    <div id="tablesArea"></div>
-    <div class="export-bar">
-      <div class="export-info">
-        <h3>匯出全部供應商</h3>
-        <p>所有供應商整合在一個 Excel，每廠商獨立分頁</p>
+    <div id="tab1result" class="hidden">
+      <div class="mode-bar">
+        <span style="font-weight:600;font-size:13px">庫存模式：</span>
+        <label><input type="radio" name="stockMode" value="split" checked onchange="recomputeQty()"> 獨立庫存（建議採購量＋蝦皮欠貨）</label>
+        <label><input type="radio" name="stockMode" value="merged" onchange="recomputeQty()"> 合倉模式（僅建議採購量）</label>
       </div>
-      <button class="btn btn-primary" onclick="exportAll()">⬇ 匯出全部 Excel</button>
-      <button class="btn btn-secondary" onclick="resetAll()">↺ 重新上傳</button>
+      <div class="summary-grid" id="sum1"></div>
+      <div class="vtabs" id="vtabs1"></div>
+      <div id="tables1"></div>
+      <div class="export-bar">
+        <div class="export-info">
+          <h3>詢價單（無品名）</h3>
+          <p>發給廠商確認庫存，不含商品名稱與內部條碼</p>
+        </div>
+        <button class="btn btn-primary" onclick="exportInquiry()">⬇ 下載詢價單 Excel</button>
+        <button class="btn btn-green" onclick="saveToSheetAndNext()">☁ 存入雲端 → 進入確認</button>
+      </div>
     </div>
   </div>
-</div>
 
+  <!-- TAB 2: 廠商確認 -->
+  <div class="tab-panel" id="tab2">
+    <div id="tab2loading" class="prog-wrap">
+      <div class="prog-lbl">從雲端讀取採購資料...</div>
+      <div class="prog-bar"><div class="prog-fill" style="width:60%"></div></div>
+    </div>
+    <div id="tab2content" class="hidden">
+      <div class="step2-info">
+        廠商回覆後，將<strong>無法出貨的品項取消打勾</strong>，其餘保留。完成後前往步驟三下載正式採購單。
+        <span style="margin-left:16px">已取消：<span class="cancelled-count" id="cancelledCount">0</span> 筆</span>
+      </div>
+      <div class="vtabs" id="vtabs2"></div>
+      <div id="tables2"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: 正式採購單 -->
+  <div class="tab-panel" id="tab3">
+    <div id="tab3loading" class="prog-wrap">
+      <div class="prog-lbl">從雲端讀取確認資料...</div>
+      <div class="prog-bar"><div class="prog-fill" style="width:60%"></div></div>
+    </div>
+    <div id="tab3content" class="hidden">
+      <div class="summary-grid" id="sum3"></div>
+      <div class="vtabs" id="vtabs3"></div>
+      <div id="tables3"></div>
+      <div class="export-bar">
+        <div class="export-info">
+          <h3>正式採購單（含品名）</h3>
+          <p>含商品條碼、商品名稱，供人工匯入 OMS</p>
+        </div>
+        <button class="btn btn-green" onclick="exportFinal()">⬇ 下載正式採購單</button>
+        <button class="btn btn-secondary" onclick="switchTab(2)">← 返回修改</button>
+      </div>
+    </div>
+  </div>
+
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
-const SHEET_ID = '1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
-const API_KEY  = 'AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
+const SUPPLIER_SHEET_ID = '1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
+const SHEETS_API_KEY    = 'AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
+const OPS_SCRIPT_URL    = 'https://script.google.com/macros/s/AKfycbwdkuoLUYznhhSUsZ8P1h_PoI-cZqJET4WKj3W1gmB9kQxHr7pkh-fjWx9XRJXqR41opQ/exec';
+const SKIP = new Set(['999999','Discount','SHIPFEE']);
 
 let supplierMap = {};
 let purchaseData = null;
-let mergedData = [];
-let currentFilter = 'all';
-const SKIP = new Set(['999999','Discount','SHIPFEE']);
+let mergedData = [];   // Step1 產出
+let cloudData  = [];   // Step2/3 從 Sheet 讀取
+let currentFilter1 = 'all';
+let currentFilter2 = 'all';
+let currentFilter3 = 'all';
 
-// ── LOAD SUPPLIER FROM GOOGLE SHEET ──
+// ── SUPPLIER SHEET ─────────────────────────────────────────────────────
 async function loadSupplierSheet() {
-  const el = document.getElementById('sheetInfo');
-  el.className = 'sheet-info loading';
-  el.textContent = '讀取中...';
+  const el = document.getElementById('supplierInfo');
+  el.className = 'sheet-info'; el.textContent = '讀取中...';
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A:G?key=${API_KEY}`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SUPPLIER_SHEET_ID}/values/A:G?key=${SHEETS_API_KEY}`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const json = await res.json();
     const rows = json.values || [];
     if (rows.length < 2) throw new Error('資料為空');
-    const header = rows[0];
-    // find column indices by name
-    const ci = name => header.indexOf(name);
-    const iCode  = ci('商品條碼');
-    const iVid   = ci('廠商編號');
-    const iVname = ci('廠商名稱');
-    const iVsku  = ci('廠商貨號');
-    const iSize  = ci('尺寸說明');
-    const iColor = ci('廠商顏色說明');
-    if (iCode === -1 || iVid === -1) throw new Error('欄位不符，請確認 Sheet 第一列標題');
+    const h = rows[0];
+    const ci = n => h.indexOf(n);
+    const iCode=ci('商品條碼'),iVid=ci('廠商編號'),iVname=ci('廠商名稱'),iVsku=ci('廠商貨號'),iSize=ci('尺寸說明'),iColor=ci('廠商顏色說明');
+    if (iCode===-1||iVid===-1) throw new Error('欄位不符');
     supplierMap = {};
     rows.slice(1).forEach(r => {
-      const code = (r[iCode] || '').trim();
-      if (code && !supplierMap[code]) {
-        supplierMap[code] = {
-          vendorId:    (r[iVid]   || '').trim(),
-          vendorName:  (r[iVname] || '').trim(),
-          vendorSku:   (r[iVsku]  || '').trim(),
-          vendorSize:  (r[iSize]  || '').trim(),
-          vendorColor: (r[iColor] || '').trim(),
-        };
-      }
+      const code = (r[iCode]||'').trim();
+      if (code && !supplierMap[code]) supplierMap[code] = {
+        vendorId:(r[iVid]||'').trim(), vendorName:(r[iVname]||'').trim(),
+        vendorSku:(r[iVsku]||'').trim(), vendorSize:(r[iSize]||'').trim(),
+        vendorColor:(r[iColor]||'').trim(),
+      };
     });
     const cnt = Object.keys(supplierMap).length;
-    el.className = 'sheet-info ok';
-    el.textContent = `已載入 ${cnt} 筆`;
-    document.getElementById('dot').className = 'dot ok';
-    document.getElementById('dotLabel').textContent = '對照表就緒';
-    showToast(`✓ 供應商對照表載入 ${cnt} 筆`);
-    if (purchaseData) processMerge();
+    el.className='sheet-info ok'; el.textContent=`已載入 ${cnt} 筆`;
+    document.getElementById('dot').className='dot ok';
+    document.getElementById('dotLabel').textContent='對照表就緒';
   } catch(e) {
-    el.className = 'sheet-info err';
-    el.textContent = '載入失敗：' + e.message;
-    document.getElementById('dot').className = 'dot err';
+    el.className='sheet-info err'; el.textContent='載入失敗：'+e.message;
+    document.getElementById('dot').className='dot err';
   }
 }
 
-// ── DRAG DROP ──
-const z1 = document.getElementById('zone1');
-z1.addEventListener('dragover', e => { e.preventDefault(); z1.classList.add('dragover'); });
-z1.addEventListener('dragleave', () => z1.classList.remove('dragover'));
-z1.addEventListener('drop', e => { e.preventDefault(); z1.classList.remove('dragover'); if(e.dataTransfer.files[0]) processPurchaseFile(e.dataTransfer.files[0]); });
-function handleFile(input) { if(input.files[0]) processPurchaseFile(input.files[0]); }
+// ── TAB SWITCH ─────────────────────────────────────────────────────────
+function switchTab(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('tab'+i).classList.toggle('active', i===n);
+    document.getElementById('tab'+i+'btn').classList.toggle('active', i===n);
+  });
+  if (n===2) loadCloudData(2);
+  if (n===3) loadCloudData(3);
+}
 
-function processPurchaseFile(file) {
+// ── FILE UPLOAD ────────────────────────────────────────────────────────
+const z1 = document.getElementById('zone1');
+z1.addEventListener('dragover', e=>{e.preventDefault();z1.classList.add('dragover')});
+z1.addEventListener('dragleave', ()=>z1.classList.remove('dragover'));
+z1.addEventListener('drop', e=>{e.preventDefault();z1.classList.remove('dragover');if(e.dataTransfer.files[0])processFile(e.dataTransfer.files[0])});
+function handleFile(input){if(input.files[0])processFile(input.files[0]);}
+
+function processFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
-    const wb = XLSX.read(e.target.result, { type:'array' });
-    purchaseData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'' });
-    document.getElementById('f1ok').style.display = 'block';
-    z1.style.borderColor = 'var(--green)';
-    setStep(1,'done'); setStep(2,'active');
-    showToast('採購報表已載入 ' + purchaseData.length + ' 筆');
+    const wb = XLSX.read(e.target.result,{type:'array'});
+    purchaseData = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+    document.getElementById('f1ok').style.display='block';
+    z1.style.borderColor='var(--green)';
+    showToast('報表已載入 '+purchaseData.length+' 筆');
     processMerge();
   };
   reader.readAsArrayBuffer(file);
 }
 
+function getSplitMode() {
+  return document.querySelector('input[name="stockMode"]:checked')?.value === 'split';
+}
+
 function processMerge() {
-  if (!purchaseData || Object.keys(supplierMap).length === 0) return;
-  const pw = document.getElementById('progWrap');
-  const pf = document.getElementById('progFill');
-  const pl = document.getElementById('progLbl');
+  if (!purchaseData || Object.keys(supplierMap).length===0) return;
+  const pw=document.getElementById('prog1'),pf=document.getElementById('prog1fill'),pl=document.getElementById('prog1lbl');
   pw.classList.remove('hidden');
-  document.getElementById('resultArea').classList.add('hidden');
-  setTimeout(() => { pf.style.width='40%'; pl.textContent='篩選需採購項目...'; }, 80);
-  setTimeout(() => { pf.style.width='75%'; pl.textContent='比對供應商對照表...'; }, 320);
-  setTimeout(() => {
+  document.getElementById('tab1result').classList.add('hidden');
+  setTimeout(()=>{pf.style.width='40%';pl.textContent='篩選需採購項目...';},80);
+  setTimeout(()=>{pf.style.width='75%';pl.textContent='比對供應商對照表...';},320);
+  setTimeout(()=>{
     pf.style.width='100%'; pl.textContent='完成';
-    mergedData = [];
-    purchaseData.forEach(row => {
-      const qty = parseFloat(row['建議採購量']) || 0;
-      if (qty <= 0) return;
-      const code = String(row['商品條碼'] || '').trim();
-      if (SKIP.has(code)) return;
+    const isSplit = getSplitMode();
+    mergedData=[];
+    purchaseData.forEach(row=>{
+      const qty     = parseFloat(row['建議採購量'])||0;
+      const shopeeQ = parseFloat(row['蝦皮欠貨量'])||0;
+      const total   = isSplit ? qty+shopeeQ : qty;
+      if(total<=0) return;
+      const code = String(row['商品條碼']||'').trim();
+      if(SKIP.has(code)) return;
       const s = supplierMap[code];
-      if (!s || !s.vendorId) return;
+      if(!s||!s.vendorId) return;
       mergedData.push({
-        vendorId:    s.vendorId,
-        vendorName:  s.vendorName,
-        vendorSku:   s.vendorSku,
-        vendorSize:  s.vendorSize,
-        vendorColor: s.vendorColor,
-        barcode:     code,
-        productName: String(row['商品名稱'] || ''),
-        qty:         Math.ceil(qty),
+        barcode:code, productName:String(row['商品名稱']||''),
+        vendorId:s.vendorId, vendorName:s.vendorName, vendorSku:s.vendorSku,
+        vendorColor:s.vendorColor, vendorSize:s.vendorSize,
+        qty:Math.ceil(qty), shopeeQty:Math.ceil(shopeeQ), totalQty:Math.ceil(total),
+        checked:true,
       });
     });
-    mergedData.sort((a,b) => a.vendorId.localeCompare(b.vendorId) || String(a.vendorSku).localeCompare(String(b.vendorSku)));
-    setTimeout(() => {
-      pw.classList.add('hidden');
-      renderResults();
-      setStep(2,'done'); setStep(3,'active');
-    }, 300);
-  }, 650);
+    mergedData.sort((a,b)=>a.vendorId.localeCompare(b.vendorId)||String(a.vendorSku).localeCompare(String(b.vendorSku)));
+    setTimeout(()=>{pw.classList.add('hidden');renderTab1();},300);
+  },650);
 }
 
-function getVendors() {
-  const seen = {};
-  mergedData.forEach(r => { if(!seen[r.vendorId]) seen[r.vendorId]=r.vendorName; });
-  return Object.entries(seen).map(([id,name]) => ({id,name}));
+function recomputeQty() {
+  if(!mergedData.length) return;
+  const isSplit = getSplitMode();
+  mergedData.forEach(r => r.totalQty = isSplit ? r.qty+r.shopeeQty : r.qty);
+  renderTab1();
 }
 
-function renderResults() {
-  document.getElementById('resultArea').classList.remove('hidden');
-  const vendors = getVendors();
-  const totalQty = mergedData.reduce((s,r) => s+r.qty, 0);
-  document.getElementById('summaryCards').innerHTML = `
+// ── RENDER TAB1 ────────────────────────────────────────────────────────
+function renderTab1() {
+  document.getElementById('tab1result').classList.remove('hidden');
+  const vendors = getVendors(mergedData);
+  const totalQty = mergedData.reduce((s,r)=>s+r.totalQty,0);
+  document.getElementById('sum1').innerHTML=`
     <div class="card"><div class="card-lbl">供應商數</div><div class="card-val">${vendors.length}</div><div class="card-sub">本次涉及廠商</div></div>
     <div class="card"><div class="card-lbl">採購 SKU</div><div class="card-val">${mergedData.length}</div><div class="card-sub">獨立品號</div></div>
-    <div class="card"><div class="card-lbl">合計採購量</div><div class="card-val">${totalQty}</div><div class="card-sub">件（已進位）</div></div>`;
-  // tabs
-  const tabs = document.getElementById('vtabs');
-  tabs.innerHTML = `<div class="vtab active" onclick="filterV('all',this)">全部<span class="badge">${mergedData.length}</span></div>`;
-  vendors.forEach(v => {
-    const cnt = mergedData.filter(r=>r.vendorId===v.id).length;
-    const t = document.createElement('div');
-    t.className='vtab'; t.innerHTML=`${v.id}<span class="badge">${cnt}</span>`;
-    t.onclick = () => filterV(v.id, t);
-    tabs.appendChild(t);
+    <div class="card"><div class="card-lbl">合計應採購</div><div class="card-val">${totalQty}</div><div class="card-sub">件（已進位）</div></div>`;
+  renderVtabs('vtabs1', vendors, mergedData, 'f1', v=>{currentFilter1=v;renderVendorTables('tables1',mergedData,currentFilter1,false)});
+  currentFilter1='all';
+  renderVendorTables('tables1', mergedData, 'all', false);
+}
+
+// ── RENDER TAB2 ────────────────────────────────────────────────────────
+function renderTab2() {
+  document.getElementById('tab2loading').classList.add('hidden');
+  document.getElementById('tab2content').classList.remove('hidden');
+  updateCancelledCount();
+  const vendors = getVendors(cloudData);
+  renderVtabs('vtabs2', vendors, cloudData, 'f2', v=>{currentFilter2=v;renderVendorTables('tables2',cloudData,currentFilter2,true)});
+  currentFilter2='all';
+  renderVendorTables('tables2', cloudData, 'all', true);
+}
+
+// ── RENDER TAB3 ────────────────────────────────────────────────────────
+function renderTab3() {
+  document.getElementById('tab3loading').classList.add('hidden');
+  document.getElementById('tab3content').classList.remove('hidden');
+  const active = cloudData.filter(r=>r.checked);
+  const vendors = getVendors(active);
+  const totalQty = active.reduce((s,r)=>s+r.totalQty,0);
+  document.getElementById('sum3').innerHTML=`
+    <div class="card"><div class="card-lbl">確認採購廠商</div><div class="card-val">${vendors.length}</div></div>
+    <div class="card"><div class="card-lbl">確認採購 SKU</div><div class="card-val">${active.length}</div></div>
+    <div class="card"><div class="card-lbl">合計採購量</div><div class="card-val">${totalQty}</div></div>
+    <div class="card"><div class="card-lbl">取消項目</div><div class="card-val" style="color:var(--red)">${cloudData.length-active.length}</div><div class="card-sub">廠商斷貨</div></div>`;
+  renderVtabs('vtabs3', vendors, active, 'f3', v=>{currentFilter3=v;renderVendorTables('tables3',active,currentFilter3,false,true)});
+  currentFilter3='all';
+  renderVendorTables('tables3', active, 'all', false, true);
+}
+
+// ── SHARED RENDER HELPERS ──────────────────────────────────────────────
+function getVendors(data) {
+  const seen={};
+  data.forEach(r=>{if(!seen[r.vendorId])seen[r.vendorId]=r.vendorName;});
+  return Object.entries(seen).map(([id,name])=>({id,name}));
+}
+
+function renderVtabs(elId, vendors, data, prefix, onFilter) {
+  const el = document.getElementById(elId);
+  el.innerHTML=`<div class="vtab active" onclick="(${onFilter.toString()})('all');setActiveVtab('${elId}',this)">全部<span class="badge">${data.length}</span></div>`;
+  vendors.forEach(v=>{
+    const cnt=data.filter(r=>r.vendorId===v.id).length;
+    const t=document.createElement('div');
+    t.className='vtab';
+    t.innerHTML=`${v.id}<span class="badge">${cnt}</span>`;
+    t.onclick=()=>{onFilter(v.id);setActiveVtab(elId,t);};
+    el.appendChild(t);
   });
-  currentFilter = 'all';
-  renderTables();
 }
 
-function filterV(vid, el) {
-  currentFilter = vid;
-  document.querySelectorAll('.vtab').forEach(t => t.classList.remove('active'));
+function setActiveVtab(elId, el) {
+  document.querySelectorAll('#'+elId+' .vtab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
-  renderTables();
 }
 
-function todayStr() {
-  return new Date().toISOString().slice(0,10).replace(/-/g,'');
-}
+function renderVendorTables(areaId, data, filter, showCheck, showName=false) {
+  const area=document.getElementById(areaId);
+  const vendors = filter==='all' ? getVendors(data) : getVendors(data).filter(v=>v.id===filter);
+  area.innerHTML='';
+  vendors.forEach(v=>{
+    const rows=data.filter(r=>r.vendorId===v.id);
+    const activeRows=rows.filter(r=>r.checked);
+    const total=activeRows.reduce((s,r)=>s+r.totalQty,0);
+    const div=document.createElement('div');
+    div.className='vendor-block';
+    const isSplit = getSplitMode();
 
-function renderTables() {
-  const area = document.getElementById('tablesArea');
-  const vendors = currentFilter==='all' ? getVendors() : getVendors().filter(v=>v.id===currentFilter);
-  area.innerHTML = '';
-  vendors.forEach(v => {
-    const rows = mergedData.filter(r=>r.vendorId===v.id);
-    const total = rows.reduce((s,r)=>s+r.qty,0);
-    const fname = `${todayStr()}_${v.id}.xlsx`;
-    const div = document.createElement('div');
-    div.className = 'vendor-block';
-    div.innerHTML = `
+    let extraCols = showName
+      ? `<th>商品條碼</th><th>商品名稱</th>`
+      : ``;
+    let checkCol = showCheck ? `<th style="width:40px;text-align:center">採購</th>` : '';
+    let shopeeCol = isSplit ? `<th style="text-align:center">蝦皮欠貨</th>` : '';
+
+    div.innerHTML=`
       <div class="vendor-head">
         <span class="vbadge">${v.id}</span>
-        <h3>${v.name||v.id}</h3>
-        <span class="vtotal">合計 ${total} 件 | ${rows.length} SKU</span>
-        <button class="btn-dl" onclick="exportVendor('${v.id}','${v.name||v.id}')">⬇ ${fname}</button>
+        <h3>${v.vendorName||v.id}</h3>
+        <span class="vtotal">確認 ${activeRows.length}/${rows.length} 筆 · ${total} 件</span>
+        ${!showCheck && !showName ? `<button class="btn-dl" onclick="exportVendorInquiry('${v.id}')">⬇ ${todayStr()}_${v.id}.xlsx</button>` : ''}
       </div>
-      <table>
-        <thead><tr>
-          <th>廠商貨號</th><th>廠商顏色說明</th><th>尺寸</th><th>商品條碼</th><th>商品名稱</th><th style="text-align:center">建議採購量</th>
-        </tr></thead>
-        <tbody>${rows.map(r=>`
-          <tr>
-            <td class="code-td">${r.vendorSku}</td>
-            <td class="color-td">${r.vendorColor}</td>
-            <td><span class="size-td">${r.vendorSize}</span></td>
-            <td class="code-td">${r.barcode}</td>
-            <td style="font-size:12px">${r.productName}</td>
-            <td class="qty-td">${r.qty}</td>
-          </tr>`).join('')}
-        </tbody>
-      </table>`;
+      <table><thead><tr>
+        ${checkCol}
+        <th>廠商貨號</th><th>廠商顏色說明</th><th>尺寸</th>
+        ${extraCols}
+        <th style="text-align:center">建議採購量</th>
+        ${shopeeCol}
+        <th style="text-align:center;font-weight:700">應採購量</th>
+      </tr></thead>
+      <tbody>${rows.map(r=>renderRow(r,showCheck,showName,isSplit)).join('')}</tbody></table>`;
     area.appendChild(div);
   });
 }
 
-function buildVendorSheet(rows, vendorId, vendorName) {
-  const wb = XLSX.utils.book_new();
-  const data = [['廠商貨號','廠商顏色說明','尺寸說明','商品條碼','商品名稱','建議採購數量','備註']];
-  rows.forEach(r => data.push([r.vendorSku, r.vendorColor, r.vendorSize, r.barcode, r.productName, r.qty, '']));
-  data.push(['','','','','合計', rows.reduce((s,r)=>s+r.qty,0), '']);
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), vendorId);
-  return wb;
+function renderRow(r, showCheck, showName, isSplit) {
+  const cls = r.checked ? '' : 'cancelled';
+  const chk = showCheck
+    ? `<td class="check-td"><input type="checkbox" class="row-check" ${r.checked?'checked':''} onchange="toggleRow('${r.barcode}','${r.vendorId}',this)"></td>`
+    : '';
+  const nameCols = showName
+    ? `<td class="code-td">${r.barcode}</td><td style="font-size:12px">${r.productName}</td>`
+    : '';
+  const shopeeCol = isSplit
+    ? `<td class="qty-shopee">${r.shopeeQty||0}</td>`
+    : '';
+  return `<tr class="${cls}">
+    ${chk}
+    <td class="code-td">${r.vendorSku}</td>
+    <td class="color-td">${r.vendorColor}</td>
+    <td><span class="size-td">${r.vendorSize}</span></td>
+    ${nameCols}
+    <td class="qty-sm">${r.qty}</td>
+    ${shopeeCol}
+    <td class="qty-td">${r.totalQty}</td>
+  </tr>`;
 }
 
-function exportVendor(vid, vname) {
+// ── TOGGLE ROW ────────────────────────────────────────────────────────
+async function toggleRow(barcode, vendorId, checkbox) {
+  const checked = checkbox.checked;
+  // update local
+  const item = cloudData.find(r=>r.barcode===barcode&&r.vendorId===vendorId);
+  if (item) item.checked = checked;
+  // update sheet
+  try {
+    await fetch(OPS_SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      body: JSON.stringify({action:'toggle', barcode, vendorId, checked}),
+      headers:{'Content-Type':'application/json'}
+    });
+  } catch(e) {}
+  updateCancelledCount();
+  renderVendorTables('tables2', cloudData, currentFilter2, true);
+}
+
+function updateCancelledCount() {
+  const cancelled = cloudData.filter(r=>!r.checked).length;
+  const el = document.getElementById('cancelledCount');
+  if (el) el.textContent = cancelled;
+}
+
+// ── CLOUD OPS ─────────────────────────────────────────────────────────
+async function saveToSheetAndNext() {
+  showLoading('存入雲端中...');
+  const batchId = todayStr();
+  const rows = mergedData.map(r=>({...r, batchId}));
+  try {
+    await fetch(OPS_SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      body: JSON.stringify({action:'init', rows}),
+      headers:{'Content-Type':'application/json'}
+    });
+    hideLoading();
+    showToast('✓ 已存入雲端');
+    markTabDone(1);
+    switchTab(2);
+  } catch(e) {
+    hideLoading();
+    showToast('存入失敗：'+e.message);
+  }
+}
+
+async function loadCloudData(tabNum) {
+  const loadEl = document.getElementById('tab'+tabNum+'loading');
+  const contentEl = document.getElementById('tab'+tabNum+'content');
+  if (loadEl) loadEl.classList.remove('hidden');
+  if (contentEl) contentEl.classList.add('hidden');
+  try {
+    const res = await fetch(OPS_SCRIPT_URL+'?action=read');
+    const json = await res.json();
+    if (json.result && Array.isArray(json.data)) {
+      cloudData = json.data.map(r=>({...r, checked: r.checked===true||r.checked==='TRUE'||r.checked===1}));
+      if (tabNum===2) renderTab2();
+      if (tabNum===3) renderTab3();
+    } else {
+      if (loadEl) loadEl.classList.add('hidden');
+      showToast('雲端無資料，請先完成步驟一');
+    }
+  } catch(e) {
+    if (loadEl) loadEl.classList.add('hidden');
+    showToast('讀取失敗：'+e.message);
+  }
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────
+function todayStr(){return new Date().toISOString().slice(0,10).replace(/-/g,'');}
+const isSplitExport=()=>document.querySelector('input[name="stockMode"]:checked')?.value==='split';
+
+function exportVendorInquiry(vid) {
   const rows = mergedData.filter(r=>r.vendorId===vid);
-  const wb = buildVendorSheet(rows, vid, vname);
-  XLSX.writeFile(wb, `${todayStr()}_${vid}.xlsx`);
-  showToast(`✓ ${vid} 已匯出`);
-}
-
-function exportAll() {
   const wb = XLSX.utils.book_new();
-  // summary sheet
-  const sum = [['廠商編號','廠商名稱','廠商貨號','廠商顏色說明','尺寸說明','商品條碼','商品名稱','建議採購數量']];
-  mergedData.forEach(r => sum.push([r.vendorId,r.vendorName,r.vendorSku,r.vendorColor,r.vendorSize,r.barcode,r.productName,r.qty]));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sum), '總採購彙整');
-  // per vendor
-  getVendors().forEach(v => {
-    const rows = mergedData.filter(r=>r.vendorId===v.id);
-    const data = [['廠商貨號','廠商顏色說明','尺寸說明','商品條碼','商品名稱','建議採購數量','備註']];
-    rows.forEach(r => data.push([r.vendorSku,r.vendorColor,r.vendorSize,r.barcode,r.productName,r.qty,'']));
-    data.push(['','','','','合計',rows.reduce((s,r)=>s+r.qty,0),'']);
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), v.id);
+  const data = [['廠商貨號','廠商顏色說明','尺寸說明','建議採購量','蝦皮欠貨量','應採購量','備註']];
+  rows.forEach(r=>data.push([r.vendorSku,r.vendorColor,r.vendorSize,r.qty,r.shopeeQty,r.totalQty,'']));
+  data.push(['','','','','合計',rows.reduce((s,r)=>s+r.totalQty,0),'']);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),vid);
+  XLSX.writeFile(wb,`${todayStr()}_詢價_${vid}.xlsx`);
+  showToast(`✓ ${vid} 詢價單已下載`);
+}
+
+function exportInquiry() {
+  const wb = XLSX.utils.book_new();
+  // summary
+  const sum=[['廠商編號','廠商名稱','廠商貨號','廠商顏色說明','尺寸說明','建議採購量','蝦皮欠貨量','應採購量']];
+  mergedData.forEach(r=>sum.push([r.vendorId,r.vendorName,r.vendorSku,r.vendorColor,r.vendorSize,r.qty,r.shopeeQty,r.totalQty]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),'總詢價彙整');
+  getVendors(mergedData).forEach(v=>{
+    const rows=mergedData.filter(r=>r.vendorId===v.id);
+    const data=[['廠商貨號','廠商顏色說明','尺寸說明','建議採購量','蝦皮欠貨量','應採購量','備註']];
+    rows.forEach(r=>data.push([r.vendorSku,r.vendorColor,r.vendorSize,r.qty,r.shopeeQty,r.totalQty,'']));
+    data.push(['','','','','合計',rows.reduce((s,r)=>s+r.totalQty,0),'']);
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),v.id);
   });
-  XLSX.writeFile(wb, `${todayStr()}_EnamoR_採購報表.xlsx`);
-  showToast('✓ 全部匯出完成');
-  setStep(3,'done');
+  XLSX.writeFile(wb,`${todayStr()}_詢價單_全廠商.xlsx`);
+  showToast('✓ 全部詢價單已下載');
 }
 
-function resetAll() {
-  purchaseData = null; mergedData = [];
-  document.getElementById('resultArea').classList.add('hidden');
-  document.getElementById('f1ok').style.display = 'none';
-  document.getElementById('zone1').style.borderColor = '';
-  document.getElementById('f1').value = '';
-  setStep(1,'active'); setStep(2,''); setStep(3,'');
-  currentFilter = 'all';
+function exportFinal() {
+  const active = cloudData.filter(r=>r.checked);
+  const wb = XLSX.utils.book_new();
+  const sum=[['廠商編號','廠商名稱','廠商貨號','廠商顏色說明','尺寸說明','商品條碼','商品名稱','建議採購量','蝦皮欠貨量','應採購量']];
+  active.forEach(r=>sum.push([r.vendorId,r.vendorName,r.vendorSku,r.vendorColor,r.vendorSize,r.barcode,r.productName,r.qty,r.shopeeQty,r.totalQty]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),'總採購彙整');
+  getVendors(active).forEach(v=>{
+    const rows=active.filter(r=>r.vendorId===v.id);
+    const data=[['廠商貨號','廠商顏色說明','尺寸說明','商品條碼','商品名稱','建議採購量','蝦皮欠貨量','應採購量','備註']];
+    rows.forEach(r=>data.push([r.vendorSku,r.vendorColor,r.vendorSize,r.barcode,r.productName,r.qty,r.shopeeQty,r.totalQty,'']));
+    data.push(['','','','','合計','','',rows.reduce((s,r)=>s+r.totalQty,0),'']);
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),v.id);
+  });
+  XLSX.writeFile(wb,`${todayStr()}_正式採購單.xlsx`);
+  showToast('✓ 正式採購單已下載');
+  markTabDone(3);
 }
 
-function setStep(n, state) {
-  const el = document.getElementById('step'+n);
-  el.className = 'step' + (state ? ' '+state : '');
+// ── UTILS ──────────────────────────────────────────────────────────────
+function markTabDone(n) {
+  const btn=document.getElementById('tab'+n+'btn');
+  if(btn){btn.classList.add('done');}
+  const num=document.getElementById('t'+n+'num');
+  if(num) num.textContent='✓';
 }
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2600);
+function showLoading(msg){
+  let el=document.getElementById('loadingOverlay');
+  if(!el){el=document.createElement('div');el.id='loadingOverlay';el.className='loading-overlay';document.body.appendChild(el);}
+  el.textContent=msg;el.style.display='flex';
 }
+function hideLoading(){const el=document.getElementById('loadingOverlay');if(el)el.style.display='none';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 
-// init
 loadSupplierSheet();
 </script>
 </body>
