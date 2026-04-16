@@ -342,7 +342,7 @@ function processMerge() {
         barcode:code, productName:String(row['商品名稱']||''),
         vendorId:s.vendorId, vendorName:s.vendorName, vendorSku:s.vendorSku,
         vendorColor:s.vendorColor, vendorSize:s.vendorSize,
-        qty:Math.ceil(qty), shopeeQty:Math.ceil(shopeeQ), totalQty:Math.ceil(total),
+        qty:Math.ceil(qty), shopeeQty:Math.ceil(shopeeQ), totalQty:Math.max(10, Math.ceil(total)),
         checked:true,
       });
     });
