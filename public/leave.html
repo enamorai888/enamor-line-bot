@@ -1,0 +1,178 @@
+// ============================================================
+//  EnamoR 員工平台 — Google Apps Script 後端
+//  貼到 Google Apps Script 編輯器，部署為「網頁應用程式」
+//  執行身份：我（你自己）
+//  存取權限：所有人（含匿名）
+// ============================================================
+
+// ===== SHEET 設定 =====
+const SPREADSHEET_ID = "1Y6yj5wtUJ7IQ3XKISrDpyzwR2wYv-s0cY0IoSi_N-5E";
+const SHEET_PUNCH  = "打卡紀錄";
+const SHEET_LEAVE  = "請假紀錄";
+
+// ===== 初始化 Sheets（第一次執行呼叫一次）=====
+function setupSheets() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  // 打卡紀錄
+  let punch = ss.getSheetByName(SHEET_PUNCH);
+  if (!punch) {
+    punch = ss.insertSheet(SHEET_PUNCH);
+    punch.appendRow(["員工姓名","日期","上班時間","下班時間","遲到分鐘","打卡時間戳記"]);
+    punch.setFrozenRows(1);
+  }
+
+  // 請假紀錄
+  let leave = ss.getSheetByName(SHEET_LEAVE);
+  if (!leave) {
+    leave = ss.insertSheet(SHEET_LEAVE);
+    leave.appendRow(["員工姓名","假別","開始日期","結束日期","時段","時數(HR)","代理人","請假原因","附件檔名","送出時間"]);
+    leave.setFrozenRows(1);
+  }
+}
+
+// ===== GET 路由 =====
+function doGet(e) {
+  const p = e.parameter;
+  let result = {};
+
+  try {
+    if (p.action === "getTodayPunch") {
+      result = getTodayPunch(p.name, p.date);
+    } else if (p.action === "getMonthStats") {
+      result = getMonthStats(p.name, p.ym);
+    } else if (p.action === "getMyRecords") {
+      result = getMyRecords(p.name);
+    }
+  } catch(err) {
+    result = { error: err.message };
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ===== POST 路由 =====
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  let result = {};
+
+  try {
+    if (data.action === "punch") {
+      result = handlePunch(data);
+    } else if (data.action === "submitLeave") {
+      result = handleLeave(data);
+    }
+  } catch(err) {
+    result = { error: err.message };
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ===== 打卡邏輯 =====
+function handlePunch(d) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_PUNCH);
+  const data = sheet.getDataRange().getValues();
+
+  if (d.type === "in") {
+    // 新增一列（上班打卡）
+    sheet.appendRow([d.name, d.date, d.time, "", d.lateMin, new Date().toLocaleString("zh-TW")]);
+  } else {
+    // 找今天那列，填下班時間
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (data[i][0] === d.name && formatDate(data[i][1]) === d.date) {
+        sheet.getRange(i + 1, 4).setValue(d.time);
+        sheet.getRange(i + 1, 6).setValue(new Date().toLocaleString("zh-TW"));
+        break;
+      }
+    }
+  }
+  return { ok: true };
+}
+
+function getTodayPunch(name, date) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_PUNCH).getDataRange().getValues();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (data[i][0] === name && formatDate(data[i][1]) === date) {
+      return { in: data[i][2] || null, out: data[i][3] || null, lateMin: data[i][4] || 0 };
+    }
+  }
+  return {};
+}
+
+function getMonthStats(name, ym) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_PUNCH).getDataRange().getValues();
+  const rows = data.slice(1).filter(r => r[0] === name && formatDate(r[1]).startsWith(ym));
+
+  let days = 0, lateTimes = 0, lateMin = 0;
+  const history = [];
+
+  rows.forEach(r => {
+    days++;
+    const late = parseInt(r[4]) || 0;
+    if (late > 0) { lateTimes++; lateMin += late; }
+    history.push({ date: formatDate(r[1]), in: r[2]||"", out: r[3]||"", lateMin: late });
+  });
+
+  return { days, lateTimes, lateMin, history };
+}
+
+// ===== 請假邏輯 =====
+function handleLeave(d) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(SHEET_LEAVE);
+
+  // 上傳附件到 Drive（如果有）
+  let fileUrl = "";
+  if (d.file && d.fileName) {
+    try {
+      const folder = DriveApp.getFoldersByName("EnamoR_附件").hasNext()
+        ? DriveApp.getFoldersByName("EnamoR_附件").next()
+        : DriveApp.createFolder("EnamoR_附件");
+      const blob = Utilities.newBlob(Utilities.base64Decode(d.file), "application/octet-stream", d.fileName);
+      const file = folder.createFile(blob);
+      file.setName(d.name + "_" + d.start + "_" + d.fileName);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      fileUrl = file.getUrl();
+    } catch(e) { fileUrl = "上傳失敗"; }
+  }
+
+  sheet.appendRow([
+    d.name, d.type, d.start, d.end, d.slot,
+    d.hours || "", d.agent, d.reason,
+    fileUrl || d.fileName || "", d.submitTime
+  ]);
+
+  return { ok: true };
+}
+
+function getMyRecords(name) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  const leaveData = ss.getSheetByName(SHEET_LEAVE).getDataRange().getValues();
+  const leaves = leaveData.slice(1)
+    .filter(r => r[0] === name)
+    .map(r => ({ type:r[1], start:r[2], end:r[3], slot:r[4], hours:r[5], agent:r[6], reason:r[7] }));
+
+  const punchData = ss.getSheetByName(SHEET_PUNCH).getDataRange().getValues();
+  const punches = punchData.slice(1)
+    .filter(r => r[0] === name)
+    .map(r => ({ date:formatDate(r[1]), in:r[2]||"", out:r[3]||"", lateMin:parseInt(r[4])||0 }));
+
+  return { leaves, punches };
+}
+
+// ===== 工具 =====
+function formatDate(val) {
+  if (!val) return "";
+  if (typeof val === "string") return val.slice(0,10);
+  const d = new Date(val);
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
