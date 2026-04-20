@@ -1,178 +1,468 @@
-// ============================================================
-//  EnamoR 員工平台 — Google Apps Script 後端
-//  貼到 Google Apps Script 編輯器，部署為「網頁應用程式」
-//  執行身份：我（你自己）
-//  存取權限：所有人（含匿名）
-// ============================================================
-
-// ===== SHEET 設定 =====
-const SPREADSHEET_ID = "1Y6yj5wtUJ7IQ3XKISrDpyzwR2wYv-s0cY0IoSi_N-5E";
-const SHEET_PUNCH  = "打卡紀錄";
-const SHEET_LEAVE  = "請假紀錄";
-
-// ===== 初始化 Sheets（第一次執行呼叫一次）=====
-function setupSheets() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-
-  // 打卡紀錄
-  let punch = ss.getSheetByName(SHEET_PUNCH);
-  if (!punch) {
-    punch = ss.insertSheet(SHEET_PUNCH);
-    punch.appendRow(["員工姓名","日期","上班時間","下班時間","遲到分鐘","打卡時間戳記"]);
-    punch.setFrozenRows(1);
-  }
-
-  // 請假紀錄
-  let leave = ss.getSheetByName(SHEET_LEAVE);
-  if (!leave) {
-    leave = ss.insertSheet(SHEET_LEAVE);
-    leave.appendRow(["員工姓名","假別","開始日期","結束日期","時段","時數(HR)","代理人","請假原因","附件檔名","送出時間"]);
-    leave.setFrozenRows(1);
-  }
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EnamoR 員工平台</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#06C755;--green-light:#E8F9EF;--green-dark:#059142;
+  --red:#E24B4A;--red-light:#FCEBEB;
+  --amber:#BA7517;--amber-light:#FAEEDA;
+  --gray-50:#F8F8F8;--gray-100:#F0F0F0;--gray-300:#CCCCCC;
+  --gray-500:#888;--gray-700:#444;--gray-900:#111;--radius:10px;--radius-sm:6px;
 }
+body{font-family:-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:#F5F5F5;color:var(--gray-900);min-height:100vh;padding-bottom:80px}
+.topbar{background:var(--green);padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-avatar{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,0.3);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:600}
+.topbar-name{color:#fff;font-size:15px;font-weight:500}
+.topbar-date{color:rgba(255,255,255,0.75);font-size:11px;margin-top:1px}
+.logout-btn{background:rgba(255,255,255,0.2);border:none;color:#fff;font-size:11px;padding:4px 10px;border-radius:12px;cursor:pointer}
+.bottomnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:0.5px solid #E0E0E0;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 0 8px;gap:3px;cursor:pointer;color:var(--gray-500);font-size:10px;border:none;background:none}
+.nav-item.active{color:var(--green)}
+.nav-icon{width:22px;height:22px}
+.page{display:none;padding:16px}
+.page.active{display:block}
+.card{background:#fff;border-radius:var(--radius);padding:16px;margin-bottom:12px;border:0.5px solid #E8E8E8}
+.card-title{font-size:13px;font-weight:500;color:var(--gray-700);margin-bottom:12px;padding-bottom:8px;border-bottom:0.5px solid var(--gray-100)}
+.punch-time{text-align:center;padding:8px 0 16px}
+.punch-time .now{font-size:40px;font-weight:300;color:var(--gray-900);letter-spacing:-1px}
+.punch-time .date{font-size:12px;color:var(--gray-500);margin-top:2px}
+.punch-btn{width:100%;padding:14px;border-radius:var(--radius);border:none;font-size:16px;font-weight:500;cursor:pointer}
+.punch-btn.in{background:var(--green);color:#fff}
+.punch-btn.out{background:var(--gray-900);color:#fff}
+.punch-btn.done{background:var(--gray-100);color:var(--gray-500);cursor:default}
+.punch-status{display:flex;gap:8px;margin-bottom:12px}
+.punch-badge{flex:1;padding:8px;border-radius:var(--radius-sm);text-align:center;background:var(--gray-50)}
+.punch-badge .label{font-size:10px;color:var(--gray-500);margin-bottom:2px}
+.punch-badge .val{font-size:14px;font-weight:500;color:var(--gray-300)}
+.punch-badge.done-in{background:var(--green-light)}.punch-badge.done-in .val{color:var(--green-dark)}
+.punch-badge.done-out{background:var(--gray-100)}.punch-badge.done-out .val{color:var(--gray-700)}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-box{background:var(--gray-50);border-radius:var(--radius-sm);padding:10px;text-align:center;border:0.5px solid var(--gray-100)}
+.stat-box .s-label{font-size:10px;color:var(--gray-500);margin-bottom:3px}
+.stat-box .s-val{font-size:18px;font-weight:500;color:var(--gray-900)}
+.stat-box .s-unit{font-size:10px;color:var(--gray-500)}
+.stat-box.warn .s-val{color:var(--red)}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid var(--gray-100)}
+.history-item:last-child{border-bottom:none}
+.hi-date{font-size:13px;font-weight:500}
+.hi-sub{font-size:11px;color:var(--gray-500);margin-top:1px}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.tag-normal{background:var(--green-light);color:var(--green-dark)}
+.tag-late{background:var(--red-light);color:var(--red)}
+.hi-late{font-size:11px;color:var(--red);margin-top:1px;text-align:right}
+.form-group{margin-bottom:12px}
+.form-label{font-size:12px;color:var(--gray-700);margin-bottom:5px;display:block}
+.req{color:var(--red);font-size:11px}
+.form-input{width:100%;padding:10px 12px;border:0.5px solid var(--gray-300);border-radius:var(--radius-sm);font-size:14px;color:var(--gray-900);background:#fff;-webkit-appearance:none}
+.form-input:focus{outline:none;border-color:var(--green)}
+.form-select{width:100%;padding:10px 12px;border:0.5px solid var(--gray-300);border-radius:var(--radius-sm);font-size:14px;color:var(--gray-900);background:#fff;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.form-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-textarea{width:100%;padding:10px 12px;border:0.5px solid var(--gray-300);border-radius:var(--radius-sm);font-size:14px;color:var(--gray-900);background:#fff;resize:none;min-height:72px}
+.form-textarea:focus{outline:none;border-color:var(--green)}
+.type-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.type-tab{padding:6px 12px;border-radius:16px;font-size:12px;border:0.5px solid var(--gray-300);background:#fff;color:var(--gray-700);cursor:pointer}
+.type-tab.active{background:var(--green);color:#fff;border-color:var(--green)}
+.upload-area{border:1px dashed var(--gray-300);border-radius:var(--radius-sm);padding:16px;text-align:center;cursor:pointer;color:var(--gray-500);font-size:13px}
+.upload-area.has-file{border-color:var(--green);background:var(--green-light);color:var(--green-dark)}
+.submit-btn{width:100%;padding:14px;background:var(--green);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:500;cursor:pointer;margin-top:4px}
+.submit-btn:disabled{background:var(--gray-300);cursor:default}
+.leave-item{padding:12px 0;border-bottom:0.5px solid var(--gray-100)}
+.leave-item:last-child{border-bottom:none}
+.li-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.li-type{font-size:13px;font-weight:500}
+.li-detail{font-size:12px;color:var(--gray-500)}
+.bind-wrap{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.bind-icon{width:64px;height:64px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.bind-title{font-size:18px;font-weight:500;margin-bottom:8px}
+.bind-sub{font-size:13px;color:var(--gray-500);margin-bottom:24px;line-height:1.6}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--gray-900);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .2s;white-space:nowrap}
+.toast.show{opacity:1}
+.empty{font-size:12px;color:#888;text-align:center;padding:16px}
+</style>
+</head>
+<body>
 
-// ===== GET 路由 =====
-function doGet(e) {
-  const p = e.parameter;
-  let result = {};
+<script>
+const CONFIG = {
+  LIFF_ID: "YOUR_LIFF_ID",
+  GAS_URL: "https://script.google.com/macros/s/AKfycbw0pC0u3sQiQTcxw8VVegGhMJwh6JXjtjI_exavqrX_tmVO5WAJr_EXSXKQbzapPQW42g/exec",
+  CLOCK_IN_TIME: "08:30",
+  EMPLOYEES: ["邱郁涵","陳妍蓁","郭宜珮","張雅慧","施小如","Rona Lin"]
+};
 
+const state = { userId:null, userName:null, todayPunch:{in:null,out:null}, leaveType:"事假", fileBase64:null, fileName:null };
+</script>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-avatar" id="topAvatar">?</div>
+    <div>
+      <div class="topbar-name" id="topName">載入中...</div>
+      <div class="topbar-date" id="topDate"></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="color:rgba(255,255,255,0.8);font-size:12px" id="topTime"></span>
+    <button class="logout-btn" onclick="logout()">登出</button>
+  </div>
+</div>
+
+<div id="bindScreen" style="display:none">
+  <div class="bind-wrap">
+    <div class="bind-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#06C755" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <div class="bind-title">請選擇你的名字</div>
+    <div class="bind-sub">綁定後將使用 LINE 帳號識別<br>每台裝置只需設定一次</div>
+    <div style="width:100%;max-width:280px">
+      <select class="form-select" id="bindSelect" style="margin-bottom:12px">
+        <option value="">— 選擇姓名 —</option>
+      </select>
+      <button class="submit-btn" onclick="bindEmployee()">確認綁定</button>
+    </div>
+  </div>
+</div>
+
+<div id="mainContent" style="display:none">
+
+  <div class="page active" id="page-punch">
+    <div class="card">
+      <div class="punch-time">
+        <div class="now" id="clockNow">--:--:--</div>
+        <div class="date" id="clockDate"></div>
+      </div>
+      <div class="punch-status">
+        <div class="punch-badge" id="badgeIn"><div class="label">上班打卡</div><div class="val" id="badgeInVal">—</div></div>
+        <div class="punch-badge" id="badgeOut"><div class="label">下班打卡</div><div class="val" id="badgeOutVal">—</div></div>
+      </div>
+      <button class="punch-btn in" id="punchBtn" onclick="doPunch()">上班打卡</button>
+    </div>
+    <div class="card">
+      <div class="card-title">本月出勤</div>
+      <div class="stats-row">
+        <div class="stat-box"><div class="s-label">出勤天數</div><div class="s-val" id="statDays">—</div><div class="s-unit">天</div></div>
+        <div class="stat-box" id="statLateBox"><div class="s-label">遲到次數</div><div class="s-val" id="statLate">—</div><div class="s-unit">次</div></div>
+        <div class="stat-box" id="statLateMinBox"><div class="s-label">遲到分鐘</div><div class="s-val" id="statLateMin">—</div><div class="s-unit">分</div></div>
+      </div>
+      <div id="punchHistory"></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-leave">
+    <div class="card">
+      <div class="card-title">申請請假</div>
+      <div class="form-group">
+        <div class="form-label">假別 <span class="req">*</span></div>
+        <div class="type-tabs" id="leaveTypeTabs">
+          <div class="type-tab active" data-type="事假" onclick="selectLeaveType(this)">事假</div>
+          <div class="type-tab" data-type="病假" onclick="selectLeaveType(this)">病假</div>
+          <div class="type-tab" data-type="特休" onclick="selectLeaveType(this)">特休</div>
+          <div class="type-tab" data-type="颱風假" onclick="selectLeaveType(this)">颱風假</div>
+          <div class="type-tab" data-type="婚假" onclick="selectLeaveType(this)">婚假</div>
+          <div class="type-tab" data-type="喪假" onclick="selectLeaveType(this)">喪假</div>
+          <div class="type-tab" data-type="公假" onclick="selectLeaveType(this)">公假</div>
+        </div>
+      </div>
+      <div class="form-row2">
+        <div class="form-group">
+          <label class="form-label">開始日期 <span class="req">*</span></label>
+          <input type="date" class="form-input" id="leaveStart">
+        </div>
+        <div class="form-group">
+          <label class="form-label">結束日期 <span class="req">*</span></label>
+          <input type="date" class="form-input" id="leaveEnd">
+        </div>
+      </div>
+      <div class="form-row2">
+        <div class="form-group">
+          <label class="form-label">時段</label>
+          <select class="form-select" id="leaveStartSlot">
+            <option value="full">全天</option>
+            <option value="morning">上午</option>
+            <option value="afternoon">下午</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">時數（選填）</label>
+          <input type="number" class="form-input" id="leaveHours" placeholder="e.g. 4" min="0" step="0.5">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">代理人 <span class="req">*</span></label>
+        <select class="form-select" id="leaveAgent">
+          <option value="">— 選擇代理人 —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">請假原因 <span class="req">*</span></label>
+        <textarea class="form-textarea" id="leaveReason" placeholder="請簡述請假原因"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">附件（病假請上傳診斷證明）</label>
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:block;margin:0 auto 4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span id="uploadText">點擊上傳圖片或 PDF</span>
+        </div>
+        <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none" onchange="handleFile(this)">
+      </div>
+      <button class="submit-btn" id="leaveSubmitBtn" onclick="submitLeave()">送出申請</button>
+    </div>
+  </div>
+
+  <div class="page" id="page-records">
+    <div class="card">
+      <div class="card-title">請假紀錄</div>
+      <div id="leaveRecords"><div class="empty">載入中...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">打卡紀錄（近 20 筆）</div>
+      <div id="punchRecords"><div class="empty">載入中...</div></div>
+    </div>
+  </div>
+
+</div>
+
+<nav class="bottomnav" id="bottomNav" style="display:none">
+  <button class="nav-item active" id="nav-punch" onclick="showPage('punch')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>打卡
+  </button>
+  <button class="nav-item" id="nav-leave" onclick="showPage('leave')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>請假
+  </button>
+  <button class="nav-item" id="nav-records" onclick="showPage('records')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>紀錄
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+async function init() {
+  updateClock();
+  setInterval(updateClock, 1000);
   try {
-    if (p.action === "getTodayPunch") {
-      result = getTodayPunch(p.name, p.date);
-    } else if (p.action === "getMonthStats") {
-      result = getMonthStats(p.name, p.ym);
-    } else if (p.action === "getMyRecords") {
-      result = getMyRecords(p.name);
-    }
-  } catch(err) {
-    result = { error: err.message };
+    await liff.init({ liffId: CONFIG.LIFF_ID });
+    if (!liff.isLoggedIn()) { liff.login(); return; }
+    const profile = await liff.getProfile();
+    state.userId = profile.userId;
+  } catch(e) {
+    state.userId = "dev";
   }
-
-  return ContentService
-    .createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
+  const bound = localStorage.getItem("enamor_" + state.userId);
+  if (bound) { state.userName = bound; showMain(); }
+  else showBind();
 }
 
-// ===== POST 路由 =====
-function doPost(e) {
-  const data = JSON.parse(e.postData.contents);
-  let result = {};
-
-  try {
-    if (data.action === "punch") {
-      result = handlePunch(data);
-    } else if (data.action === "submitLeave") {
-      result = handleLeave(data);
-    }
-  } catch(err) {
-    result = { error: err.message };
-  }
-
-  return ContentService
-    .createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-// ===== 打卡邏輯 =====
-function handlePunch(d) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_PUNCH);
-  const data = sheet.getDataRange().getValues();
-
-  if (d.type === "in") {
-    // 新增一列（上班打卡）
-    sheet.appendRow([d.name, d.date, d.time, "", d.lateMin, new Date().toLocaleString("zh-TW")]);
-  } else {
-    // 找今天那列，填下班時間
-    for (let i = data.length - 1; i >= 1; i--) {
-      if (data[i][0] === d.name && formatDate(data[i][1]) === d.date) {
-        sheet.getRange(i + 1, 4).setValue(d.time);
-        sheet.getRange(i + 1, 6).setValue(new Date().toLocaleString("zh-TW"));
-        break;
-      }
-    }
-  }
-  return { ok: true };
-}
-
-function getTodayPunch(name, date) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const data = ss.getSheetByName(SHEET_PUNCH).getDataRange().getValues();
-  for (let i = data.length - 1; i >= 1; i--) {
-    if (data[i][0] === name && formatDate(data[i][1]) === date) {
-      return { in: data[i][2] || null, out: data[i][3] || null, lateMin: data[i][4] || 0 };
-    }
-  }
-  return {};
-}
-
-function getMonthStats(name, ym) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const data = ss.getSheetByName(SHEET_PUNCH).getDataRange().getValues();
-  const rows = data.slice(1).filter(r => r[0] === name && formatDate(r[1]).startsWith(ym));
-
-  let days = 0, lateTimes = 0, lateMin = 0;
-  const history = [];
-
-  rows.forEach(r => {
-    days++;
-    const late = parseInt(r[4]) || 0;
-    if (late > 0) { lateTimes++; lateMin += late; }
-    history.push({ date: formatDate(r[1]), in: r[2]||"", out: r[3]||"", lateMin: late });
+function showBind() {
+  const sel = document.getElementById("bindSelect");
+  CONFIG.EMPLOYEES.forEach(n => {
+    const o = document.createElement("option");
+    o.value = o.textContent = n;
+    sel.appendChild(o);
   });
-
-  return { days, lateTimes, lateMin, history };
+  document.getElementById("bindScreen").style.display = "block";
 }
 
-// ===== 請假邏輯 =====
-function handleLeave(d) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(SHEET_LEAVE);
+function bindEmployee() {
+  const name = document.getElementById("bindSelect").value;
+  if (!name) { showToast("請選擇姓名"); return; }
+  localStorage.setItem("enamor_" + state.userId, name);
+  state.userName = name;
+  document.getElementById("bindScreen").style.display = "none";
+  showMain();
+}
 
-  // 上傳附件到 Drive（如果有）
-  let fileUrl = "";
-  if (d.file && d.fileName) {
-    try {
-      const folder = DriveApp.getFoldersByName("EnamoR_附件").hasNext()
-        ? DriveApp.getFoldersByName("EnamoR_附件").next()
-        : DriveApp.createFolder("EnamoR_附件");
-      const blob = Utilities.newBlob(Utilities.base64Decode(d.file), "application/octet-stream", d.fileName);
-      const file = folder.createFile(blob);
-      file.setName(d.name + "_" + d.start + "_" + d.fileName);
-      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      fileUrl = file.getUrl();
-    } catch(e) { fileUrl = "上傳失敗"; }
+function logout() {
+  localStorage.removeItem("enamor_" + state.userId);
+  location.reload();
+}
+
+function showMain() {
+  document.getElementById("topName").textContent = state.userName;
+  document.getElementById("topAvatar").textContent = state.userName.slice(-1);
+  const agentSel = document.getElementById("leaveAgent");
+  CONFIG.EMPLOYEES.filter(n => n !== state.userName).forEach(n => {
+    const o = document.createElement("option");
+    o.value = o.textContent = n;
+    agentSel.appendChild(o);
+  });
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById("leaveStart").value = today;
+  document.getElementById("leaveEnd").value = today;
+  document.getElementById("mainContent").style.display = "block";
+  document.getElementById("bottomNav").style.display = "flex";
+  loadTodayPunch();
+  loadMonthStats();
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById("clockNow").textContent = now.toTimeString().slice(0,8);
+  document.getElementById("clockDate").textContent = now.toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric",weekday:"short"});
+  document.getElementById("topDate").textContent = now.toLocaleDateString("zh-TW",{month:"numeric",day:"numeric",weekday:"short"});
+  document.getElementById("topTime").textContent = now.toTimeString().slice(0,5);
+}
+
+function loadTodayPunch() {
+  const today = new Date().toISOString().slice(0,10);
+  const key = "punch_" + state.userName + "_" + today;
+  const saved = localStorage.getItem(key);
+  if (saved) { state.todayPunch = JSON.parse(saved); renderPunchUI(); }
+  gasGet({action:"getTodayPunch", name:state.userName, date:today})
+    .then(r => { if(r && r.in){ state.todayPunch={in:r.in,out:r.out||null}; localStorage.setItem(key,JSON.stringify(state.todayPunch)); renderPunchUI(); }}).catch(()=>{});
+}
+
+function renderPunchUI() {
+  const p = state.todayPunch;
+  document.getElementById("badgeInVal").textContent = p.in || "—";
+  document.getElementById("badgeOutVal").textContent = p.out || "—";
+  document.getElementById("badgeIn").className = "punch-badge" + (p.in ? " done-in" : "");
+  document.getElementById("badgeOut").className = "punch-badge" + (p.out ? " done-out" : "");
+  const btn = document.getElementById("punchBtn");
+  if (!p.in) { btn.textContent="上班打卡"; btn.className="punch-btn in"; btn.disabled=false; }
+  else if (!p.out) { btn.textContent="下班打卡"; btn.className="punch-btn out"; btn.disabled=false; }
+  else { btn.textContent="今日已完成打卡"; btn.className="punch-btn done"; btn.disabled=true; }
+}
+
+async function doPunch() {
+  const btn = document.getElementById("punchBtn");
+  btn.disabled = true; btn.textContent = "打卡中...";
+  const now = new Date();
+  const timeStr = now.toTimeString().slice(0,5);
+  const type = !state.todayPunch.in ? "in" : "out";
+  const today = now.toISOString().slice(0,10);
+  let lateMin = 0;
+  if (type === "in") {
+    const [sh,sm] = CONFIG.CLOCK_IN_TIME.split(":").map(Number);
+    lateMin = Math.max(0, now.getHours()*60+now.getMinutes() - (sh*60+sm));
   }
-
-  sheet.appendRow([
-    d.name, d.type, d.start, d.end, d.slot,
-    d.hours || "", d.agent, d.reason,
-    fileUrl || d.fileName || "", d.submitTime
-  ]);
-
-  return { ok: true };
+  try {
+    await gasPost({action:"punch", name:state.userName, date:today, time:timeStr, type, lateMin});
+    if (type==="in") state.todayPunch.in = timeStr; else state.todayPunch.out = timeStr;
+    localStorage.setItem("punch_"+state.userName+"_"+today, JSON.stringify(state.todayPunch));
+    renderPunchUI(); loadMonthStats();
+    showToast(type==="in" ? (lateMin>0?`上班打卡成功（遲到${lateMin}分鐘）`:"上班打卡成功") : "下班打卡成功");
+  } catch(e) { showToast("打卡失敗，請重試"); btn.disabled=false; renderPunchUI(); }
 }
 
-function getMyRecords(name) {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-
-  const leaveData = ss.getSheetByName(SHEET_LEAVE).getDataRange().getValues();
-  const leaves = leaveData.slice(1)
-    .filter(r => r[0] === name)
-    .map(r => ({ type:r[1], start:r[2], end:r[3], slot:r[4], hours:r[5], agent:r[6], reason:r[7] }));
-
-  const punchData = ss.getSheetByName(SHEET_PUNCH).getDataRange().getValues();
-  const punches = punchData.slice(1)
-    .filter(r => r[0] === name)
-    .map(r => ({ date:formatDate(r[1]), in:r[2]||"", out:r[3]||"", lateMin:parseInt(r[4])||0 }));
-
-  return { leaves, punches };
+async function loadMonthStats() {
+  const ym = new Date().toISOString().slice(0,7);
+  try {
+    const r = await gasGet({action:"getMonthStats", name:state.userName, ym});
+    if (!r) return;
+    document.getElementById("statDays").textContent = r.days||0;
+    document.getElementById("statLate").textContent = r.lateTimes||0;
+    document.getElementById("statLateMin").textContent = r.lateMin||0;
+    if ((r.lateTimes||0)>0) { document.getElementById("statLateBox").classList.add("warn"); document.getElementById("statLateMinBox").classList.add("warn"); }
+    const el = document.getElementById("punchHistory");
+    if (!r.history||!r.history.length) { el.innerHTML='<div class="empty">本月尚無紀錄</div>'; return; }
+    el.innerHTML = r.history.slice(-7).reverse().map(h=>`
+      <div class="history-item">
+        <div><div class="hi-date">${h.date}</div><div class="hi-sub">${h.in||"—"} → ${h.out||"—"}</div></div>
+        <div style="text-align:right"><span class="tag ${h.lateMin>0?'tag-late':'tag-normal'}">${h.lateMin>0?'遲到':'正常'}</span>${h.lateMin>0?`<div class="hi-late">+${h.lateMin}分</div>`:''}</div>
+      </div>`).join("");
+  } catch(e) {}
 }
 
-// ===== 工具 =====
-function formatDate(val) {
-  if (!val) return "";
-  if (typeof val === "string") return val.slice(0,10);
-  const d = new Date(val);
-  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+let selectedLeaveType = "事假";
+function selectLeaveType(el) {
+  document.querySelectorAll(".type-tab").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  selectedLeaveType = el.dataset.type;
 }
+
+function handleFile(input) {
+  const file = input.files[0]; if(!file) return;
+  state.fileName = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    state.fileBase64 = e.target.result.split(",")[1];
+    document.getElementById("uploadArea").classList.add("has-file");
+    document.getElementById("uploadText").textContent = "已選取：" + file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+async function submitLeave() {
+  const start = document.getElementById("leaveStart").value;
+  const end = document.getElementById("leaveEnd").value;
+  const agent = document.getElementById("leaveAgent").value;
+  const reason = document.getElementById("leaveReason").value.trim();
+  const hours = document.getElementById("leaveHours").value;
+  const slot = document.getElementById("leaveStartSlot").value;
+  if (!start||!end) { showToast("請填寫日期"); return; }
+  if (!agent) { showToast("請選擇代理人"); return; }
+  if (!reason) { showToast("請填寫請假原因"); return; }
+  if (selectedLeaveType==="病假"&&!state.fileBase64) { showToast("病假請上傳診斷證明"); return; }
+  const btn = document.getElementById("leaveSubmitBtn");
+  btn.disabled=true; btn.textContent="送出中...";
+  try {
+    await gasPost({action:"submitLeave", name:state.userName, type:selectedLeaveType, start, end, slot, hours:hours||"", agent, reason, file:state.fileBase64||"", fileName:state.fileName||"", submitTime:new Date().toLocaleString("zh-TW")});
+    showToast("申請已送出");
+    document.getElementById("leaveReason").value="";
+    document.getElementById("fileInput").value="";
+    document.getElementById("uploadArea").classList.remove("has-file");
+    document.getElementById("uploadText").textContent="點擊上傳圖片或 PDF";
+    state.fileBase64=null; state.fileName=null;
+  } catch(e) { showToast("送出失敗，請重試"); }
+  btn.disabled=false; btn.textContent="送出申請";
+}
+
+async function loadRecords() {
+  try {
+    const r = await gasGet({action:"getMyRecords", name:state.userName});
+    const ll = document.getElementById("leaveRecords");
+    const pl = document.getElementById("punchRecords");
+    const leaves = r.leaves||[];
+    const punches = r.punches||[];
+    ll.innerHTML = leaves.length ? leaves.slice(-20).reverse().map(l=>`
+      <div class="leave-item">
+        <div class="li-header"><span class="li-type">${l.type}</span><span class="tag tag-normal" style="font-size:10px">已送出</span></div>
+        <div class="li-detail">${l.start}${l.end&&l.end!==l.start?' ~ '+l.end:''} ${l.hours?'（'+l.hours+'HR）':''} | 代理：${l.agent}</div>
+      </div>`).join("") : '<div class="empty">尚無請假紀錄</div>';
+    pl.innerHTML = punches.length ? punches.slice(-20).reverse().map(p=>`
+      <div class="history-item">
+        <div><div class="hi-date">${p.date}</div><div class="hi-sub">${p.in||"—"} → ${p.out||"—"}</div></div>
+        <div style="text-align:right"><span class="tag ${p.lateMin>0?'tag-late':'tag-normal'}">${p.lateMin>0?'遲到':'正常'}</span>${p.lateMin>0?`<div class="hi-late">+${p.lateMin}分</div>`:''}</div>
+      </div>`).join("") : '<div class="empty">尚無打卡紀錄</div>';
+  } catch(e) {
+    document.getElementById("leaveRecords").innerHTML='<div class="empty">載入失敗</div>';
+    document.getElementById("punchRecords").innerHTML='<div class="empty">載入失敗</div>';
+  }
+}
+
+function showPage(name) {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  document.getElementById("nav-"+name).classList.add("active");
+  if (name==="records") loadRecords();
+}
+
+function showToast(msg) {
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+async function gasPost(data) {
+  const res = await fetch(CONFIG.GAS_URL, {method:"POST", body:JSON.stringify(data)});
+  return res.json();
+}
+
+async function gasGet(params) {
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(CONFIG.GAS_URL+"?"+qs);
+  return res.json();
+}
+
+init();
+</script>
+</body>
+</html>
