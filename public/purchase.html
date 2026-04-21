@@ -125,6 +125,8 @@ tr.cancelled td{opacity:.35;text-decoration:line-through}
 .loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;z-index:500;font-size:14px;color:var(--muted);font-family:'DM Mono',monospace}
 .qty-input:focus{outline:none;border-color:var(--green)!important;box-shadow:0 0 0 2px rgba(45,122,58,.15)}
 .qty-input::-webkit-inner-spin-button{opacity:1}
+#zone2{border-style:dashed;cursor:pointer}
+#zone2:hover{border-color:var(--green);background:var(--green-light)}
 </style>
 </head>
 <body>
@@ -204,9 +206,22 @@ tr.cancelled td{opacity:.35;text-decoration:line-through}
     </div>
     <div id="tab2content" class="hidden">
       <div class="step2-info">
-        廠商回覆後，將<strong>無法出貨的品項取消打勾</strong>，其餘保留。完成後前往步驟三下載正式採購單。
+        上傳廠商回傳的 Excel（沒貨品項已刪除），系統自動比對並取消未回傳的品項。可分批上傳多個廠商檔案。
         <span style="margin-left:16px">已取消：<span class="cancelled-count" id="cancelledCount">0</span> 筆</span>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+        <div class="upload-zone" id="zone2" onclick="document.getElementById('f2').click()"
+          style="padding:16px 24px;max-width:none;flex:1;min-width:280px;margin-bottom:0;display:flex;align-items:center;justify-content:center;gap:12px">
+          <input type="file" id="f2" accept=".xlsx,.xls" onchange="handleVendorFile(this)" multiple>
+          <span style="font-size:20px">📥</span>
+          <div style="text-align:left">
+            <div style="font-size:13px;font-weight:500">上傳廠商回傳 Excel</div>
+            <div style="font-size:11px;color:var(--muted)">支援多檔同時上傳，自動識別廠商</div>
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="resetAllChecked()" style="white-space:nowrap">↺ 全部重設勾選</button>
+      </div>
+      <div id="vendorUploadLog" style="margin-bottom:12px"></div>
       <div class="vtabs" id="vtabs2"></div>
       <div id="tables2"></div>
     </div>
@@ -526,6 +541,83 @@ function renderRow(r, showCheck, showName, isSplit) {
     <td class="qty-sm" style="color:#aaa">${r.totalQty}</td>
     ${qtyCell}
   </tr>`;
+}
+
+// ── VENDOR FILE UPLOAD (Tab2) ─────────────────────────────────────────
+function handleVendorFile(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  let processed = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const wb = XLSX.read(e.target.result, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+      if (!rows.length) { showToast('檔案無資料：'+file.name); return; }
+
+      // 建立廠商回傳的 key set: 廠商貨號_顏色_尺寸
+      const vendorSet = new Set();
+      const vendorQtyMap = {};
+      rows.forEach(r => {
+        const key = String(r['廠商貨號']||'').trim()+'_'+String(r['廠商顏色說明']||'').trim()+'_'+String(r['尺寸說明']||'').trim();
+        vendorSet.add(key);
+        vendorQtyMap[key] = parseInt(r['應採購量'])||0;
+      });
+
+      // 找出這個廠商的 cloudData 項目
+      // 先從檔名猜廠商 ID（格式 YYYYMMDD_CH01.xlsx）
+      const nameParts = file.name.replace('.xlsx','').replace('.xls','').split('_');
+      const guessedVendorId = nameParts.length >= 2 ? nameParts[nameParts.length-1] : null;
+
+      let matched = 0, cancelled = 0, updated = 0;
+      cloudData.forEach(r => {
+        if (guessedVendorId && r.vendorId !== guessedVendorId) return;
+        const key = String(r.vendorSku||'').trim()+'_'+String(r.vendorColor||'').trim()+'_'+String(r.vendorSize||'').trim();
+        if (vendorSet.has(key)) {
+          r.checked = true;
+          matched++;
+          // 帶入廠商回傳數量
+          const vqty = vendorQtyMap[key];
+          if (vqty > 0) { r.finalQty = vqty; updated++; }
+        } else {
+          r.checked = false;
+          cancelled++;
+        }
+      });
+
+      // sync cancelled to sheet
+      cloudData.filter(r => guessedVendorId ? r.vendorId===guessedVendorId : true).forEach(r => {
+        fetch(OPS_SCRIPT_URL, {
+          method:'POST', mode:'no-cors',
+          body: JSON.stringify({action:'toggle', barcode:r.barcode, vendorId:r.vendorId, checked:r.checked}),
+          headers:{'Content-Type':'application/json'}
+        }).catch(()=>{});
+      });
+
+      // log
+      const log = document.getElementById('vendorUploadLog');
+      const chip = document.createElement('div');
+      chip.style.cssText = 'display:inline-flex;align-items:center;gap:6px;background:var(--green-light);border:1px solid var(--green-border);border-radius:6px;padding:5px 12px;font-size:12px;margin:3px;font-family:"DM Mono",monospace';
+      chip.innerHTML = `✓ <strong>${guessedVendorId||file.name}</strong> 比對完成：${matched} 筆確認 · <span style="color:var(--red)">${cancelled} 筆取消</span> · ${updated} 筆數量更新`;
+      log.appendChild(chip);
+
+      processed++;
+      updateCancelledCount();
+      renderVendorTables('tables2', cloudData, currentFilter2, true);
+      showToast(`${guessedVendorId||file.name}：${matched} 確認，${cancelled} 取消`);
+    };
+    reader.readAsArrayBuffer(file);
+  });
+  input.value = '';
+}
+
+function resetAllChecked() {
+  cloudData.forEach(r => { r.checked = true; delete r.finalQty; });
+  updateCancelledCount();
+  renderVendorTables('tables2', cloudData, currentFilter2, true);
+  document.getElementById('vendorUploadLog').innerHTML = '';
+  showToast('已全部重設為勾選');
 }
 
 // ── TOGGLE ROW ────────────────────────────────────────────────────────
