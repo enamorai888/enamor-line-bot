@@ -1,4 +1,4 @@
-json{
+{
   "functions": {
     "api/line-webhook.js": {
       "memory": 256,
