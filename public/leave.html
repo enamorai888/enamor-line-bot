@@ -141,6 +141,13 @@ const state = { userId:null, userName:null, todayPunch:{in:null,out:null}, leave
         <div class="punch-badge" id="badgeIn"><div class="label">上班打卡</div><div class="val" id="badgeInVal">—</div></div>
         <div class="punch-badge" id="badgeOut"><div class="label">下班打卡</div><div class="val" id="badgeOutVal">—</div></div>
       </div>
+      <div id="gpsBox" style="display:flex;align-items:flex-start;gap:8px;background:#F0FBF4;border-radius:8px;padding:10px 12px;margin-bottom:12px;border:0.5px solid #B8EDD0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059142" stroke-width="2" stroke-linecap="round" style="margin-top:2px;flex-shrink:0"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="9" stroke-dasharray="2 3"/></svg>
+        <div>
+          <div style="font-size:11px;color:#059142;font-weight:500;margin-bottom:2px">打卡位置將被記錄</div>
+          <div style="font-size:12px;color:#2D7A4F" id="gpsAddr">偵測中...</div>
+        </div>
+      </div>
       <button class="punch-btn in" id="punchBtn" onclick="doPunch()">上班打卡</button>
     </div>
     <div class="card">
@@ -299,6 +306,7 @@ function showMain() {
   document.getElementById("bottomNav").style.display = "flex";
   loadTodayPunch();
   loadMonthStats();
+  prefetchGPS();
 }
 
 function updateClock() {
@@ -330,9 +338,50 @@ function renderPunchUI() {
   else { btn.textContent="今日已完成打卡"; btn.className="punch-btn done"; btn.disabled=true; }
 }
 
+async function prefetchGPS() {
+  const el = document.getElementById("gpsAddr");
+  if (!navigator.geolocation) { el.textContent = "此裝置不支援定位"; return; }
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      el.textContent = `${lat}, ${lng}　偵測中...`;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=zh-TW`);
+        const data = await res.json();
+        const addr = data.display_name ? data.display_name.split(",").slice(0,3).join(" ").trim() : `${lat}, ${lng}`;
+        el.textContent = addr;
+        el.title = `${lat}, ${lng}`;
+      } catch(e) { el.textContent = `${lat}, ${lng}`; }
+    },
+    () => { el.textContent = "定位失敗（請開啟位置權限）"; document.getElementById("gpsBox").style.background="#FFF3F3"; document.getElementById("gpsBox").style.borderColor="#FFBBBB"; el.style.color="#C00"; },
+    {timeout:10000, enableHighAccuracy:true}
+  );
+}
+
+async function getLocation() {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) { resolve({lat:"",lng:"",addr:"無法取得"}); return; }
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        const lat = pos.coords.latitude.toFixed(6);
+        const lng = pos.coords.longitude.toFixed(6);
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=zh-TW`);
+          const data = await res.json();
+          const addr = data.display_name ? data.display_name.split(",").slice(0,3).join("").trim() : `${lat},${lng}`;
+          resolve({lat, lng, addr});
+        } catch(e) { resolve({lat, lng, addr:`${lat},${lng}`}); }
+      },
+      () => resolve({lat:"",lng:"",addr:"拒絕定位"}),
+      {timeout:8000, enableHighAccuracy:true}
+    );
+  });
+}
+
 async function doPunch() {
   const btn = document.getElementById("punchBtn");
-  btn.disabled = true; btn.textContent = "打卡中...";
+  btn.disabled = true; btn.textContent = "定位中...";
   const now = new Date();
   const timeStr = now.toTimeString().slice(0,5);
   const type = !state.todayPunch.in ? "in" : "out";
@@ -342,12 +391,16 @@ async function doPunch() {
     const [sh,sm] = CONFIG.CLOCK_IN_TIME.split(":").map(Number);
     lateMin = Math.max(0, now.getHours()*60+now.getMinutes() - (sh*60+sm));
   }
+  btn.textContent = "打卡中...";
+  const loc = await getLocation();
   try {
-    await gasPost({action:"punch", name:state.userName, date:today, time:timeStr, type, lateMin});
+    await gasPost({action:"punch", name:state.userName, date:today, time:timeStr, type, lateMin, lat:loc.lat, lng:loc.lng, addr:loc.addr});
     if (type==="in") state.todayPunch.in = timeStr; else state.todayPunch.out = timeStr;
     localStorage.setItem("punch_"+state.userName+"_"+today, JSON.stringify(state.todayPunch));
     renderPunchUI(); loadMonthStats();
+    const locMsg = loc.addr && loc.addr !== "拒絕定位" ? `\n位置：${loc.addr}` : "";
     showToast(type==="in" ? (lateMin>0?`上班打卡成功（遲到${lateMin}分鐘）`:"上班打卡成功") : "下班打卡成功");
+    if (locMsg) setTimeout(()=>showToast("📍 " + loc.addr), 2400);
   } catch(e) { showToast("打卡失敗，請重試"); btn.disabled=false; renderPunchUI(); }
 }
 
@@ -364,7 +417,7 @@ async function loadMonthStats() {
     if (!r.history||!r.history.length) { el.innerHTML='<div class="empty">本月尚無紀錄</div>'; return; }
     el.innerHTML = r.history.slice(-7).reverse().map(h=>`
       <div class="history-item">
-        <div><div class="hi-date">${h.date}</div><div class="hi-sub">${h.in||"—"} → ${h.out||"—"}</div></div>
+        <div><div class="hi-date">${h.date}</div><div class="hi-sub">${h.in||"—"} → ${h.out||"—"}</div>${h.addr?`<div style="font-size:10px;color:#888;margin-top:2px">${h.addr}</div>`:''}</div>
         <div style="text-align:right"><span class="tag ${h.lateMin>0?'tag-late':'tag-normal'}">${h.lateMin>0?'遲到':'正常'}</span>${h.lateMin>0?`<div class="hi-late">+${h.lateMin}分</div>`:''}</div>
       </div>`).join("");
   } catch(e) {}
