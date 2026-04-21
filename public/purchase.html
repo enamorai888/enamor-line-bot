@@ -714,7 +714,7 @@ async function loadCloudData(tabNum) {
     if (json.result && Array.isArray(json.data)) {
       cloudData = json.data.map(r=>({
         ...r,
-        checked: r.checked===true||r.checked==='TRUE'||r.checked===1,
+        checked: false,  // 預設全部未勾選，等廠商回傳檔上傳後才勾選
         availDays: parseFloat(String(r.availDays||'').replace(',',''))||0,
         stockoutDate: String(r.stockoutDate||''),
       }));
