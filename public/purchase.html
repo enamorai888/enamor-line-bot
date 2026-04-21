@@ -770,9 +770,9 @@ function exportFinal() {
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sum),'總採購彙整');
   getVendors(active).forEach(v=>{
     const rows=active.filter(r=>r.vendorId===v.id);
-    const data=[['廠商貨號','廠商顏色說明','尺寸說明','商品條碼','商品名稱','建議採購量','蝦皮欠貨量','系統建議量','實際採購量','備註']];
-    rows.forEach(r=>{const fq=r.finalQty!==undefined?r.finalQty:r.totalQty;data.push([r.vendorSku,r.vendorColor,r.vendorSize,r.barcode,r.productName,r.qty,r.shopeeQty,r.totalQty,fq,'']);});
-    data.push(['','','','','合計','','','',rows.reduce((s,r)=>s+(r.finalQty!==undefined?r.finalQty:r.totalQty),0),'']);
+    const data=[['廠商貨號','廠商顏色說明','尺寸說明','商品條碼','商品名稱','實際採購量','備註']];
+    rows.forEach(r=>{const fq=r.finalQty!==undefined?r.finalQty:r.totalQty;data.push([r.vendorSku,r.vendorColor,r.vendorSize,r.barcode,r.productName,fq,'']);});
+    data.push(['','','','','合計',rows.reduce((s,r)=>s+(r.finalQty!==undefined?r.finalQty:r.totalQty),0),'']);
     XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(data),v.id);
   });
   XLSX.writeFile(wb,`${todayStr()}_正式採購單.xlsx`);
