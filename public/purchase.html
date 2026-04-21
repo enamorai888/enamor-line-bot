@@ -239,7 +239,7 @@ tr.cancelled td{opacity:.35;text-decoration:line-through}
 <script>
 const SUPPLIER_SHEET_ID = '1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
 const SHEETS_API_KEY    = 'AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
-const OPS_SCRIPT_URL    = 'https://script.google.com/macros/s/AKfycbwt-EG0wX_fXSqPYuBfs1EfPpoCt08tkUYvsghADkQt41CNkVbKxn1qSA9aNAkuE8C54A/exec';
+const OPS_SCRIPT_URL    = 'https://script.google.com/macros/s/AKfycbwHIT8vlYU9qhj4yJM017czPLwRy4KfHdKfyBpdYkKAh4u3BHiGXjNCPpH3toLizQnu_A/exec';
 const SKIP = new Set(['999999','Discount','SHIPFEE']);
 
 let supplierMap = {};
@@ -249,6 +249,25 @@ let cloudData  = [];   // Step2/3 從 Sheet 讀取
 let currentFilter1 = 'all';
 let currentFilter2 = 'all';
 let currentFilter3 = 'all';
+
+// ── DATE HELPERS ──────────────────────────────────────────────────────
+function formatDate(dateStr) {
+  if (!dateStr || dateStr === '0' || dateStr === '') return '—';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return '—';
+    return (d.getMonth()+1)+'/'+(d.getDate());
+  } catch(e) { return '—'; }
+}
+function isUrgent(dateStr) {
+  if (!dateStr || dateStr === '0' || dateStr === '') return false;
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    const diff = (d - new Date()) / (1000*60*60*24);
+    return diff >= 0 && diff <= 14;
+  } catch(e) { return false; }
+}
 
 // ── SUPPLIER SHEET ─────────────────────────────────────────────────────
 async function loadSupplierSheet() {
@@ -331,7 +350,9 @@ function processMerge() {
     mergedData=[];
     purchaseData.forEach(row=>{
       const qty     = parseFloat(row['建議採購量'])||0;
-      const shopeeQ = parseFloat(row['蝦皮欠貨量'])||0;
+      const shopeeQ = parseFloat(row['蝦皮欠貨量']||row['康德欠貨量'])||0;
+      const availDays = parseFloat(String(row['可用天數']||'').replace(',',''))||0;
+      const stockoutDate = String(row['預計缺貨日']||'').trim();
       const total   = isSplit ? qty+shopeeQ : qty;
       if(total<=0) return;
       const code = String(row['商品條碼']||'').trim();
@@ -343,6 +364,7 @@ function processMerge() {
         vendorId:s.vendorId, vendorName:s.vendorName, vendorSku:s.vendorSku,
         vendorColor:s.vendorColor, vendorSize:s.vendorSize,
         qty:Math.ceil(qty), shopeeQty:Math.ceil(shopeeQ), totalQty:Math.max(10, Math.ceil(total)),
+        availDays:availDays, stockoutDate:stockoutDate,
         checked:true,
       });
     });
@@ -460,6 +482,8 @@ function renderVendorTables(areaId, data, filter, showCheck, showName=false) {
         ${extraCols}
         <th style="text-align:center">建議採購量</th>
         ${shopeeCol}
+        <th style="text-align:center">可用天數</th>
+        <th style="text-align:center">預計缺貨日</th>
         ${finalHeader}
       </tr></thead>
       <tbody>${rows.map(r=>renderRow(r,showCheck,showName,isSplit)).join('')}</tbody></table>`;
@@ -497,6 +521,8 @@ function renderRow(r, showCheck, showName, isSplit) {
     ${nameCols}
     <td class="qty-sm">${r.qty}</td>
     ${shopeeCol}
+    <td class="qty-sm" style="color:${(r.availDays||0)<7&&(r.availDays||0)>0?'var(--red)':'var(--muted)'}">${r.availDays||0}</td>
+    <td style="font-size:11px;font-family:'DM Mono',monospace;text-align:center;color:${isUrgent(r.stockoutDate)?'var(--red)':'var(--muted)'};white-space:nowrap">${formatDate(r.stockoutDate)}</td>
     <td class="qty-sm" style="color:#aaa">${r.totalQty}</td>
     ${qtyCell}
   </tr>`;
@@ -586,7 +612,12 @@ async function loadCloudData(tabNum) {
     const res = await fetch(OPS_SCRIPT_URL+'?action=read');
     const json = await res.json();
     if (json.result && Array.isArray(json.data)) {
-      cloudData = json.data.map(r=>({...r, checked: r.checked===true||r.checked==='TRUE'||r.checked===1}));
+      cloudData = json.data.map(r=>({
+        ...r,
+        checked: r.checked===true||r.checked==='TRUE'||r.checked===1,
+        availDays: parseFloat(String(r.availDays||'').replace(',',''))||0,
+        stockoutDate: String(r.stockoutDate||''),
+      }));
       if (tabNum===2) renderTab2();
       if (tabNum===3) renderTab3();
     } else {
