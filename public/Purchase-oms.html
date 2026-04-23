@@ -165,7 +165,7 @@ function renderTbl(){
     const al=inf.it.filter(i=>i.need);const ts=al.reduce((s,i)=>s+i.sug,0);
     const d=document.createElement('div');d.className='vendor-block';
     d.innerHTML=`<div class="vendor-head"><span class="vbadge">${v}</span><h3>${inf.n||v}</h3>${al.length?`<span style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;font-weight:600">⚠ ${al.length} 需採購</span>`:''}<span class="vtotal">${inf.it.length} SKU${ts?` · 建議 ${ts} 件`:''}</span>${al.length?`<button class="btn-dl" onclick="expV('${v}')">⬇ ${v}.xlsx</button>`:''}</div>
-    <table><thead><tr><th>廠商貨號</th><th>顏色</th><th>尺寸</th><th>商品名稱</th><th class="text-right">庫存</th><th class="text-right">採購中</th><th class="text-right">14天銷</th><th class="text-right">日均</th><th class="text-right">ROP</th><th class="text-right">可用</th><th class="text-right" style="color:var(--green);font-weight:700">建議</th></tr></thead>
+    <table><thead><tr><th>商品條碼</th><th>廠商貨號</th><th>顏色</th><th>尺寸</th><th>商品名稱</th><th class="text-right">庫存</th><th class="text-right">採購中</th><th class="text-right">14天銷</th><th class="text-right">日均</th><th class="text-right">ROP</th><th class="text-right">可用</th><th class="text-right" style="color:var(--green);font-weight:700">建議</th></tr></thead>
     <tbody>${inf.it.map(rR).join('')}</tbody></table>`;
     area.appendChild(d);
   });
@@ -173,7 +173,7 @@ function renderTbl(){
 
 function rR(i){
   const c=i.need?'alert-row':'';const dc=i.dl<=7?'var(--red)':i.dl<=14?'var(--orange)':'var(--muted)';
-  return`<tr class="${c}"><td class="mono" style="font-size:11px">${i.vs||i.bc}</td><td style="font-size:12px">${i.vc2||'—'}</td><td>${i.vsz?`<span class="size-tag">${i.vsz}</span>`:'—'}</td><td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.nm}">${i.nm||'—'}</td><td class="mono text-right" style="font-weight:600">${i.stk}</td><td class="mono text-right" style="color:${i.po?'var(--orange)':'var(--muted)'}">${i.po||'—'}</td><td class="mono text-right">${i.s14}</td><td class="mono text-right">${i.da.toFixed(1)}</td><td class="mono text-right">${i.rop}</td><td class="mono text-right" style="color:${dc};font-weight:${i.dl<=14?'700':'400'}">${i.dl>=999?'∞':i.dl+'天'}</td><td class="mono text-right" style="font-weight:700;font-size:14px;color:${i.need?'var(--red)':'var(--muted)'}">${i.sug>0?i.sug:'—'}</td></tr>`;
+  return`<tr class="${c}"><td class="mono" style="font-size:11px;color:var(--muted)">${i.bc}</td><td class="mono" style="font-size:11px">${i.vs||i.bc}</td><td style="font-size:12px">${i.vc2||'—'}</td><td>${i.vsz?`<span class="size-tag">${i.vsz}</span>`:'—'}</td><td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.nm}">${i.nm||'—'}</td><td class="mono text-right" style="font-weight:600">${i.stk}</td><td class="mono text-right" style="color:${i.po?'var(--orange)':'var(--muted)'}">${i.po||'—'}</td><td class="mono text-right">${i.s14}</td><td class="mono text-right">${i.da.toFixed(1)}</td><td class="mono text-right">${i.rop}</td><td class="mono text-right" style="color:${dc};font-weight:${i.dl<=14?'700':'400'}">${i.dl>=999?'∞':i.dl+'天'}</td><td class="mono text-right" style="font-weight:700;font-size:14px;color:${i.need?'var(--red)':'var(--muted)'}">${i.sug>0?i.sug:'—'}</td></tr>`;
 }
 
 function setF(v,el){cF=v;document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTbl()}
