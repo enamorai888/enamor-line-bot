@@ -7,110 +7,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-:root{
-  --bg:#f7f7f5;--surface:#fff;--surface2:#f3f3f0;--border:#e2dedd;
-  --green:#2d7a3a;--green-light:#f0f7f1;--green-border:#b7dfcc;
-  --red:#c0392b;--red-light:#fef2f2;--red-border:#fecaca;
-  --orange:#e67e22;--orange-light:#fff8f0;
-  --text:#1a1a1a;--muted:#888;--muted2:#bbb;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh}
-
-header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}
-.logo-img{height:30px}
-.header-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px}
-.spacer{flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:#ddd;flex-shrink:0;transition:all .3s}
-.dot.ok{background:var(--green);box-shadow:0 0 5px rgba(45,122,58,.4)}
-.dot.err{background:var(--red)}
-.dot-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
-
+:root{--bg:#f7f7f5;--surface:#fff;--surface2:#f3f3f0;--border:#e2dedd;--green:#2d7a3a;--green-light:#f0f7f1;--green-border:#b7dfcc;--red:#c0392b;--red-light:#fef2f2;--red-border:#fecaca;--orange:#e67e22;--orange-light:#fff8f0;--text:#1a1a1a;--muted:#888;--muted2:#bbb}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh}
+header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}.logo-img{height:30px}.header-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px}.spacer{flex:1}.dot{width:7px;height:7px;border-radius:50%;background:#ddd;flex-shrink:0;transition:all .3s}.dot.ok{background:var(--green);box-shadow:0 0 5px rgba(45,122,58,.4)}.dot.err{background:var(--red)}.dot-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 .wrap{max-width:1280px;margin:0 auto;padding:24px 28px}
-
-/* STATUS BAR */
-.status-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.sb-item{display:flex;align-items:center;gap:6px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)}
-.sb-item .dot{width:6px;height:6px}
-.sb-item.ok{color:var(--green)}
-.sb-item.ok .dot{background:var(--green)}
-
-/* ACTION BAR */
-.action-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.btn{padding:9px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px;white-space:nowrap}
-.btn-primary{background:var(--text);color:#fff}
-.btn-primary:hover{background:#333}
-.btn-green{background:var(--green);color:#fff}
-.btn-green:hover{background:#256132}
-.btn-secondary{background:#fff;color:var(--muted);border:1px solid var(--border)}
-.btn-secondary:hover{border-color:var(--text);color:var(--text)}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-
-/* SUMMARY */
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
-.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
-.card-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-family:'DM Mono',monospace;margin-bottom:5px}
-.card-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace}
-.card-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.card-alert{border-color:var(--red-border);background:var(--red-light)}
-.card-alert .card-val{color:var(--red)}
-
-/* VENDOR CONFIG */
-.vendor-config{background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:20px;overflow:hidden}
-.vc-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
-.vc-header h3{font-size:13px;font-weight:600}
-.vc-toggle{font-size:10px;color:var(--muted2);margin-left:auto}
-.vc-body{padding:0 16px;max-height:0;overflow:hidden;transition:max-height .3s}
-.vc-body.open{max-height:600px;padding:12px 16px}
-.vc-table{width:100%;border-collapse:collapse}
-.vc-table th{padding:6px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}
-.vc-table td{padding:6px 10px;font-size:12px;border-bottom:1px solid var(--surface2)}
-.vc-input{width:60px;text-align:center;font-family:'DM Mono',monospace;font-size:12px;border:1px solid var(--border);border-radius:4px;padding:3px 6px;background:#fff;color:var(--text)}
-.vc-input:focus{outline:none;border-color:var(--green)}
-
-/* FILTER */
-.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-.filter-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
-.chip{padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap}
-.chip:hover{border-color:var(--text);color:var(--text)}
-.chip.active{background:var(--text);border-color:var(--text);color:#fff;font-weight:600}
-.chip.alert{border-color:var(--red);color:var(--red)}
-.chip.alert.active{background:var(--red);color:#fff}
-.search-input{margin-left:auto;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-family:'DM Mono',monospace;color:var(--text);outline:none;width:200px}
-.search-input:focus{border-color:var(--text)}
-
-/* VENDOR BLOCK */
-.vendor-block{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}
-.vendor-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
-.vbadge{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:600}
-.vendor-head h3{font-size:14px;font-weight:600}
-.vtotal{margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}
-.btn-dl{padding:6px 14px;border-radius:5px;border:1px solid var(--green);background:#fff;color:var(--green);font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:500}
-.btn-dl:hover{background:var(--green);color:#fff}
-
-table{width:100%;border-collapse:collapse}
-th{padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}
-td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--surface2);vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:#faf9f8}
-.mono{font-family:'DM Mono',monospace}
-.text-center{text-align:center}
-.text-right{text-align:right}
-.alert-row td{background:var(--red-light)!important}
-.size-tag{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:3px;border:1px solid var(--border);display:inline-block}
-
-/* LOADING */
-.loading{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}
-.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
-.toast.show{opacity:1;transform:translateY(0)}
-.hidden{display:none!important}
+.status-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}.sb-item{display:flex;align-items:center;gap:6px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)}.sb-item .dot{width:6px;height:6px}.sb-item.ok{color:var(--green)}.sb-item.ok .dot{background:var(--green)}
+.action-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}.btn{padding:9px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px;white-space:nowrap}.btn-primary{background:var(--text);color:#fff}.btn-primary:hover{background:#333}.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#256132}.btn-secondary{background:#fff;color:var(--muted);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--text);color:var(--text)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}.card-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-family:'DM Mono',monospace;margin-bottom:5px}.card-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace}.card-sub{font-size:11px;color:var(--muted);margin-top:2px}.card-alert{border-color:var(--red-border);background:var(--red-light)}.card-alert .card-val{color:var(--red)}
+.vendor-config{background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:20px;overflow:hidden}.vc-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}.vc-header h3{font-size:13px;font-weight:600}.vc-toggle{font-size:10px;color:var(--muted2);margin-left:auto}.vc-body{padding:0;max-height:0;overflow:hidden;transition:max-height .3s}.vc-body.open{max-height:800px;padding:12px 16px;overflow-y:auto}.vc-table{width:100%;border-collapse:collapse}.vc-table th{padding:6px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}.vc-table td{padding:6px 10px;font-size:12px;border-bottom:1px solid var(--surface2)}.vc-input{width:60px;text-align:center;font-family:'DM Mono',monospace;font-size:12px;border:1px solid var(--border);border-radius:4px;padding:3px 6px;background:#fff;color:var(--text)}.vc-input:focus{outline:none;border-color:var(--green)}
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}.filter-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}.chip{padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap}.chip:hover{border-color:var(--text);color:var(--text)}.chip.active{background:var(--text);border-color:var(--text);color:#fff;font-weight:600}.chip.alert{border-color:var(--red);color:var(--red)}.chip.alert.active{background:var(--red);color:#fff}.search-input{margin-left:auto;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-family:'DM Mono',monospace;color:var(--text);outline:none;width:200px}.search-input:focus{border-color:var(--text)}
+.vendor-block{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}.vendor-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}.vbadge{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:600}.vendor-head h3{font-size:14px;font-weight:600}.vtotal{margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}.btn-dl{padding:6px 14px;border-radius:5px;border:1px solid var(--green);background:#fff;color:var(--green);font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:500}.btn-dl:hover{background:var(--green);color:#fff}
+table{width:100%;border-collapse:collapse}th{padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--surface2);vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#faf9f8}.mono{font-family:'DM Mono',monospace}.text-center{text-align:center}.text-right{text-align:right}.alert-row td{background:var(--red-light)!important}.size-tag{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:3px;border:1px solid var(--border);display:inline-block}
+.loading{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}.toast.show{opacity:1;transform:translateY(0)}.hidden{display:none!important}
 </style>
 </head>
 <body>
-
 <header>
   <img class="logo-img" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
   <span class="header-title">採購平台 · OMS</span>
@@ -118,527 +30,177 @@ tr:hover td{background:#faf9f8}
   <div class="dot" id="dot"></div>
   <span class="dot-label" id="dotLabel">待連線</span>
 </header>
-
 <div class="wrap">
-
-  <!-- STATUS -->
-  <div class="status-bar" id="statusBar">
-    <div class="sb-item" id="sbOms"><div class="dot"></div>OMS 連線</div>
-    <div class="sb-item" id="sbSupplier"><div class="dot"></div>供應商對照表</div>
-    <div class="sb-item" id="sbStock"><div class="dot"></div>庫存 —</div>
-    <div class="sb-item" id="sbOrders"><div class="dot"></div>訂單 —</div>
+  <div class="status-bar">
+    <div class="sb-item" id="sbOms"><div class="dot"></div>OMS</div>
+    <div class="sb-item" id="sbSup"><div class="dot"></div>對照表</div>
+    <div class="sb-item" id="sbStk"><div class="dot"></div>庫存</div>
+    <div class="sb-item" id="sbSal"><div class="dot"></div>銷量</div>
+    <div class="sb-item" id="sbPo"><div class="dot"></div>採購單</div>
   </div>
-
-  <!-- ACTION -->
   <div class="action-bar">
     <button class="btn btn-primary" id="btnFetch" onclick="fetchAll()">📡 從 OMS 拉取數據</button>
-    <span id="fetchStatus" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+    <span id="fetchSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
     <div class="spacer"></div>
-    <button class="btn btn-green hidden" id="btnExport" onclick="exportAll()">⬇ 匯出採購建議 Excel</button>
+    <button class="btn btn-green hidden" id="btnExp" onclick="exportAll()">⬇ 匯出採購建議 Excel</button>
   </div>
-
-  <!-- LOADING -->
-  <div class="loading hidden" id="loadingArea"><span class="spinner"></span><span id="loadingMsg">讀取中...</span></div>
-
-  <!-- CONTENT (hidden until data loaded) -->
-  <div id="contentArea" class="hidden">
-
-    <!-- SUMMARY -->
-    <div class="summary-grid" id="summaryGrid"></div>
-
-    <!-- VENDOR CONFIG -->
+  <div class="loading hidden" id="ldArea"><span class="spinner"></span><span id="ldMsg">讀取中...</span></div>
+  <div id="content" class="hidden">
+    <div class="summary-grid" id="sumGrid"></div>
     <div class="vendor-config">
-      <div class="vc-header" onclick="toggleConfig()">
+      <div class="vc-header" onclick="toggleCfg()">
         <h3>⚙ 供應商交期設定</h3>
-        <span style="font-size:11px;color:var(--muted)">（交期天數 + 安全庫存天數 = 再訂購點計算基礎）</span>
-        <span class="vc-toggle" id="vcToggle">▶</span>
+        <span style="font-size:11px;color:var(--muted)">交期 + 安全庫存 = 再訂購點（by 供應商）</span>
+        <span class="vc-toggle" id="vcTog">▶</span>
       </div>
       <div class="vc-body" id="vcBody">
-        <table class="vc-table">
-          <thead><tr><th>廠商編號</th><th>廠商名稱</th><th>SKU 數</th><th>交期天數</th><th>安全庫存天數</th><th>合計</th></tr></thead>
-          <tbody id="vcRows"></tbody>
-        </table>
+        <table class="vc-table"><thead><tr><th>廠商</th><th>名稱</th><th>SKU</th><th>需採購</th><th>交期</th><th>安全</th><th>合計</th></tr></thead><tbody id="vcR"></tbody></table>
       </div>
     </div>
-
-    <!-- FILTER -->
     <div class="filter-bar">
       <span class="filter-lbl">篩選</span>
-      <div class="chip active" onclick="setFilter('all',this)">全部</div>
-      <div class="chip alert" onclick="setFilter('alert',this)">⚠ 需採購</div>
-      <div class="chip" onclick="setFilter('ok',this)">庫存充足</div>
-      <input class="search-input" placeholder="搜尋貨號/品名..." oninput="searchFilter(this.value)" id="searchInput">
+      <div class="chip active" onclick="setF('all',this)">全部</div>
+      <div class="chip alert" onclick="setF('alert',this)">⚠ 需採購</div>
+      <div class="chip" onclick="setF('ok',this)">充足</div>
+      <div class="chip" onclick="setF('un',this)">未對照</div>
+      <input class="search-input" placeholder="搜尋..." oninput="sQ=this.value;renderTbl()">
     </div>
-
-    <!-- TABLES -->
-    <div id="tablesArea"></div>
-
+    <div id="tblArea"></div>
   </div>
-
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────
-const OMS_PROXY = 'https://enamor-oms.vercel.app/api/oms-proxy';
-const OMS_TOKEN = '28447208';
-const SUPPLIER_SHEET_ID = '1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
-const SHEETS_API_KEY = 'AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
-const LS_KEY = 'enamor_purchase_oms_config';
+const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208';
+const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
+const LK='enamor_po_oms_v2',SD=14;
+let supMap={},stockD=[],skuSal={},pendPO={},merged=[],vCfg={},cF='all',sQ='';
+function ldCfg(){try{vCfg=JSON.parse(localStorage.getItem(LK)||'{}')}catch(e){vCfg={}}}
+function svCfg(){localStorage.setItem(LK,JSON.stringify(vCfg))}
+function gVC(v){if(!vCfg[v])vCfg[v]={ld:7,sf:7};return vCfg[v]}
+async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({endpoint:ep,body:b})});return r.json()}
+async function ldSup(){const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:G?key=${SK}`;const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');const h=rows[0],ci=n=>h.indexOf(n);const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明');supMap={};rows.slice(1).forEach(r=>{const c=(r[iC]||'').trim();if(c&&!supMap[c])supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs:(r[iS]||'').trim(),vsz:(r[iSz]||'').trim(),vc:(r[iCo]||'').trim()}});return Object.keys(supMap).length}
 
-// ── STATE ─────────────────────────────────────────────────────────────
-let supplierMap = {};   // barcode → {vendorId, vendorName, vendorSku, vendorSize, vendorColor}
-let stockData = [];     // raw OMS stock
-let orderData = [];     // raw OMS orders
-let skuSales = {};      // barcode → { qty14d, dailyAvg }
-let mergedItems = [];   // final merged list
-let vendorConfig = {};  // vendorId → { leadDays, safetyDays }
-let currentFilter = 'all';
-let searchQ = '';
-
-function loadConfig() {
-  try { vendorConfig = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch(e) { vendorConfig = {}; }
-}
-function saveConfig() {
-  localStorage.setItem(LS_KEY, JSON.stringify(vendorConfig));
-}
-function getVendorConfig(vid) {
-  if (!vendorConfig[vid]) vendorConfig[vid] = { leadDays: 7, safetyDays: 7 };
-  return vendorConfig[vid];
-}
-
-// ── OMS FETCH ─────────────────────────────────────────────────────────
-async function omsPost(endpoint, body) {
-  const res = await fetch(OMS_PROXY, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-proxy-token': OMS_TOKEN },
-    body: JSON.stringify({ endpoint, body }),
-  });
-  return await res.json();
-}
-
-// ── SUPPLIER SHEET ────────────────────────────────────────────────────
-async function loadSupplierSheet() {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SUPPLIER_SHEET_ID}/values/A:G?key=${SHEETS_API_KEY}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const json = await res.json();
-  const rows = json.values || [];
-  if (rows.length < 2) throw new Error('資料為空');
-  const h = rows[0];
-  const ci = n => h.indexOf(n);
-  const iCode=ci('商品條碼'),iVid=ci('廠商編號'),iVname=ci('廠商名稱'),iVsku=ci('廠商貨號'),iSize=ci('尺寸說明'),iColor=ci('廠商顏色說明');
-  supplierMap = {};
-  rows.slice(1).forEach(r => {
-    const code = (r[iCode]||'').trim();
-    if (code && !supplierMap[code]) supplierMap[code] = {
-      vendorId:(r[iVid]||'').trim(), vendorName:(r[iVname]||'').trim(),
-      vendorSku:(r[iVsku]||'').trim(), vendorSize:(r[iSize]||'').trim(),
-      vendorColor:(r[iColor]||'').trim(),
-    };
-  });
-  return Object.keys(supplierMap).length;
-}
-
-// ── MAIN FETCH ────────────────────────────────────────────────────────
-async function fetchAll() {
-  const btn = document.getElementById('btnFetch');
-  const status = document.getElementById('fetchStatus');
-  btn.disabled = true;
-  document.getElementById('loadingArea').classList.remove('hidden');
-  document.getElementById('contentArea').classList.add('hidden');
-
-  try {
-    // 1. Supplier sheet
-    setLoading('載入供應商對照表...');
-    const supplierCount = await loadSupplierSheet();
-    setSbStatus('sbSupplier', true, `對照表 ${supplierCount} 筆`);
-
-    // 2. OMS Stock
-    setLoading(`拉取 OMS 庫存...`);
-    const stockRes = await omsPost('/api/v2/default/getStocksData/searchList', { "view_products_stock.stock_group": "10" });
-    stockData = stockRes.retval || [];
-    setSbStatus('sbOms', true, 'OMS 連線正常');
-    setSbStatus('sbStock', true, `庫存 ${stockData.length} 筆`);
-
-    // 3. OMS Orders (last 14 days)
-    setLoading('拉取近 14 天訂單...');
-    const d14 = new Date(); d14.setDate(d14.getDate() - 14);
-    const dateStr = d14.toISOString().slice(0, 10);
-    const orderRes = await omsPost('/api/v2/default/apiOrderList/searchDetail', {
-      "orders.created_at@start": [">=", dateStr],
-      "orders.orders_status": "1",
-    });
-    // Try searchList if searchDetail doesn't return items
-    let rawOrders = orderRes.retval || [];
-    if (rawOrders.length === 0) {
-      const orderRes2 = await omsPost('/api/v2/default/apiOrderList/searchList', {
-        "orders.created_at@start": [">=", dateStr],
-      });
-      rawOrders = orderRes2.retval || [];
-    }
-    orderData = rawOrders;
-    setSbStatus('sbOrders', true, `訂單 ${orderData.length} 筆（14天）`);
-
-    // 4. Calculate sales
-    setLoading('計算銷量...');
-    await calcSales();
-
-    // 5. Merge
-    setLoading('合併數據...');
-    merge();
-
-    // Done
-    document.getElementById('loadingArea').classList.add('hidden');
-    document.getElementById('contentArea').classList.remove('hidden');
-    document.getElementById('btnExport').classList.remove('hidden');
-    document.getElementById('dot').className = 'dot ok';
-    document.getElementById('dotLabel').textContent = '數據就緒';
-    status.textContent = `最後更新 ${new Date().toLocaleTimeString('zh-TW')}`;
+async function fetchAll(){
+  const btn=document.getElementById('btnFetch');btn.disabled=true;
+  document.getElementById('ldArea').classList.remove('hidden');
+  document.getElementById('content').classList.add('hidden');
+  try{
+    sL('載入供應商對照表...');const sc=await ldSup();sS('sbSup',1,`對照表 ${sc}`);
+    sL('拉取庫存...');const sr=await oP('/api/v2/default/getStocksData/searchList',{"view_products_stock.stock_group":"10"});stockD=sr.retval||[];sS('sbOms',1,'OMS 正常');sS('sbStk',1,`庫存 ${stockD.length}`);
+    sL('拉取14天訂單明細...');const dd=new Date();dd.setDate(dd.getDate()-SD);const ds=dd.toISOString().slice(0,10);
+    const or=await oP('/api/v2/default/apiOrderList/searchDetail',{"orders.created_at@start":[">=",ds]});
+    const rv=or.retval||{};const oi=rv['訂單明細']||[];sS('sbSal',1,`明細 ${oi.length}（${SD}天）`);
+    skuSal={};oi.forEach(i=>{const m=(i['orders_products.products_model']||'').trim();const q=parseInt(i['orders_products.products_quantity']||0);if(m&&q>0){skuSal[m]=(skuSal[m]||0)+q}});
+    sL('拉取待處理採購單...');const pr=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.status":"60"});
+    const pv=pr.retval||{};const pi=pv.purchase||pv['purchase']||[];pendPO={};
+    if(Array.isArray(pi)){pi.forEach(p=>{const m=(p['purchase.products_model']||'').trim();const pq=parseInt(p['purchase.purchase_quantity']||0);const sq=parseInt(p['purchase.stock_quantity']||0);const rem=pq-sq;if(m&&rem>0)pendPO[m]=(pendPO[m]||0)+rem})}
+    sS('sbPo',1,`採購中 ${Object.keys(pendPO).length} SKU`);
+    sL('合併計算...');doMerge();
+    document.getElementById('ldArea').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+    document.getElementById('btnExp').classList.remove('hidden');
+    document.getElementById('dot').className='dot ok';
+    document.getElementById('dotLabel').textContent='數據就緒';
+    document.getElementById('fetchSt').textContent=`更新 ${new Date().toLocaleTimeString('zh-TW')}`;
     renderAll();
-  } catch(e) {
-    document.getElementById('loadingArea').classList.add('hidden');
-    status.textContent = '錯誤：' + e.message;
-    document.getElementById('dot').className = 'dot err';
-    showToast('拉取失敗：' + e.message);
+  }catch(e){
+    document.getElementById('ldArea').classList.add('hidden');
+    document.getElementById('fetchSt').textContent='錯誤：'+e.message;
+    document.getElementById('dot').className='dot err';
+    toast('失敗：'+e.message);console.error(e);
   }
-  btn.disabled = false;
+  btn.disabled=false;
 }
 
-function setLoading(msg) {
-  document.getElementById('loadingMsg').textContent = msg;
-}
-function setSbStatus(id, ok, text) {
-  const el = document.getElementById(id);
-  el.className = 'sb-item' + (ok ? ' ok' : '');
-  el.innerHTML = `<div class="dot"></div>${text}`;
-}
+function sL(m){document.getElementById('ldMsg').textContent=m}
+function sS(id,ok,t){const e=document.getElementById(id);e.className='sb-item'+(ok?' ok':'');e.innerHTML=`<div class="dot"></div>${t}`}
 
-// ── SALES CALC ────────────────────────────────────────────────────────
-async function calcSales() {
-  skuSales = {};
-  // orderData from searchList doesn't have item detail
-  // Need to fetch detail for each order to get products
-  // For efficiency, try searchDetail with date filter
-  const d14 = new Date(); d14.setDate(d14.getDate() - 14);
-  const dateStr = d14.toISOString().slice(0, 10);
-
-  const detailRes = await omsPost('/api/v2/default/apiOrderList/searchDetail', {
-    "orders.created_at@start": [">=", dateStr],
+function doMerge(){
+  const sm={};
+  stockD.forEach(s=>{const m=(s['view_products_stock.products_model']||'').trim();const q=parseInt(s['view_products_stock.stock_qty']||0);const n=(s['view_products_stock.products_name']||'').trim();if(!m)return;if(!sm[m])sm[m]={stk:0,nm:n};sm[m].stk+=q});
+  merged=[];
+  Object.entries(sm).forEach(([bc,inf])=>{
+    const sp=supMap[bc];const sold=skuSal[bc]||0;const da=Math.round((sold/SD)*100)/100;const po=pendPO[bc]||0;
+    const vid=sp?sp.vid:'未對照';const vc=gVC(vid);
+    const rop=Math.ceil(da*(vc.ld+vc.sf));const eff=inf.stk+po;
+    const sug=Math.max(0,rop-eff);const need=eff<rop&&da>0;
+    const dl=da>0?Math.floor(inf.stk/da):999;
+    merged.push({bc,nm:inf.nm,vid,vn:sp?.vn||'',vs:sp?.vs||'',vc2:sp?.vc||'',vsz:sp?.vsz||'',stk:inf.stk,s14:sold,da,po,rop,sug,need,dl});
   });
-  const details = detailRes.retval || [];
-
-  details.forEach(order => {
-    const items = order.orders_items || [];
-    items.forEach(item => {
-      const model = (item['orders_products.products_model'] || item.products_model || '').trim();
-      const qty = parseInt(item['orders_products.products_quantity'] || item.products_quantity || 0);
-      if (model && qty > 0) {
-        if (!skuSales[model]) skuSales[model] = { qty14d: 0 };
-        skuSales[model].qty14d += qty;
-      }
-    });
-  });
-
-  // If no detail data, estimate from order count (fallback)
-  if (details.length === 0 && orderData.length > 0) {
-    // Can't get SKU-level data without detail, mark as unavailable
-    setSbStatus('sbOrders', true, `訂單 ${orderData.length} 筆（無明細）`);
-  }
-
-  // Calc daily avg
-  Object.keys(skuSales).forEach(k => {
-    skuSales[k].dailyAvg = Math.round((skuSales[k].qty14d / 14) * 100) / 100;
-  });
+  merged.sort((a,b)=>{if(a.need!==b.need)return a.need?-1:1;return a.dl-b.dl});
 }
 
-// ── MERGE ─────────────────────────────────────────────────────────────
-function merge() {
-  mergedItems = [];
-  const stockMap = {};
+function renderAll(){renderSum();renderVC();renderTbl()}
 
-  // Group stock by products_model (sum across warehouses)
-  stockData.forEach(s => {
-    const model = (s['view_products_stock.products_model'] || '').trim();
-    const qty = parseInt(s['view_products_stock.stock_qty'] || 0);
-    const name = (s['view_products_stock.products_name'] || '').trim();
-    if (!model) return;
-    if (!stockMap[model]) stockMap[model] = { stock: 0, name };
-    stockMap[model].stock += qty;
-  });
+function renderSum(){
+  const al=merged.filter(i=>i.need);const ts=al.reduce((s,i)=>s+i.sug,0);
+  const vs=new Set(merged.filter(i=>i.vid!=='未對照').map(i=>i.vid));
+  const um=merged.filter(i=>i.vid==='未對照').length;
+  const tStk=merged.reduce((s,i)=>s+i.stk,0);const tPo=merged.reduce((s,i)=>s+i.po,0);
+  document.getElementById('sumGrid').innerHTML=`
+    <div class="card ${al.length?'card-alert':''}"><div class="card-lbl">需採購</div><div class="card-val">${al.length}</div><div class="card-sub">SKU 低於再訂購點</div></div>
+    <div class="card"><div class="card-lbl">建議採購量</div><div class="card-val" style="color:var(--green)">${ts.toLocaleString()}</div><div class="card-sub">件</div></div>
+    <div class="card"><div class="card-lbl">庫存 SKU</div><div class="card-val">${merged.length}</div><div class="card-sub">${vs.size} 供應商</div></div>
+    <div class="card"><div class="card-lbl">總庫存</div><div class="card-val">${tStk.toLocaleString()}</div><div class="card-sub">良品</div></div>
+    <div class="card"><div class="card-lbl">採購中</div><div class="card-val" style="color:var(--orange)">${tPo.toLocaleString()}</div><div class="card-sub">已下單未到</div></div>
+    <div class="card"><div class="card-lbl">未對照</div><div class="card-val" style="color:${um?'var(--orange)':'var(--muted)'}">${um}</div><div class="card-sub">無供應商</div></div>`;
+}
 
-  // Merge with supplier data
-  Object.entries(stockMap).forEach(([barcode, info]) => {
-    const sup = supplierMap[barcode];
-    const sales = skuSales[barcode] || { qty14d: 0, dailyAvg: 0 };
-    const vendorId = sup ? sup.vendorId : '未對照';
-    const vc = getVendorConfig(vendorId);
-    const rop = Math.ceil(sales.dailyAvg * (vc.leadDays + vc.safetyDays));
-    const suggestQty = Math.max(0, rop - info.stock);
-    const needPurchase = info.stock < rop && sales.dailyAvg > 0;
-    const daysLeft = sales.dailyAvg > 0 ? Math.floor(info.stock / sales.dailyAvg) : 999;
+function renderVC(){
+  const vs={};merged.forEach(i=>{if(i.vid==='未對照')return;if(!vs[i.vid])vs[i.vid]={n:i.vn,c:0,a:0};vs[i.vid].c++;if(i.need)vs[i.vid].a++});
+  document.getElementById('vcR').innerHTML=Object.entries(vs).sort((a,b)=>b[1].a-a[1].a||a[0].localeCompare(b[0])).map(([v,inf])=>{
+    const c=gVC(v);return`<tr><td class="mono" style="font-weight:600">${v}</td><td>${inf.n}</td><td class="mono text-center">${inf.c}</td><td class="mono text-center" style="color:${inf.a?'var(--red)':'var(--muted)'};font-weight:${inf.a?'700':'400'}">${inf.a}</td><td><input class="vc-input" type="number" min="1" max="90" value="${c.ld}" onchange="uVC('${v}','ld',this.value)"></td><td><input class="vc-input" type="number" min="0" max="90" value="${c.sf}" onchange="uVC('${v}','sf',this.value)"></td><td class="mono text-center" style="font-weight:600">${c.ld+c.sf}天</td></tr>`}).join('');
+}
 
-    mergedItems.push({
-      barcode,
-      productName: info.name,
-      vendorId,
-      vendorName: sup ? sup.vendorName : '',
-      vendorSku: sup ? sup.vendorSku : '',
-      vendorColor: sup ? sup.vendorColor : '',
-      vendorSize: sup ? sup.vendorSize : '',
-      stock: info.stock,
-      sales14d: sales.qty14d,
-      dailyAvg: sales.dailyAvg,
-      rop,
-      suggestQty,
-      needPurchase,
-      daysLeft,
-    });
-  });
-
-  // Sort: need purchase first, then by days left
-  mergedItems.sort((a, b) => {
-    if (a.needPurchase !== b.needPurchase) return a.needPurchase ? -1 : 1;
-    return a.daysLeft - b.daysLeft;
+function renderTbl(){
+  let items=merged;
+  if(cF==='alert')items=items.filter(i=>i.need);
+  if(cF==='ok')items=items.filter(i=>!i.need&&i.vid!=='未對照');
+  if(cF==='un')items=items.filter(i=>i.vid==='未對照');
+  if(sQ){const q=sQ.toLowerCase();items=items.filter(i=>i.bc.toLowerCase().includes(q)||i.nm.toLowerCase().includes(q)||(i.vs||'').toLowerCase().includes(q)||(i.vid||'').toLowerCase().includes(q))}
+  const vs={};items.forEach(i=>{if(!vs[i.vid])vs[i.vid]={n:i.vn,it:[]};vs[i.vid].it.push(i)});
+  const area=document.getElementById('tblArea');area.innerHTML='';
+  if(!Object.keys(vs).length){area.innerHTML='<div class="loading">沒有符合條件的項目</div>';return}
+  Object.entries(vs).sort((a,b)=>{const aA=a[1].it.some(i=>i.need),bA=b[1].it.some(i=>i.need);if(aA!==bA)return aA?-1:1;return a[0].localeCompare(b[0])}).forEach(([v,inf])=>{
+    const al=inf.it.filter(i=>i.need);const ts=al.reduce((s,i)=>s+i.sug,0);
+    const d=document.createElement('div');d.className='vendor-block';
+    d.innerHTML=`<div class="vendor-head"><span class="vbadge">${v}</span><h3>${inf.n||v}</h3>${al.length?`<span style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;font-weight:600">⚠ ${al.length} 需採購</span>`:''}<span class="vtotal">${inf.it.length} SKU${ts?` · 建議 ${ts} 件`:''}</span>${al.length?`<button class="btn-dl" onclick="expV('${v}')">⬇ ${v}.xlsx</button>`:''}</div>
+    <table><thead><tr><th>廠商貨號</th><th>顏色</th><th>尺寸</th><th>商品名稱</th><th class="text-right">庫存</th><th class="text-right">採購中</th><th class="text-right">14天銷</th><th class="text-right">日均</th><th class="text-right">ROP</th><th class="text-right">可用</th><th class="text-right" style="color:var(--green);font-weight:700">建議</th></tr></thead>
+    <tbody>${inf.it.map(rR).join('')}</tbody></table>`;
+    area.appendChild(d);
   });
 }
 
-// ── RENDER ─────────────────────────────────────────────────────────────
-function renderAll() {
-  renderSummary();
-  renderVendorConfig();
-  renderTables();
+function rR(i){
+  const c=i.need?'alert-row':'';const dc=i.dl<=7?'var(--red)':i.dl<=14?'var(--orange)':'var(--muted)';
+  return`<tr class="${c}"><td class="mono" style="font-size:11px">${i.vs||i.bc}</td><td style="font-size:12px">${i.vc2||'—'}</td><td>${i.vsz?`<span class="size-tag">${i.vsz}</span>`:'—'}</td><td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.nm}">${i.nm||'—'}</td><td class="mono text-right" style="font-weight:600">${i.stk}</td><td class="mono text-right" style="color:${i.po?'var(--orange)':'var(--muted)'}">${i.po||'—'}</td><td class="mono text-right">${i.s14}</td><td class="mono text-right">${i.da.toFixed(1)}</td><td class="mono text-right">${i.rop}</td><td class="mono text-right" style="color:${dc};font-weight:${i.dl<=14?'700':'400'}">${i.dl>=999?'∞':i.dl+'天'}</td><td class="mono text-right" style="font-weight:700;font-size:14px;color:${i.need?'var(--red)':'var(--muted)'}">${i.sug>0?i.sug:'—'}</td></tr>`;
 }
 
-function renderSummary() {
-  const alertCount = mergedItems.filter(i => i.needPurchase).length;
-  const totalSku = mergedItems.length;
-  const totalStock = mergedItems.reduce((s, i) => s + i.stock, 0);
-  const totalSuggest = mergedItems.filter(i => i.needPurchase).reduce((s, i) => s + i.suggestQty, 0);
-  const vendors = new Set(mergedItems.filter(i => i.vendorId !== '未對照').map(i => i.vendorId));
-  const unmatched = mergedItems.filter(i => i.vendorId === '未對照').length;
+function setF(v,el){cF=v;document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTbl()}
+function toggleCfg(){const b=document.getElementById('vcBody');b.classList.toggle('open');document.getElementById('vcTog').textContent=b.classList.contains('open')?'▼':'▶'}
+function uVC(v,f,val){gVC(v)[f]=parseInt(val)||0;svCfg();doMerge();renderAll();toast(`${v} 已更新`)}
 
-  document.getElementById('summaryGrid').innerHTML = `
-    <div class="card ${alertCount > 0 ? 'card-alert' : ''}">
-      <div class="card-lbl">需採購</div>
-      <div class="card-val">${alertCount}</div>
-      <div class="card-sub">SKU 低於再訂購點</div>
-    </div>
-    <div class="card">
-      <div class="card-lbl">庫存 SKU</div>
-      <div class="card-val">${totalSku}</div>
-      <div class="card-sub">${vendors.size} 個供應商</div>
-    </div>
-    <div class="card">
-      <div class="card-lbl">總庫存量</div>
-      <div class="card-val">${totalStock.toLocaleString()}</div>
-      <div class="card-sub">良品</div>
-    </div>
-    <div class="card">
-      <div class="card-lbl">建議採購量</div>
-      <div class="card-val" style="color:var(--green)">${totalSuggest.toLocaleString()}</div>
-      <div class="card-sub">件</div>
-    </div>
-    <div class="card">
-      <div class="card-lbl">未對照</div>
-      <div class="card-val" style="color:${unmatched > 0 ? 'var(--orange)' : 'var(--muted)'}">${unmatched}</div>
-      <div class="card-sub">SKU 無供應商</div>
-    </div>`;
+function tdy(){return new Date().toISOString().slice(0,10).replace(/-/g,'')}
+function expV(v){
+  const it=merged.filter(i=>i.vid===v&&i.need);if(!it.length){toast('沒有需採購項目');return}
+  const wb=XLSX.utils.book_new();const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','日均銷量','建議採購量','備註']];
+  it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.da,i.sug,'']));
+  d.push(['','','','','','合計',it.reduce((s,i)=>s+i.sug,0),'']);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v);
+  XLSX.writeFile(wb,`${tdy()}_採購_${v}.xlsx`);toast(`✓ ${v} 已下載`);
 }
-
-function renderVendorConfig() {
-  const vendors = {};
-  mergedItems.forEach(i => {
-    if (i.vendorId === '未對照') return;
-    if (!vendors[i.vendorId]) vendors[i.vendorId] = { name: i.vendorName, count: 0 };
-    vendors[i.vendorId].count++;
-  });
-
-  const rows = Object.entries(vendors).sort((a, b) => a[0].localeCompare(b[0])).map(([vid, info]) => {
-    const vc = getVendorConfig(vid);
-    return `<tr>
-      <td class="mono" style="font-weight:600">${vid}</td>
-      <td>${info.name}</td>
-      <td class="mono text-center">${info.count}</td>
-      <td><input class="vc-input" type="number" min="1" max="60" value="${vc.leadDays}" onchange="updateVendorConfig('${vid}','leadDays',this.value)"></td>
-      <td><input class="vc-input" type="number" min="0" max="60" value="${vc.safetyDays}" onchange="updateVendorConfig('${vid}','safetyDays',this.value)"></td>
-      <td class="mono text-center" style="font-weight:600">${vc.leadDays + vc.safetyDays} 天</td>
-    </tr>`;
-  }).join('');
-  document.getElementById('vcRows').innerHTML = rows;
+function exportAll(){
+  const al=merged.filter(i=>i.need);if(!al.length){toast('沒有需採購項目');return}
+  const wb=XLSX.utils.book_new();
+  const s=[['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','日均銷量','再訂購點','建議採購量']];
+  al.forEach(i=>s.push([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.da,i.rop,i.sug]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s),'採購彙整');
+  const vs={};al.forEach(i=>{if(!vs[i.vid])vs[i.vid]=[];vs[i.vid].push(i)});
+  Object.entries(vs).forEach(([v,it])=>{const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','日均銷量','建議採購量','備註']];it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.da,i.sug,'']));d.push(['','','','','','合計',it.reduce((s,i)=>s+i.sug,0),'']);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v.substring(0,31))});
+  XLSX.writeFile(wb,`${tdy()}_OMS採購建議.xlsx`);toast('✓ 採購建議已匯出');
 }
-
-function renderTables() {
-  const filtered = getFilteredItems();
-  const vendors = {};
-  filtered.forEach(i => {
-    const vid = i.vendorId;
-    if (!vendors[vid]) vendors[vid] = { name: i.vendorName, items: [] };
-    vendors[vid].items.push(i);
-  });
-
-  const area = document.getElementById('tablesArea');
-  area.innerHTML = '';
-
-  Object.entries(vendors).sort((a, b) => {
-    // 有需採購的排前面
-    const aAlert = a[1].items.some(i => i.needPurchase);
-    const bAlert = b[1].items.some(i => i.needPurchase);
-    if (aAlert !== bAlert) return aAlert ? -1 : 1;
-    return a[0].localeCompare(b[0]);
-  }).forEach(([vid, info]) => {
-    const alertCount = info.items.filter(i => i.needPurchase).length;
-    const totalSuggest = info.items.filter(i => i.needPurchase).reduce((s, i) => s + i.suggestQty, 0);
-
-    const div = document.createElement('div');
-    div.className = 'vendor-block';
-    div.innerHTML = `
-      <div class="vendor-head">
-        <span class="vbadge">${vid}</span>
-        <h3>${info.name || vid}</h3>
-        ${alertCount > 0 ? `<span style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace">⚠ ${alertCount} 筆需採購</span>` : ''}
-        <span class="vtotal">${info.items.length} SKU · 建議採購 ${totalSuggest} 件</span>
-        ${alertCount > 0 ? `<button class="btn-dl" onclick="exportVendor('${vid}')">⬇ ${vid}.xlsx</button>` : ''}
-      </div>
-      <table>
-        <thead><tr>
-          <th>廠商貨號</th>
-          <th>顏色</th>
-          <th>尺寸</th>
-          <th>商品名稱</th>
-          <th class="text-right">庫存</th>
-          <th class="text-right">14天銷量</th>
-          <th class="text-right">日均銷</th>
-          <th class="text-right">再訂購點</th>
-          <th class="text-right">可用天數</th>
-          <th class="text-right" style="font-weight:700;color:var(--green)">建議採購</th>
-        </tr></thead>
-        <tbody>${info.items.map(renderRow).join('')}</tbody>
-      </table>`;
-    area.appendChild(div);
-  });
-
-  if (Object.keys(vendors).length === 0) {
-    area.innerHTML = '<div class="loading">沒有符合篩選條件的項目</div>';
-  }
-}
-
-function renderRow(item) {
-  const cls = item.needPurchase ? 'alert-row' : '';
-  const daysColor = item.daysLeft <= 7 ? 'var(--red)' : item.daysLeft <= 14 ? 'var(--orange)' : 'var(--muted)';
-  return `<tr class="${cls}">
-    <td class="mono" style="font-size:11px">${item.vendorSku || item.barcode}</td>
-    <td style="font-size:12px">${item.vendorColor || '—'}</td>
-    <td>${item.vendorSize ? `<span class="size-tag">${item.vendorSize}</span>` : '—'}</td>
-    <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.productName || '—'}</td>
-    <td class="mono text-right" style="font-weight:600">${item.stock}</td>
-    <td class="mono text-right">${item.sales14d}</td>
-    <td class="mono text-right">${item.dailyAvg.toFixed(1)}</td>
-    <td class="mono text-right">${item.rop}</td>
-    <td class="mono text-right" style="color:${daysColor};font-weight:${item.daysLeft<=14?'700':'400'}">${item.daysLeft >= 999 ? '∞' : item.daysLeft + '天'}</td>
-    <td class="mono text-right" style="font-weight:700;font-size:14px;color:${item.needPurchase ? 'var(--red)' : 'var(--muted)'}">${item.suggestQty > 0 ? item.suggestQty : '—'}</td>
-  </tr>`;
-}
-
-// ── FILTER ─────────────────────────────────────────────────────────────
-function getFilteredItems() {
-  let items = mergedItems;
-  if (currentFilter === 'alert') items = items.filter(i => i.needPurchase);
-  if (currentFilter === 'ok') items = items.filter(i => !i.needPurchase);
-  if (searchQ) {
-    const q = searchQ.toLowerCase();
-    items = items.filter(i =>
-      i.barcode.toLowerCase().includes(q) ||
-      i.productName.toLowerCase().includes(q) ||
-      (i.vendorSku || '').toLowerCase().includes(q) ||
-      (i.vendorId || '').toLowerCase().includes(q)
-    );
-  }
-  return items;
-}
-
-function setFilter(val, el) {
-  currentFilter = val;
-  document.querySelectorAll('.filter-bar .chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  renderTables();
-}
-
-function searchFilter(val) {
-  searchQ = val;
-  renderTables();
-}
-
-// ── VENDOR CONFIG ─────────────────────────────────────────────────────
-function toggleConfig() {
-  const body = document.getElementById('vcBody');
-  const toggle = document.getElementById('vcToggle');
-  body.classList.toggle('open');
-  toggle.textContent = body.classList.contains('open') ? '▼' : '▶';
-}
-
-function updateVendorConfig(vid, field, val) {
-  const vc = getVendorConfig(vid);
-  vc[field] = parseInt(val) || 0;
-  saveConfig();
-  // Recalculate
-  merge();
-  renderAll();
-  showToast(`${vid} 設定已更新`);
-}
-
-// ── EXPORT ────────────────────────────────────────────────────────────
-function todayStr() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
-
-function exportVendor(vid) {
-  const items = mergedItems.filter(i => i.vendorId === vid && i.needPurchase);
-  if (!items.length) { showToast('該廠商沒有需採購項目'); return; }
-  const wb = XLSX.utils.book_new();
-  const data = [['廠商貨號', '廠商顏色說明', '尺寸說明', '庫存', '日均銷量', '建議採購量', '備註']];
-  items.forEach(i => data.push([i.vendorSku || i.barcode, i.vendorColor, i.vendorSize, i.stock, i.dailyAvg, i.suggestQty, '']));
-  data.push(['', '', '', '', '合計', items.reduce((s, i) => s + i.suggestQty, 0), '']);
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), vid);
-  XLSX.writeFile(wb, `${todayStr()}_採購_${vid}.xlsx`);
-  showToast(`✓ ${vid} 採購單已下載`);
-}
-
-function exportAll() {
-  const alertItems = mergedItems.filter(i => i.needPurchase);
-  if (!alertItems.length) { showToast('目前沒有需採購的項目'); return; }
-  const wb = XLSX.utils.book_new();
-
-  // Summary sheet
-  const sum = [['廠商編號', '廠商名稱', '廠商貨號', '顏色', '尺寸', '商品條碼', '商品名稱', '庫存', '日均銷量', '再訂購點', '建議採購量']];
-  alertItems.forEach(i => sum.push([i.vendorId, i.vendorName, i.vendorSku, i.vendorColor, i.vendorSize, i.barcode, i.productName, i.stock, i.dailyAvg, i.rop, i.suggestQty]));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sum), '採購彙整');
-
-  // Per vendor sheets
-  const vendors = {};
-  alertItems.forEach(i => {
-    if (!vendors[i.vendorId]) vendors[i.vendorId] = [];
-    vendors[i.vendorId].push(i);
-  });
-  Object.entries(vendors).forEach(([vid, items]) => {
-    const data = [['廠商貨號', '廠商顏色說明', '尺寸說明', '庫存', '日均銷量', '建議採購量', '備註']];
-    items.forEach(i => data.push([i.vendorSku || i.barcode, i.vendorColor, i.vendorSize, i.stock, i.dailyAvg, i.suggestQty, '']));
-    data.push(['', '', '', '', '合計', items.reduce((s, i) => s + i.suggestQty, 0), '']);
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data), vid.substring(0, 31));
-  });
-
-  XLSX.writeFile(wb, `${todayStr()}_OMS採購建議.xlsx`);
-  showToast('✓ 採購建議已匯出');
-}
-
-// ── UTILS ─────────────────────────────────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2600);
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────
-loadConfig();
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+ldCfg();
 </script>
 </body>
 </html>
