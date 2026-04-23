@@ -279,8 +279,8 @@ const MODULES = [
   {
     id:'1', icon:'🏗️', title:'模組一：基礎建設', color:'#1e40af',
     tasks:[
-      {id:'1-1',name:'OMS Proxy API',status:'todo',pri:'high',h:3,dep:[],note:'api/oms-proxy.js，解決 CORS，統一 token 刷新'},
-      {id:'1-2',name:'OMS 認證機制',status:'todo',pri:'high',h:1,dep:['1-1'],note:'ClientId/CheckValue 存 Vercel 環境變數'},
+      {id:'1-1',name:'OMS Proxy API',status:'done',pri:'high',h:3,dep:[],note:'enamor-oms.vercel.app 已部署，正式站已通 2026/04/23'},
+      {id:'1-2',name:'OMS 認證機制',status:'done',pri:'high',h:1,dep:['1-1'],note:'ClientId=enamorAPI，正式站 Token 取得成功 2026/04/23'},
       {id:'1-3',name:'Hermes 靈感捕捉 Skill 部署',status:'wip',pri:'mid',h:1,dep:[],note:'Skill 指令已寫，需在 Hermes 執行安裝'},
       {id:'1-4',name:'Google Sheet BI 架構設計',status:'todo',pri:'mid',h:2,dep:[],note:'新增：銷售記錄、採購記錄、素材庫分頁'},
     ]
@@ -288,7 +288,7 @@ const MODULES = [
   {
     id:'2', icon:'🛒', title:'模組二：採購系統', color:'#065f46',
     tasks:[
-      {id:'2-1',name:'庫存即時查詢',status:'todo',pri:'high',h:2,dep:['1-1'],note:'OMS getStocksData，拉全倉正品庫存'},
+      {id:'2-1',name:'庫存即時查詢',status:'wip',pri:'high',h:2,dep:['1-1'],note:'OMS getStocksData 已驗證回傳資料 2026/04/23'},
       {id:'2-2',name:'週銷量計算',status:'todo',pri:'high',h:3,dep:['1-1'],note:'OMS apiOrderList 近 7/14 天各 SKU 銷量'},
       {id:'2-3',name:'已採購未到量查詢',status:'todo',pri:'high',h:2,dep:['1-1'],note:'OMS apiPurchaseHeaderList status=60'},
       {id:'2-4',name:'動態再訂購點計算',status:'todo',pri:'high',h:2,dep:['2-2'],note:'日均銷 × 交期天數 + 安全庫存'},
