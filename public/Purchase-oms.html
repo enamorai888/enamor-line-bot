@@ -23,6 +23,25 @@ table{width:100%;border-collapse:collapse}th{padding:8px 12px;text-align:left;fo
 </style>
 </head>
 <body>
+<!-- PASSWORD WALL -->
+<div id="authWall" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:40px;text-align:center;max-width:360px;width:90%">
+    <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" style="height:28px;margin-bottom:20px" onerror="this.style.display='none'">
+    <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:16px">採購平台 · OMS</div>
+    <input type="password" id="authPw" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')authCheck()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:'DM Mono',monospace;text-align:center;outline:none;margin-bottom:12px">
+    <button onclick="authCheck()" style="width:100%;padding:10px;border:none;border-radius:6px;background:var(--text);color:#fff;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;cursor:pointer">進入</button>
+    <div id="authErr" style="color:var(--red);font-size:12px;margin-top:10px;display:none">密碼錯誤</div>
+  </div>
+</div>
+<script>
+function authCheck(){
+  if(document.getElementById('authPw').value==='28447208'){
+    document.getElementById('authWall').style.display='none';
+    sessionStorage.setItem('enamor_auth','1');
+  }else{document.getElementById('authErr').style.display='block'}
+}
+if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall').style.display='none';
+</script>
 <header>
   <img class="logo-img" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
   <span class="header-title">採購平台 · OMS</span>
@@ -78,7 +97,7 @@ function ldCfg(){try{vCfg=JSON.parse(localStorage.getItem(LK)||'{}')}catch(e){vC
 function svCfg(){localStorage.setItem(LK,JSON.stringify(vCfg))}
 function gVC(v){if(!vCfg[v])vCfg[v]={ld:7,sf:7};return vCfg[v]}
 async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({endpoint:ep,body:b})});return r.json()}
-async function ldSup(){const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:G?key=${SK}`;const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');const h=rows[0],ci=n=>h.indexOf(n);const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明');supMap={};rows.slice(1).forEach(r=>{const c=(r[iC]||'').trim();if(c&&!supMap[c])supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs:(r[iS]||'').trim(),vsz:(r[iSz]||'').trim(),vc:(r[iCo]||'').trim()}});return Object.keys(supMap).length}
+async function ldSup(){const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:Q?key=${SK}`;const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');const h=rows[0],ci=n=>h.indexOf(n);const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明'),iAct=ci('Shopify啟用');supMap={};rows.slice(1).forEach(r=>{const c=(r[iC]||'').trim();const active=(r[iAct]||'').trim();if(c&&active==='V'&&!supMap[c])supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs:(r[iS]||'').trim(),vsz:(r[iSz]||'').trim(),vc:(r[iCo]||'').trim()}});return Object.keys(supMap).length}
 
 async function fetchAll(){
   const btn=document.getElementById('btnFetch');btn.disabled=true;
