@@ -78,7 +78,7 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
     <!-- SKU RANKING -->
     <div class="sec" id="secRank">
       <div class="sec-h" onclick="tog('rankBody')"><h3>📊 SKU 銷售排行</h3><span class="sec-badge" id="rankBadge">0</span><div class="spacer"></div><input class="search-input" placeholder="搜尋貨號/品名..." oninput="skuQ=this.value;renderRank()" onclick="event.stopPropagation()"><span class="sec-tog" id="rankTog">▼</span></div>
-      <div class="sec-b" id="rankBody"><div id="rankTbl"></div></div>
+      <div class="sec-b" id="rankBody"><div class="cb" id="seriesChips"></div><div id="rankTbl"></div></div>
     </div>
 
     <!-- SERIES BREAKDOWN -->
@@ -124,7 +124,7 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
 <script>
 const P='https://enamor-oms.vercel.app/api/oms-proxy',TK='28447208';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
-let supMap={},items=[],orders=[],days=7,skuQ='';
+let supMap={},items=[],orders=[],days=7,skuQ='',seriesF='all';
 const COLORS=['#2d7a3a','#6c5ce7','#e67e22','#c0392b','#0984e3','#00b894','#d63031','#636e72','#fdcb6e','#e17055'];
 const SKIP=new Set(['999999','platform_coin','SHIPFEE','seller_discount','Discount','universal_products']);
 
@@ -260,7 +260,13 @@ function renderAll(){
 
 function renderRank(data){
   const skus=data||getSkuData();
+  // 建立系列 chips
+  const seriesSet={};skus.forEach(s=>{const sr=s.series||'未標記';seriesSet[sr]=(seriesSet[sr]||0)+s.qty});
+  const seriesList=Object.entries(seriesSet).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('seriesChips').innerHTML=`<div class="chip ${seriesF==='all'?'active':''}" onclick="seriesF='all';renderRank()">全部</div>`+seriesList.map(([s,q])=>`<div class="chip ${seriesF===s?'active':''}" onclick="seriesF='${s}';renderRank()">${s} <span style="opacity:.5;margin-left:2px">${q}</span></div>`).join('');
+  // 過濾
   let filtered=skus;
+  if(seriesF!=='all')filtered=filtered.filter(s=>(s.series||'未標記')===seriesF);
   if(skuQ){const q=skuQ.toLowerCase();filtered=filtered.filter(s=>s.model.toLowerCase().includes(q)||s.name.toLowerCase().includes(q))}
   const top=filtered.slice(0,50);
   const maxQty=top[0]?.qty||1;
@@ -272,7 +278,7 @@ function renderRank(data){
       <td><span class="rank ${ri}">${i+1}</span></td>
       <td class="mono" style="font-size:11px">${s.model}</td>
       <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.name}">${s.name||'—'}</td>
-      <td>${s.series?`<span class="tag-chip">${s.series}</span>`:''}</td>
+      <td>${s.series?`<span class="tag-chip" style="cursor:pointer" onclick="seriesF='${s.series}';renderRank()">${s.series}</span>`:''}</td>
       <td>${s.mat?`<span class="tag-chip">${s.mat}</span>`:''}</td>
       <td class="mono text-right" style="font-weight:700">${s.qty}</td>
       <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div></div><div class="bar-val">${pct}%</div></div></td>
