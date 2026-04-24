@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnamoR 銷售分析</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f7f7f5;--surface:#fff;--surface2:#f3f3f0;--border:#e2dedd;--green:#2d7a3a;--green-light:#f0f7f1;--red:#c0392b;--red-light:#fef2f2;--orange:#e67e22;--purple:#6c5ce7;--purple-light:#f3f0ff;--text:#1a1a1a;--muted:#888;--muted2:#bbb}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh}
+header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}.logo-img{height:30px}.header-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px}.spacer{flex:1}.dot{width:7px;height:7px;border-radius:50%;background:#ddd;flex-shrink:0;transition:all .3s}.dot.ok{background:var(--green);box-shadow:0 0 5px rgba(45,122,58,.4)}.dot.err{background:var(--red)}.dot-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 28px}
+.sb{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}.sb-i{display:flex;align-items:center;gap:6px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)}.sb-i .dot{width:6px;height:6px}.sb-i.ok{color:var(--green)}.sb-i.ok .dot{background:var(--green)}
+.ab{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.btn{padding:9px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px;white-space:nowrap}.btn-primary{background:var(--text);color:#fff}.btn-primary:hover{background:#333}.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#256132}.btn:disabled{opacity:.4;cursor:not-allowed}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}.card-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-family:'DM Mono',monospace;margin-bottom:5px}.card-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace}.card-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.sec{background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:20px;overflow:hidden}.sec-h{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}.sec-h h3{font-size:14px;font-weight:600}.sec-badge{font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:10px;background:var(--surface2);color:var(--muted);border:1px solid var(--border)}.sec-tog{font-size:10px;color:var(--muted2);margin-left:auto}.sec-b{overflow:hidden}
+.cb{display:flex;gap:6px;padding:12px 18px;flex-wrap:wrap;border-bottom:1px solid var(--surface2)}.chip{padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap}.chip:hover{border-color:var(--text);color:var(--text)}.chip.active{background:var(--text);border-color:var(--text);color:#fff;font-weight:600}
+table{width:100%;border-collapse:collapse}th{padding:8px 14px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}td{padding:9px 14px;font-size:13px;border-bottom:1px solid var(--surface2);vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#faf9f8}.mono{font-family:'DM Mono',monospace}.text-right{text-align:right}
+.bar-cell{display:flex;align-items:center;gap:8px}.bar-bg{flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;min-width:60px}.bar-fill{height:100%;border-radius:3px}.bar-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);min-width:36px;text-align:right}
+.rank{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;flex-shrink:0}.r1{background:#ffd700;color:#333}.r2{background:#c0c0c0;color:#333}.r3{background:#cd7f32;color:#fff}.rn{background:var(--surface2);color:var(--muted)}
+.search-input{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-family:'DM Mono',monospace;color:var(--text);outline:none;width:200px}.search-input:focus{border-color:var(--text)}
+.loading{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}.toast.show{opacity:1;transform:translateY(0)}.hidden{display:none!important}
+.pct-bar{display:inline-block;height:14px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.tag-chip{display:inline-block;font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);margin:1px 2px}
+</style>
+</head>
+<body>
+<!-- PASSWORD WALL -->
+<div id="authWall" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:40px;text-align:center;max-width:360px;width:90%">
+    <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" style="height:28px;margin-bottom:20px" onerror="this.style.display='none'">
+    <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:16px">銷售分析</div>
+    <input type="password" id="authPw" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')authCheck()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:'DM Mono',monospace;text-align:center;outline:none;margin-bottom:12px">
+    <button onclick="authCheck()" style="width:100%;padding:10px;border:none;border-radius:6px;background:var(--text);color:#fff;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;cursor:pointer">進入</button>
+    <div id="authErr" style="color:var(--red);font-size:12px;margin-top:10px;display:none">密碼錯誤</div>
+  </div>
+</div>
+<script>
+function authCheck(){if(document.getElementById('authPw').value==='28447208'){document.getElementById('authWall').style.display='none';sessionStorage.setItem('enamor_auth','1')}else{document.getElementById('authErr').style.display='block'}}
+if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall').style.display='none';
+</script>
+
+<header>
+  <img class="logo-img" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
+  <span class="header-title">銷售分析</span>
+  <div class="spacer"></div>
+  <div class="dot" id="dot"></div>
+  <span class="dot-label" id="dotLabel">待連線</span>
+</header>
+
+<div class="wrap">
+  <div class="sb">
+    <div class="sb-i" id="sbOms"><div class="dot"></div>OMS</div>
+    <div class="sb-i" id="sbSup"><div class="dot"></div>對照表</div>
+    <div class="sb-i" id="sbOrd"><div class="dot"></div>訂單</div>
+  </div>
+  <div class="ab">
+    <button class="btn btn-primary" id="btnFetch" onclick="fetchAll()">📡 拉取銷售數據</button>
+    <div class="cb" style="border:none;padding:0;gap:4px">
+      <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-right:4px">區間</span>
+      <div class="chip active" onclick="setDays(7,this)">7天</div>
+      <div class="chip" onclick="setDays(14,this)">14天</div>
+      <div class="chip" onclick="setDays(30,this)">30天</div>
+    </div>
+    <span id="fetchSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+    <div class="spacer"></div>
+    <button class="btn btn-green hidden" id="btnExp" onclick="exportAll()">⬇ 匯出 Excel</button>
+  </div>
+  <div class="loading hidden" id="ldArea"><span class="spinner"></span><span id="ldMsg">讀取中...</span></div>
+
+  <div id="content" class="hidden">
+    <!-- SUMMARY -->
+    <div class="sg" id="sumGrid"></div>
+
+    <!-- SKU RANKING -->
+    <div class="sec" id="secRank">
+      <div class="sec-h" onclick="tog('rankBody')"><h3>📊 SKU 銷售排行</h3><span class="sec-badge" id="rankBadge">0</span><div class="spacer"></div><input class="search-input" placeholder="搜尋貨號/品名..." oninput="skuQ=this.value;renderRank()" onclick="event.stopPropagation()"><span class="sec-tog" id="rankTog">▼</span></div>
+      <div class="sec-b" id="rankBody"><div id="rankTbl"></div></div>
+    </div>
+
+    <!-- SERIES BREAKDOWN -->
+    <div class="sec" id="secSeries">
+      <div class="sec-h" onclick="tog('seriesBody')"><h3>🏷 系列銷售佔比</h3><span class="sec-tog" id="seriesTog">▼</span></div>
+      <div class="sec-b" id="seriesBody"><div id="seriesTbl"></div></div>
+    </div>
+
+    <!-- MATERIAL BREAKDOWN -->
+    <div class="sec" id="secMat">
+      <div class="sec-h" onclick="tog('matBody')"><h3>🧶 材質銷售佔比</h3><span class="sec-tog" id="matTog">▼</span></div>
+      <div class="sec-b" id="matBody"><div id="matTbl"></div></div>
+    </div>
+
+    <!-- RISE BREAKDOWN -->
+    <div class="sec" id="secRise">
+      <div class="sec-h" onclick="tog('riseBody')"><h3>📐 腰高銷售佔比</h3><span class="sec-tog" id="riseTog">▼</span></div>
+      <div class="sec-b" id="riseBody"><div id="riseTbl"></div></div>
+    </div>
+
+    <!-- SPEC BREAKDOWN -->
+    <div class="sec" id="secSpec">
+      <div class="sec-h" onclick="tog('specBody')"><h3>👗 品類銷售佔比</h3><span class="sec-tog" id="specTog">▼</span></div>
+      <div class="sec-b" id="specBody"><div id="specTbl"></div></div>
+    </div>
+
+    <!-- VENDOR BREAKDOWN -->
+    <div class="sec" id="secVendor">
+      <div class="sec-h" onclick="tog('vendorBody')"><h3>🏭 供應商銷售佔比</h3><span class="sec-tog" id="vendorTog">▼</span></div>
+      <div class="sec-b" id="vendorBody"><div id="vendorTbl"></div></div>
+    </div>
+
+    <!-- DAILY TREND -->
+    <div class="sec" id="secDaily">
+      <div class="sec-h" onclick="tog('dailyBody')"><h3>📅 每日銷售趨勢</h3><span class="sec-tog" id="dailyTog">▼</span></div>
+      <div class="sec-b" id="dailyBody"><div id="dailyTbl"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const P='https://enamor-oms.vercel.app/api/oms-proxy',TK='28447208';
+const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
+let supMap={},items=[],orders=[],days=7,skuQ='';
+const COLORS=['#2d7a3a','#6c5ce7','#e67e22','#c0392b','#0984e3','#00b894','#d63031','#636e72','#fdcb6e','#e17055'];
+const SKIP=new Set(['999999','platform_coin','SHIPFEE','seller_discount','Discount','universal_products']);
+
+async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':TK},body:JSON.stringify({endpoint:ep,body:b})});return r.json()}
+
+async function ldSup(){
+  const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:P?key=${SK}`;
+  const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);
+  const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');
+  const h=rows[0],ci=n=>h.indexOf(n);
+  const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明');
+  const iSer=ci('Series'),iMat=ci('Mat'),iRise=ci('Rise'),iSpec=ci('Spec'),iFeat=ci('Feature'),iPrice=ci('Price');
+  supMap={};
+  rows.slice(1).forEach(r=>{
+    const c=(r[iC]||'').trim();
+    if(c&&!supMap[c])supMap[c]={
+      vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs:(r[iS]||'').trim(),vsz:(r[iSz]||'').trim(),vc:(r[iCo]||'').trim(),
+      series:(r[iSer]||'').trim(),mat:(r[iMat]||'').trim(),rise:(r[iRise]||'').trim(),spec:(r[iSpec]||'').trim(),
+      feat:(r[iFeat]||'').trim(),price:(r[iPrice]||'').trim()
+    };
+  });
+  return Object.keys(supMap).length;
+}
+
+function setDays(d,el){days=d;document.querySelectorAll('.ab .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active')}
+
+async function fetchAll(){
+  const btn=document.getElementById('btnFetch');btn.disabled=true;
+  document.getElementById('ldArea').classList.remove('hidden');
+  document.getElementById('content').classList.add('hidden');
+  try{
+    sL('載入對照表...');const sc=await ldSup();sS('sbSup',1,`對照表 ${sc}`);
+    sL(`拉取近 ${days} 天訂單明細...`);
+    const dd=new Date();dd.setDate(dd.getDate()-days);const ds=dd.toISOString().slice(0,10);
+    const or=await oP('/api/v2/default/apiOrderList/searchDetail',{"orders.created_at@start":[">=",ds]});
+    const rv=or.retval||{};
+    items=rv['訂單明細']||[];
+    orders=rv['基本資料']||[];
+    sS('sbOms',1,'OMS 正常');
+    sS('sbOrd',1,`${orders.length} 單 / ${items.length} 明細（${days}天）`);
+    document.getElementById('ldArea').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+    document.getElementById('btnExp').classList.remove('hidden');
+    document.getElementById('dot').className='dot ok';
+    document.getElementById('dotLabel').textContent='數據就緒';
+    document.getElementById('fetchSt').textContent=`更新 ${new Date().toLocaleTimeString('zh-TW')}`;
+    renderAll();
+  }catch(e){
+    document.getElementById('ldArea').classList.add('hidden');
+    document.getElementById('fetchSt').textContent='錯誤：'+e.message;
+    document.getElementById('dot').className='dot err';
+    toast('失敗：'+e.message);console.error(e);
+  }
+  btn.disabled=false;
+}
+
+function sL(m){document.getElementById('ldMsg').textContent=m}
+function sS(id,ok,t){const e=document.getElementById(id);e.className='sb-i'+(ok?' ok':'');e.innerHTML=`<div class="dot"></div>${t}`}
+
+// ── PARSE ─────────────────────────────────────────────────────────────
+function getSkuData(){
+  const map={};
+  items.forEach(i=>{
+    const model=(i['orders_products.products_model']||'').trim();
+    const qty=parseInt(i['orders_products.products_quantity']||0);
+    const price=parseFloat(i['orders_products.products_price']||0);
+    const total=parseFloat(i['orders_products.total_price']||0);
+    const name=(i['orders_products.products_name']||'').trim();
+    const orderId=(i['orders_products.orders_id']||'').trim();
+    if(!model||qty<=0||SKIP.has(model))return;
+    if(!map[model])map[model]={model,name,qty:0,revenue:0,orders:new Set()};
+    map[model].qty+=qty;
+    map[model].revenue+=total||price*qty;
+    map[model].orders.add(orderId);
+  });
+  return Object.values(map).map(s=>{
+    const sup=supMap[s.model]||{};
+    return{...s,orderCount:s.orders.size,vid:sup.vid||'未對照',vn:sup.vn||'',series:sup.series||'',mat:sup.mat||'',rise:sup.rise||'',spec:sup.spec||'',feat:sup.feat||'',vsz:sup.vsz||'',vc:sup.vc||''};
+  }).sort((a,b)=>b.qty-a.qty);
+}
+
+function getDailyData(){
+  const map={};
+  orders.forEach(o=>{
+    const dt=(o['orders.created_at']||'').slice(0,10);
+    const amt=parseFloat(o['orders.orders_amt']||0);
+    if(!dt)return;
+    if(!map[dt])map[dt]={date:dt,orders:0,revenue:0};
+    map[dt].orders++;
+    map[dt].revenue+=amt;
+  });
+  return Object.values(map).sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+function groupBy(data,key){
+  const map={};let total=0;
+  data.forEach(d=>{
+    const v=d[key]||'未標記';
+    if(!map[v])map[v]={label:v,qty:0,revenue:0,skuCount:0};
+    map[v].qty+=d.qty;map[v].revenue+=d.revenue;map[v].skuCount++;
+    total+=d.qty;
+  });
+  return Object.values(map).sort((a,b)=>b.qty-a.qty).map(g=>({...g,pct:total>0?Math.round(g.qty/total*1000)/10:0}));
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────
+function renderAll(){
+  const skus=getSkuData();
+  const daily=getDailyData();
+  const totalQty=skus.reduce((s,d)=>s+d.qty,0);
+  const totalRev=skus.reduce((s,d)=>s+d.revenue,0);
+  const totalOrders=orders.length;
+  const avgOrderVal=totalOrders>0?Math.round(totalRev/totalOrders):0;
+  const activeSku=skus.filter(s=>s.qty>0).length;
+
+  document.getElementById('sumGrid').innerHTML=`
+    <div class="card"><div class="card-lbl">訂單數</div><div class="card-val">${totalOrders}</div><div class="card-sub">${days} 天</div></div>
+    <div class="card"><div class="card-lbl">銷售件數</div><div class="card-val">${totalQty.toLocaleString()}</div><div class="card-sub">件</div></div>
+    <div class="card"><div class="card-lbl">銷售額</div><div class="card-val">$${Math.round(totalRev).toLocaleString()}</div><div class="card-sub">NT$</div></div>
+    <div class="card"><div class="card-lbl">客單價</div><div class="card-val">$${avgOrderVal.toLocaleString()}</div><div class="card-sub">平均</div></div>
+    <div class="card"><div class="card-lbl">動銷 SKU</div><div class="card-val">${activeSku}</div><div class="card-sub">有銷量品項</div></div>
+    <div class="card"><div class="card-lbl">日均件數</div><div class="card-val">${(totalQty/days).toFixed(1)}</div><div class="card-sub">件/天</div></div>`;
+
+  document.getElementById('rankBadge').textContent=activeSku;
+  renderRank(skus);
+  renderBreakdown('seriesTbl',groupBy(skus,'series'),'系列');
+  renderBreakdown('matTbl',groupBy(skus,'mat'),'材質');
+  renderBreakdown('riseTbl',groupBy(skus,'rise'),'腰高');
+  renderBreakdown('specTbl',groupBy(skus,'spec'),'品類');
+  renderBreakdown('vendorTbl',groupBy(skus,'vid'),'供應商');
+  renderDaily(daily);
+}
+
+function renderRank(data){
+  const skus=data||getSkuData();
+  let filtered=skus;
+  if(skuQ){const q=skuQ.toLowerCase();filtered=filtered.filter(s=>s.model.toLowerCase().includes(q)||s.name.toLowerCase().includes(q))}
+  const top=filtered.slice(0,50);
+  const maxQty=top[0]?.qty||1;
+  document.getElementById('rankTbl').innerHTML=`<table><thead><tr><th style="width:30px">#</th><th>商品條碼</th><th>商品名稱</th><th>系列</th><th>材質</th><th class="text-right">銷量</th><th style="width:120px">佔比</th><th class="text-right">銷售額</th><th class="text-right">單數</th></tr></thead>
+  <tbody>${top.map((s,i)=>{
+    const ri=i<3?`r${i+1}`:'rn';
+    const pct=maxQty>0?Math.round(s.qty/maxQty*100):0;
+    return`<tr>
+      <td><span class="rank ${ri}">${i+1}</span></td>
+      <td class="mono" style="font-size:11px">${s.model}</td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.name}">${s.name||'—'}</td>
+      <td>${s.series?`<span class="tag-chip">${s.series}</span>`:''}</td>
+      <td>${s.mat?`<span class="tag-chip">${s.mat}</span>`:''}</td>
+      <td class="mono text-right" style="font-weight:700">${s.qty}</td>
+      <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div></div><div class="bar-val">${pct}%</div></div></td>
+      <td class="mono text-right">$${Math.round(s.revenue).toLocaleString()}</td>
+      <td class="mono text-right">${s.orderCount}</td>
+    </tr>`}).join('')}</tbody></table>`;
+}
+
+function renderBreakdown(elId,data,label){
+  const maxQty=data[0]?.qty||1;
+  const totalRev=data.reduce((s,d)=>s+d.revenue,0);
+  document.getElementById(elId).innerHTML=`<table><thead><tr><th>${label}</th><th class="text-right">銷量</th><th style="width:180px">佔比</th><th class="text-right">銷售額</th><th class="text-right">SKU 數</th></tr></thead>
+  <tbody>${data.map((d,i)=>{
+    const pct=maxQty>0?Math.round(d.qty/maxQty*100):0;
+    return`<tr>
+      <td style="font-weight:600">${d.label}</td>
+      <td class="mono text-right" style="font-weight:700">${d.qty.toLocaleString()}</td>
+      <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div></div><div class="bar-val">${d.pct}%</div></div></td>
+      <td class="mono text-right">$${Math.round(d.revenue).toLocaleString()}</td>
+      <td class="mono text-right">${d.skuCount}</td>
+    </tr>`}).join('')}</tbody></table>`;
+}
+
+function renderDaily(data){
+  if(!data.length){document.getElementById('dailyTbl').innerHTML='<div class="loading">無數據</div>';return}
+  const maxOrd=Math.max(...data.map(d=>d.orders));
+  document.getElementById('dailyTbl').innerHTML=`<table><thead><tr><th>日期</th><th>星期</th><th class="text-right">訂單數</th><th style="width:180px">分佈</th><th class="text-right">銷售額</th><th class="text-right">客單價</th></tr></thead>
+  <tbody>${data.map((d,i)=>{
+    const dt=new Date(d.date);
+    const weekday=['日','一','二','三','四','五','六'][dt.getDay()];
+    const pct=maxOrd>0?Math.round(d.orders/maxOrd*100):0;
+    const avg=d.orders>0?Math.round(d.revenue/d.orders):0;
+    const isWeekend=dt.getDay()===0||dt.getDay()===6;
+    return`<tr${isWeekend?' style="background:var(--surface2)"':''}>
+      <td class="mono">${d.date.slice(5)}</td>
+      <td style="color:${isWeekend?'var(--red)':'var(--muted)'}">${weekday}</td>
+      <td class="mono text-right" style="font-weight:700">${d.orders}</td>
+      <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:${COLORS[i%COLORS.length]}"></div></div><div class="bar-val">${d.orders}</div></div></td>
+      <td class="mono text-right">$${Math.round(d.revenue).toLocaleString()}</td>
+      <td class="mono text-right" style="color:var(--muted)">$${avg.toLocaleString()}</td>
+    </tr>`}).join('')}</tbody></table>`;
+}
+
+// ── TOGGLE / UTILS ────────────────────────────────────────────────────
+function tog(id){const b=document.getElementById(id);if(!b)return;b.style.display=b.style.display==='none'?'':'none'}
+
+function exportAll(){
+  const skus=getSkuData();const daily=getDailyData();
+  const wb=XLSX.utils.book_new();
+  // SKU ranking
+  const s1=[['排名','商品條碼','商品名稱','系列','材質','腰高','品類','供應商','銷量','銷售額','訂單數']];
+  skus.forEach((s,i)=>s1.push([i+1,s.model,s.name,s.series,s.mat,s.rise,s.spec,s.vid,s.qty,Math.round(s.revenue),s.orderCount]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'SKU排行');
+  // Series
+  const s2=[['系列','銷量','佔比%','銷售額','SKU數']];
+  groupBy(skus,'series').forEach(d=>s2.push([d.label,d.qty,d.pct,Math.round(d.revenue),d.skuCount]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s2),'系列');
+  // Material
+  const s3=[['材質','銷量','佔比%','銷售額','SKU數']];
+  groupBy(skus,'mat').forEach(d=>s3.push([d.label,d.qty,d.pct,Math.round(d.revenue),d.skuCount]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s3),'材質');
+  // Daily
+  const s4=[['日期','訂單數','銷售額','客單價']];
+  daily.forEach(d=>s4.push([d.date,d.orders,Math.round(d.revenue),d.orders>0?Math.round(d.revenue/d.orders):0]));
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s4),'每日');
+  XLSX.writeFile(wb,`${new Date().toISOString().slice(0,10).replace(/-/g,'')}_銷售分析_${days}天.xlsx`);
+  toast('✓ 已匯出');
+}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+</script>
+</body>
+</html>
