@@ -667,9 +667,9 @@ ${excludeNote}
 直接回傳 HTML 代碼，不要用 markdown code block，不要任何解釋。`;
 
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
+    const r=await fetch('https://enamor-line-bot.vercel.app/api/claude-proxy',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','x-proxy-token':'28447208'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
     });
     const data=await r.json();
