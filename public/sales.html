@@ -687,103 +687,114 @@ function buildTemplate(tpl,sz,imgUrl,copy,seriesLabel){
   return tplWarm(w,h,imgUrl,copy,subLines,seriesLabel,isStory,isLine);
 }
 
-// 模板 A：暗底質感（照片全屏 + 深色漸層覆蓋 + 左下文案）
+// Logo URLs
+const LOGO_W='https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-W.png';
+const LOGO_B='https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png';
+
+// 共用動畫 CSS
+const ANIM_CSS=`@keyframes slideUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes growLine{from{width:0}to{width:40px}}`;
+const GRAIN=`<div style="position:absolute;inset:0;background-image:url(&quot;data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E&quot;);pointer-events:none;z-index:50;opacity:0.35"></div>`;
+// 延遲 helper
+function anim(delay){return`opacity:0;animation:slideUp .8s ease ${delay}s forwards`}
+function animFade(delay){return`opacity:0;animation:fadeIn .8s ease ${delay}s forwards`}
+
+// 模板 A：暗底質感（參考：捲邊的內褲你忍了多久）
+// 照片全屏，左側漸層 opacity .85→透明，文案只佔左下 35%
 function tplDark(w,h,img,c,subHtml,series,isStory,isLine){
-  const hFS=isLine?'28px':isStory?'52px':'44px';
-  const subFS=isLine?'12px':isStory?'18px':'15px';
-  const capFS=isLine?'10px':'12px';
-  const pad=isLine?'24px':'48px';
-  const logoFS=isLine?'14px':'18px';
-  const ctaPad=isLine?'8px 20px':'14px 40px';
-  const tagFS=isLine?'8px':'10px';
+  // Feed 1080: headline 36px, sub 14px — 文案區佔底部 30%
+  const s={
+    feed:{hFS:36,subFS:14,capFS:11,tagFS:9,logoH:22,pad:56,ctaPad:'12px 36px',ctaFS:11,gradStop:'35%',gradMid:'55%',certFS:8,urlFS:9},
+    story:{hFS:40,subFS:16,capFS:12,tagFS:9,logoH:22,pad:48,ctaPad:'14px 40px',ctaFS:12,gradStop:'30%',gradMid:'50%',certFS:8,urlFS:9},
+    line:{hFS:22,subFS:11,capFS:9,tagFS:7,logoH:16,pad:20,ctaPad:'7px 18px',ctaFS:9,gradStop:'50%',gradMid:'70%',certFS:7,urlFS:7}
+  }[isLine?'line':isStory?'story':'feed'];
   const gradDir=isLine?'to left':'to top';
 
-  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
-<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;position:relative;font-family:Georgia,'Noto Sans TC',sans-serif">
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${ANIM_CSS}</style></head>
+<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;position:relative;font-family:'Noto Sans TC',sans-serif;font-weight:300">
 <div style="position:absolute;inset:0;background:url('${img}') center/cover no-repeat"></div>
-<div style="position:absolute;inset:0;background:linear-gradient(${gradDir},rgba(28,28,26,.92) ${isLine?'55%':'45%'},rgba(28,28,26,.4) 70%,transparent)"></div>
-<div style="position:absolute;${isLine?'left:24px;top:50%;transform:translateY(-50%)':'bottom:0;left:0;right:0;padding:'+pad};${isLine?'':'padding-bottom:'+pad};color:#FAFAF7;z-index:2">
-  <div style="font-size:${tagFS};letter-spacing:4px;text-transform:uppercase;color:#C4A882;margin-bottom:${isLine?'6px':'14px'}">${series}</div>
-  <div style="font-family:Georgia,serif;font-size:${hFS};font-weight:300;line-height:1.25;margin-bottom:${isLine?'6px':'16px'}">${c.headline}</div>
-  <div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${subFS};line-height:1.8;color:rgba(250,250,247,.75);margin-bottom:${isLine?'8px':'20px'}">${subHtml}</div>
-  ${isLine?'':`<div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${capFS};color:rgba(250,250,247,.5);margin-bottom:20px;letter-spacing:.5px">${c.caption}</div>`}
-  <div style="display:flex;align-items:center;gap:${isLine?'12px':'20px'};${isLine?'':'margin-top:8px'}">
-    <div style="border:1px solid rgba(250,250,247,.4);padding:${ctaPad};font-family:'Noto Sans TC',sans-serif;font-size:${isLine?'10px':'12px'};letter-spacing:3px;color:#FAFAF7;text-transform:uppercase">${c.cta}　→</div>
+<div style="position:absolute;inset:0;background:linear-gradient(${gradDir},rgba(28,28,26,.85) ${s.gradStop},rgba(28,28,26,.35) ${s.gradMid},transparent)"></div>
+${GRAIN}
+<div style="position:absolute;${isLine?`left:${s.pad}px;top:50%;transform:translateY(-50%);max-width:45%`:`bottom:${s.pad}px;left:${s.pad}px;max-width:${isStory?'80%':'55%'}`};color:#FAFAF7;z-index:2">
+  <div style="font-size:${s.tagFS}px;letter-spacing:4px;text-transform:uppercase;color:#C4A882;margin-bottom:${isLine?4:12}px;${anim(0.3)}">${series}</div>
+  <div style="font-family:Georgia,serif;font-size:${s.hFS}px;font-weight:300;line-height:1.3;margin-bottom:${isLine?4:14}px;${anim(0.6)}">${c.headline}</div>
+  <div style="font-size:${s.subFS}px;line-height:1.9;color:rgba(250,250,247,.7);margin-bottom:${isLine?6:16}px;${anim(0.9)}">${subHtml}</div>
+  ${isLine?'':`<div style="font-size:${s.capFS}px;color:rgba(250,250,247,.45);margin-bottom:16px;letter-spacing:.3px;${anim(1.2)}">${c.caption}</div>`}
+  <div style="display:flex;align-items:center;justify-content:space-between;${anim(isLine?1.2:1.5)}">
+    ${isLine?'':`<div style="font-size:${s.certFS}px;letter-spacing:1.5px;color:rgba(250,250,247,.3);text-transform:uppercase">MIT · SGS CERTIFIED</div>`}
+    <div style="border:1px solid rgba(250,250,247,.35);padding:${s.ctaPad};font-size:${s.ctaFS}px;letter-spacing:3px;color:#FAFAF7">${c.cta}　→</div>
   </div>
 </div>
-<div style="position:absolute;top:${isLine?'16px':'32px'};left:${isLine?'24px':pad};font-family:Georgia,serif;font-size:${logoFS};color:#FAFAF7;letter-spacing:2px;z-index:2">EnamoR</div>
-<div style="position:absolute;${isLine?'top:16px;right:16px':'top:32px;right:'+pad};font-size:${isLine?'7px':'9px'};letter-spacing:2px;color:rgba(250,250,247,.35);text-transform:uppercase;z-index:2">enamorshop.com</div>
-${isLine?'':`<div style="position:absolute;bottom:${pad};right:${pad};font-size:8px;letter-spacing:1.5px;color:rgba(250,250,247,.3);text-transform:uppercase;z-index:2">MIT · SGS CERTIFIED</div>`}
+<img src="${LOGO_W}" style="position:absolute;top:${isLine?12:28}px;left:${isLine?16:s.pad}px;height:${s.logoH}px;z-index:2;${animFade(0.2)}" onerror="this.outerHTML='<div style=\\'position:absolute;top:${isLine?12:28}px;left:${isLine?16:s.pad}px;font-family:Georgia,serif;font-size:${isLine?12:16}px;color:#FAFAF7;letter-spacing:2px;z-index:2\\'>EnamoR</div>'">
+<div style="position:absolute;top:${isLine?12:28}px;right:${isLine?12:s.pad}px;font-size:${s.urlFS}px;letter-spacing:2px;color:rgba(250,250,247,.3);z-index:2;${animFade(2.0)}">enamorshop.com</div>
 </body></html>`;
 }
 
-// 模板 B：亮底簡約（照片左半 + 暖白右半文案）
+// 模板 B：亮底簡約（參考：摸起來澀澀的）
+// 照片左 50%，右側暖白底 #F5F0E8，文案垂直居中偏上
 function tplLight(w,h,img,c,subHtml,series,isStory,isLine){
-  const imgW=isLine?'45%':isStory?'100%':'50%';
-  const isHoriz=!isStory;
-  const hFS=isLine?'24px':isStory?'42px':'38px';
-  const subFS=isLine?'11px':isStory?'16px':'14px';
-  const pad=isLine?'20px':isStory?'36px':'44px';
+  const s={
+    feed:{hFS:34,subFS:14,capFS:11,tagFS:9,logoH:20,pad:48,ctaPad:'12px 36px',ctaFS:11,certFS:8,imgRatio:'50%'},
+    story:{hFS:38,subFS:15,capFS:12,tagFS:9,logoH:20,pad:40,ctaPad:'14px 40px',ctaFS:12,certFS:8,imgRatio:'55%'},
+    line:{hFS:20,subFS:10,capFS:9,tagFS:7,logoH:14,pad:16,ctaPad:'6px 14px',ctaFS:9,certFS:7,imgRatio:'42%'}
+  }[isLine?'line':isStory?'story':'feed'];
 
   if(isStory){
-    return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
-<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;background:#FAFAF7;font-family:Georgia,'Noto Sans TC',sans-serif;display:flex;flex-direction:column">
-<div style="flex:1;background:url('${img}') center/cover no-repeat"></div>
-<div style="padding:${pad};flex:0 0 auto">
-  <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8B6F47;margin-bottom:14px">${series}</div>
-  <div style="font-family:Georgia,serif;font-size:${hFS};font-weight:300;color:#1C1C1A;line-height:1.3;margin-bottom:16px">${c.headline}</div>
-  <div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${subFS};line-height:1.8;color:#5C5C58;margin-bottom:16px">${subHtml}</div>
-  <div style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#9C9A92;margin-bottom:20px">${c.caption}</div>
-  <div style="display:inline-block;border:1px solid #1C1C1A;padding:12px 36px;font-family:'Noto Sans TC',sans-serif;font-size:12px;letter-spacing:3px;color:#1C1C1A">${c.cta}　→</div>
-  <div style="margin-top:24px;display:flex;justify-content:space-between;align-items:center">
-    <span style="font-family:Georgia,serif;font-size:15px;color:#1C1C1A;letter-spacing:2px">EnamoR</span>
-    <span style="font-size:8px;letter-spacing:1.5px;color:#9C9A92;text-transform:uppercase">MIT · SGS CERTIFIED</span>
+    return`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${ANIM_CSS}</style></head>
+<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;background:#F5F0E8;font-family:'Noto Sans TC',sans-serif;font-weight:300;display:flex;flex-direction:column">
+<div style="flex:0 0 ${s.imgRatio};background:url('${img}') center/cover no-repeat"></div>
+<div style="flex:1;padding:${s.pad}px;display:flex;flex-direction:column;justify-content:center">
+  <div style="font-size:${s.tagFS}px;letter-spacing:4px;text-transform:uppercase;color:#8B6F47;margin-bottom:12px;${anim(0.3)}">${series}</div>
+  <div style="font-family:Georgia,serif;font-size:${s.hFS}px;font-weight:300;color:#1C1C1A;line-height:1.3;margin-bottom:14px;${anim(0.6)}">${c.headline}</div>
+  <div style="font-size:${s.subFS}px;line-height:1.9;color:#5C5C58;margin-bottom:12px;${anim(0.9)}">${subHtml}</div>
+  <div style="font-size:${s.capFS}px;color:#9C9A92;margin-bottom:18px;${anim(1.2)}">${c.caption}</div>
+  <div style="display:inline-block;border:1px solid #1C1C1A;padding:${s.ctaPad};font-size:${s.ctaFS}px;letter-spacing:3px;color:#1C1C1A;align-self:flex-start;${anim(1.5)}">${c.cta}　→</div>
+  <div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:16px">
+    <img src="${LOGO_B}" style="height:${s.logoH}px" onerror="this.outerHTML='<span style=\\'font-family:Georgia,serif;font-size:15px;color:#1C1C1A;letter-spacing:2px\\'>EnamoR</span>'">
+    <span style="font-size:${s.certFS}px;letter-spacing:1.5px;color:#9C9A92;text-transform:uppercase">MIT · SGS CERTIFIED</span>
   </div>
 </div></body></html>`;
   }
 
-  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
-<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;background:#FAFAF7;font-family:Georgia,'Noto Sans TC',sans-serif;display:flex;${isLine?'flex-direction:row':''}">
-<div style="width:${imgW};height:100%;background:url('${img}') center/cover no-repeat;flex-shrink:0"></div>
-<div style="flex:1;padding:${pad};display:flex;flex-direction:column;justify-content:center">
-  <div style="font-size:${isLine?'8px':'10px'};letter-spacing:4px;text-transform:uppercase;color:#8B6F47;margin-bottom:${isLine?'8px':'16px'}">${series}</div>
-  <div style="font-family:Georgia,serif;font-size:${hFS};font-weight:300;color:#1C1C1A;line-height:1.3;margin-bottom:${isLine?'6px':'18px'}">${c.headline}</div>
-  <div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${subFS};line-height:1.8;color:#5C5C58;margin-bottom:${isLine?'6px':'18px'}">${subHtml}</div>
-  ${isLine?'':`<div style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#9C9A92;margin-bottom:24px">${c.caption}</div>`}
-  <div style="display:inline-block;border:1px solid #1C1C1A;padding:${isLine?'6px 16px':'12px 36px'};font-family:'Noto Sans TC',sans-serif;font-size:${isLine?'10px':'12px'};letter-spacing:3px;color:#1C1C1A;align-self:flex-start">${c.cta}　→</div>
-  ${isLine?'':`<div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:20px">
-    <span style="font-family:Georgia,serif;font-size:15px;color:#1C1C1A;letter-spacing:2px">EnamoR</span>
-    <span style="font-size:8px;letter-spacing:1.5px;color:#9C9A92;text-transform:uppercase">MIT · SGS CERTIFIED</span>
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${ANIM_CSS}</style></head>
+<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;background:#F5F0E8;font-family:'Noto Sans TC',sans-serif;font-weight:300;display:flex">
+<div style="width:${s.imgRatio};height:100%;background:url('${img}') center/cover no-repeat;flex-shrink:0"></div>
+<div style="flex:1;padding:${s.pad}px;display:flex;flex-direction:column;justify-content:center">
+  <div style="font-size:${s.tagFS}px;letter-spacing:4px;text-transform:uppercase;color:#8B6F47;margin-bottom:${isLine?6:14}px;${anim(0.3)}">${series}</div>
+  <div style="font-family:Georgia,serif;font-size:${s.hFS}px;font-weight:300;color:#1C1C1A;line-height:1.3;margin-bottom:${isLine?4:16}px;${anim(0.6)}">${c.headline}</div>
+  <div style="font-size:${s.subFS}px;line-height:1.9;color:#5C5C58;margin-bottom:${isLine?4:14}px;${anim(0.9)}">${subHtml}</div>
+  ${isLine?'':`<div style="font-size:${s.capFS}px;color:#9C9A92;margin-bottom:20px;${anim(1.2)}">${c.caption}</div>`}
+  <div style="display:inline-block;border:1px solid #1C1C1A;padding:${s.ctaPad};font-size:${s.ctaFS}px;letter-spacing:3px;color:#1C1C1A;align-self:flex-start">${c.cta}　→</div>
+  ${isLine?'':`<div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:16px">
+    <img src="${LOGO_B}" style="height:${s.logoH}px" onerror="this.outerHTML='<span style=\\'font-family:Georgia,serif;font-size:15px;color:#1C1C1A;letter-spacing:2px\\'>EnamoR</span>'">
+    <span style="font-size:${s.certFS}px;letter-spacing:1.5px;color:#9C9A92;text-transform:uppercase">MIT · SGS CERTIFIED</span>
   </div>`}
 </div></body></html>`;
 }
 
-// 模板 C：暖米氛圍（照片全屏 + 暖米半透明覆蓋 + 中央文案）
+// 模板 C：大圖沉浸（參考：不舒服的時候 / 250點）
+// 照片全屏，底部淡漸層，文案在左下，照片佔 75%+
 function tplWarm(w,h,img,c,subHtml,series,isStory,isLine){
-  const hFS=isLine?'26px':isStory?'48px':'42px';
-  const subFS=isLine?'11px':isStory?'17px':'15px';
-  const pad=isLine?'24px':'48px';
-  const overlayW=isLine?'55%':isStory?'80%':'55%';
-  const pos=isLine?'right:0;top:0;bottom:0':'right:0;top:0;bottom:0';
+  const s={
+    feed:{hFS:32,subFS:14,capFS:11,tagFS:9,logoH:18,pad:48,ctaPad:'12px 36px',ctaFS:11,certFS:8,urlFS:9},
+    story:{hFS:36,subFS:15,capFS:12,tagFS:9,logoH:18,pad:44,ctaPad:'14px 40px',ctaFS:12,certFS:8,urlFS:9},
+    line:{hFS:20,subFS:10,capFS:9,tagFS:7,logoH:14,pad:16,ctaPad:'6px 14px',ctaFS:9,certFS:7,urlFS:7}
+  }[isLine?'line':isStory?'story':'feed'];
 
-  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
-<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;position:relative;font-family:Georgia,'Noto Sans TC',sans-serif">
-<div style="position:absolute;inset:0;background:url('${img}') center/cover no-repeat"></div>
-<div style="position:absolute;${pos};width:${overlayW};background:rgba(245,240,232,.88);display:flex;flex-direction:column;justify-content:center;padding:${pad};z-index:2">
-  <div style="font-size:${isLine?'8px':'10px'};letter-spacing:4px;text-transform:uppercase;color:#8B6F47;margin-bottom:${isLine?'6px':'14px'}">${series}</div>
-  <div style="font-family:Georgia,serif;font-size:${hFS};font-weight:300;color:#1C1C1A;line-height:1.3;margin-bottom:${isLine?'6px':'18px'}">${c.headline}</div>
-  <div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${subFS};line-height:1.8;color:#5C5C58;margin-bottom:${isLine?'6px':'16px'}">${subHtml}</div>
-  ${isLine?'':`<div style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#9C9A92;margin-bottom:20px">${c.caption}</div>`}
-  <div style="display:flex;align-items:center;gap:16px;${isLine?'':'margin-top:8px'}">
-    <div style="display:inline-block;border:1px solid #1C1C1A;padding:${isLine?'6px 16px':'12px 36px'};font-family:'Noto Sans TC',sans-serif;font-size:${isLine?'10px':'12px'};letter-spacing:3px;color:#1C1C1A">${c.cta}　→</div>
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${ANIM_CSS}</style></head>
+<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;position:relative;font-family:'Noto Sans TC',sans-serif;font-weight:300">
+<div style="position:absolute;inset:0;background:url('${img}') center top/cover no-repeat"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;height:${isLine?'100%':'35%'};background:linear-gradient(to top,rgba(250,250,247,.95) ${isLine?'50%':'60%'},rgba(250,250,247,.6) 80%,transparent);z-index:1"></div>
+<div style="position:absolute;${isLine?`left:${s.pad}px;top:50%;transform:translateY(-50%);max-width:55%`:`bottom:${s.pad}px;left:${s.pad}px;max-width:65%`};z-index:2;color:#1C1C1A">
+  <div style="font-family:Georgia,serif;font-size:${s.hFS}px;font-weight:300;line-height:1.4;margin-bottom:${isLine?4:12}px;${anim(0.3)}">${c.headline}</div>
+  <div style="font-size:${s.subFS}px;line-height:1.9;color:#5C5C58;margin-bottom:${isLine?4:10}px;${anim(0.6)}">${subHtml}</div>
+  ${isLine?'':`<div style="font-size:${s.capFS}px;color:#9C9A92;font-style:italic;margin-bottom:16px;${anim(0.9)}">${c.caption}</div>`}
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;${isLine?'':'margin-top:8px'}">
+    <div style="font-size:${s.capFS}px;color:#9C9A92;letter-spacing:.3px">${isLine?'':'新官網試營運，註冊即領 250 點'}</div>
+    <div style="border:1px solid #1C1C1A;padding:${s.ctaPad};font-size:${s.ctaFS}px;letter-spacing:3px;color:#1C1C1A;flex-shrink:0">${c.cta}　→</div>
   </div>
-  ${isLine?'':`<div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:20px">
-    <span style="font-family:Georgia,serif;font-size:15px;color:#1C1C1A;letter-spacing:2px">EnamoR</span>
-    <span style="font-size:8px;letter-spacing:1.5px;color:#9C9A92;text-transform:uppercase">MIT · SGS CERTIFIED</span>
-  </div>`}
 </div>
-<div style="position:absolute;top:${isLine?'12px':'28px'};left:${isLine?'16px':'32px'};font-family:Georgia,serif;font-size:${isLine?'12px':'16px'};color:#1C1C1A;letter-spacing:2px;z-index:1">EnamoR</div>
-<div style="position:absolute;top:${isLine?'12px':'28px'};right:${isLine?'16px':'32px'};font-size:${isLine?'7px':'9px'};letter-spacing:2px;color:rgba(28,28,26,.3);text-transform:uppercase;z-index:1">enamorshop.com</div>
+<img src="${LOGO_B}" style="position:absolute;top:${isLine?10:24}px;left:${isLine?12:s.pad}px;height:${s.logoH}px;z-index:2;opacity:.6" onerror="this.outerHTML='<div style=\\'position:absolute;top:${isLine?10:24}px;left:${isLine?12:s.pad}px;font-family:Georgia,serif;font-size:${isLine?11:14}px;color:#1C1C1A;letter-spacing:3px;text-transform:uppercase;opacity:.5;z-index:2\\'>EnamoR</div>'">
+<div style="position:absolute;${isLine?`bottom:8px;right:12px`:`bottom:${s.pad}px;right:${s.pad}px`};font-size:${s.urlFS}px;letter-spacing:1.5px;color:rgba(28,28,26,.3);z-index:2">enamorshop.com</div>
 </body></html>`;
 }
 
