@@ -25,6 +25,45 @@ table{width:100%;border-collapse:collapse}th{padding:8px 14px;text-align:left;fo
 .toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}.toast.show{opacity:1;transform:translateY(0)}.hidden{display:none!important}
 .pct-bar{display:inline-block;height:14px;border-radius:2px;margin-right:6px;vertical-align:middle}
 .tag-chip{display:inline-block;font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);margin:1px 2px}
+/* SELECTION BAR */
+.sel-bar{position:fixed;bottom:0;left:0;right:0;background:var(--text);color:#fff;padding:14px 28px;display:flex;align-items:center;gap:16px;z-index:200;transform:translateY(100%);transition:transform .25s;box-shadow:0 -2px 12px rgba(0,0,0,.15)}.sel-bar.show{transform:translateY(0)}.sel-count{font-family:'DM Mono',monospace;font-size:14px;font-weight:700}.sel-btn{padding:8px 18px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;background:var(--green);color:#fff;transition:all .15s}.sel-btn:hover{background:#256132}.sel-btn-clear{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff}.sel-btn-clear:hover{border-color:#fff}
+/* STUDIO */
+.studio{background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:20px;overflow:hidden}.studio-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;background:var(--purple-light)}.studio-h h3{font-size:15px;font-weight:600;color:var(--purple)}.studio-body{padding:20px}
+.sku-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;display:flex;gap:16px;flex-wrap:wrap}
+.sku-img{width:100px;height:130px;object-fit:cover;border-radius:6px;border:1px solid var(--border)}
+.sku-info{flex:1;min-width:200px}
+.sku-info h4{font-size:14px;font-weight:600;margin-bottom:6px}
+.sku-meta{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:8px}
+.copy-area{background:#fff;border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden}
+.copy-header{padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted)}
+.copy-body{padding:12px;font-size:13px;line-height:1.7;white-space:pre-wrap}
+.copy-btn{margin-left:auto;padding:3px 10px;border-radius:4px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:10px;font-family:'DM Mono',monospace;cursor:pointer}.copy-btn:hover{border-color:var(--text);color:var(--text)}
+.angle-chip{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-family:'DM Mono',monospace;margin:2px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--muted)}.angle-chip.active{background:var(--purple);border-color:var(--purple);color:#fff}
+.gen-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin .6s linear infinite;margin-right:6px;vertical-align:middle}
+.row-sel td{background:var(--purple-light)!important}
+.chk{width:16px;height:16px;cursor:pointer;accent-color:var(--purple)}
+/* STUDIO WORKSPACE */
+.ws-grid{display:grid;grid-template-columns:280px 1fr;gap:20px;min-height:400px}
+@media(max-width:768px){.ws-grid{grid-template-columns:1fr}}
+.ws-left{display:flex;flex-direction:column;gap:12px}
+.ws-right{display:flex;flex-direction:column;gap:12px}
+.ws-panel{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.ws-panel-title{font-size:11px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px}
+.photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.photo-thumb{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:all .15s}.photo-thumb:hover{border-color:var(--purple)}.photo-thumb.picked{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-light)}
+.upload-mini{border:2px dashed var(--border);border-radius:6px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;font-size:11px;color:var(--muted);gap:4px;position:relative}.upload-mini:hover{border-color:var(--purple);color:var(--purple)}.upload-mini input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tpl-card{border:2px solid var(--border);border-radius:6px;padding:10px;cursor:pointer;transition:all .15s;text-align:center}.tpl-card:hover{border-color:var(--purple)}.tpl-card.picked{border-color:var(--purple);background:var(--purple-light)}
+.tpl-preview{height:48px;border-radius:4px;margin-bottom:6px}
+.tpl-name{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)}
+.preview-tabs{display:flex;gap:0;border-bottom:1px solid var(--border)}
+.preview-tab{flex:1;padding:8px;text-align:center;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}.preview-tab:hover{color:var(--text)}.preview-tab.active{color:var(--purple);border-bottom-color:var(--purple);font-weight:600}
+.preview-frame{background:#f0f0ee;border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:300px}
+.preview-frame iframe{border:none;background:#fff}
+.gen-btn{padding:12px 24px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;background:var(--purple);color:#fff;width:100%;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}.gen-btn:hover{background:#5a4bd6}.gen-btn:disabled{opacity:.5;cursor:not-allowed}
+.result-card{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.result-header{padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:12px;font-family:'DM Mono',monospace}
+.result-actions{margin-left:auto;display:flex;gap:6px}
 </style>
 </head>
 <body>
@@ -116,7 +155,28 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
       <div class="sec-h" onclick="tog('dailyBody')"><h3>📅 每日銷售趨勢</h3><span class="sec-tog" id="dailyTog">▼</span></div>
       <div class="sec-b" id="dailyBody"><div id="dailyTbl"></div></div>
     </div>
+
+    <!-- STUDIO -->
+    <div class="studio hidden" id="studioSec">
+      <div class="studio-h"><h3>🎨 素材工作站</h3><span class="sec-badge" id="studioBadge">0 品項</span><div class="spacer"></div><button class="sel-btn" style="background:var(--green)" onclick="exportStudio()">⬇ 匯出全部素材</button></div>
+      <div class="studio-body" id="studioBody">
+        <!-- SKU 選擇列 -->
+        <div class="cb" id="studioSkuChips" style="padding:12px 0;border-bottom:1px solid var(--border)"></div>
+        <!-- 當前 SKU 工作區 -->
+        <div id="studioWork" style="padding:16px 0">
+          <div class="loading">請從上方 SKU 排行勾選品項</div>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- SELECTION BAR -->
+<div class="sel-bar" id="selBar">
+  <span class="sel-count" id="selCount">0</span><span style="font-size:12px">品項已選</span>
+  <div class="spacer"></div>
+  <button class="sel-btn sel-btn-clear" onclick="clearSel()">清除選取</button>
+  <button class="sel-btn" onclick="openStudio()">🎨 進入素材工作站 →</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -124,23 +184,24 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
 <script>
 const P='https://enamor-oms.vercel.app/api/oms-proxy',TK='28447208';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
-let supMap={},items=[],orders=[],days=7,skuQ='',seriesF='all';
+let supMap={},items=[],orders=[],days=7,skuQ='',seriesF='all',selected=new Set();
 const COLORS=['#2d7a3a','#6c5ce7','#e67e22','#c0392b','#0984e3','#00b894','#d63031','#636e72','#fdcb6e','#e17055'];
 const SKIP=new Set(['999999','platform_coin','SHIPFEE','seller_discount','Discount','universal_products']);
 
 async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':TK},body:JSON.stringify({endpoint:ep,body:b})});return r.json()}
 
 async function ldSup(){
-  const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:P?key=${SK}`;
+  const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:Q?key=${SK}`;
   const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);
   const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');
   const h=rows[0],ci=n=>h.indexOf(n);
-  const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明');
+  const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明'),iAct=ci('Shopify啟用');
   const iSer=ci('Series'),iMat=ci('Mat'),iRise=ci('Rise'),iSpec=ci('Spec'),iFeat=ci('Feature'),iPrice=ci('Price');
   supMap={};
   rows.slice(1).forEach(r=>{
     const c=(r[iC]||'').trim();
-    if(c&&!supMap[c])supMap[c]={
+    const active=(r[iAct]||'').trim();
+    if(c&&active==='V'&&!supMap[c])supMap[c]={
       vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs:(r[iS]||'').trim(),vsz:(r[iSz]||'').trim(),vc:(r[iCo]||'').trim(),
       series:(r[iSer]||'').trim(),mat:(r[iMat]||'').trim(),rise:(r[iRise]||'').trim(),spec:(r[iSpec]||'').trim(),
       feat:(r[iFeat]||'').trim(),price:(r[iPrice]||'').trim()
@@ -270,11 +331,12 @@ function renderRank(data){
   if(skuQ){const q=skuQ.toLowerCase();filtered=filtered.filter(s=>s.model.toLowerCase().includes(q)||s.name.toLowerCase().includes(q))}
   const top=filtered.slice(0,50);
   const maxQty=top[0]?.qty||1;
-  document.getElementById('rankTbl').innerHTML=`<table><thead><tr><th style="width:30px">#</th><th>商品條碼</th><th>商品名稱</th><th>系列</th><th>材質</th><th class="text-right">銷量</th><th style="width:120px">佔比</th><th class="text-right">銷售額</th><th class="text-right">單數</th></tr></thead>
+  document.getElementById('rankTbl').innerHTML=`<table><thead><tr><th style="width:30px"><input type="checkbox" class="chk" onchange="toggleAll(this)" title="全選"></th><th style="width:30px">#</th><th>商品條碼</th><th>商品名稱</th><th>系列</th><th>材質</th><th class="text-right">銷量</th><th style="width:120px">佔比</th><th class="text-right">銷售額</th><th class="text-right">單數</th></tr></thead>
   <tbody>${top.map((s,i)=>{
     const ri=i<3?`r${i+1}`:'rn';
     const pct=maxQty>0?Math.round(s.qty/maxQty*100):0;
-    return`<tr>
+    return`<tr class="${selected.has(s.model)?'row-sel':''}">
+      <td><input type="checkbox" class="chk" ${selected.has(s.model)?'checked':''} onchange="toggleSel('${s.model}',this)"></td>
       <td><span class="rank ${ri}">${i+1}</span></td>
       <td class="mono" style="font-size:11px">${s.model}</td>
       <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.name}">${s.name||'—'}</td>
@@ -349,6 +411,336 @@ function exportAll(){
 }
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+
+// ── SELECTION ─────────────────────────────────────────────────────────
+function toggleSel(model,cb){
+  if(cb.checked)selected.add(model);else selected.delete(model);
+  updSelBar();renderRank();
+}
+function toggleAll(cb){
+  const skus=getSkuData();let filtered=skus;
+  if(seriesF!=='all')filtered=filtered.filter(s=>(s.series||'未標記')===seriesF);
+  if(skuQ){const q=skuQ.toLowerCase();filtered=filtered.filter(s=>s.model.toLowerCase().includes(q)||s.name.toLowerCase().includes(q))}
+  filtered.slice(0,50).forEach(s=>{if(cb.checked)selected.add(s.model);else selected.delete(s.model)});
+  updSelBar();renderRank();
+}
+function clearSel(){selected.clear();updSelBar();renderRank()}
+function updSelBar(){
+  const bar=document.getElementById('selBar');
+  const cnt=document.getElementById('selCount');
+  cnt.textContent=selected.size;
+  bar.classList.toggle('show',selected.size>0);
+}
+
+// ── STUDIO ────────────────────────────────────────────────────────────
+const ANGLES=[
+  {id:'comfort',label:'舒適體感',prompt:'強調穿著舒適、像沒穿一樣的體感，用身體記憶的描述'},
+  {id:'stretch',label:'彈性包覆',prompt:'強調彈性好、不緊繃、自由伸展、不捲邊'},
+  {id:'cool',label:'涼感乾爽',prompt:'強調透氣涼感、夏天不悶熱、乾爽的觸感'},
+  {id:'texture',label:'觸感反差',prompt:'強調摸到的第一秒觸感差異、跟普通內褲的對比'},
+  {id:'quality',label:'品質工藝',prompt:'強調台灣製造、SGS認證、萊卡材質等品質細節'},
+  {id:'daily',label:'日常小奢',prompt:'用一杯咖啡的價格換一整天的觸感升級，日常犒賞自己'},
+];
+
+const TEMPLATES=[
+  {id:'dark',label:'暗底質感',bg:'#1C1C1A',text:'#FAFAF7',accent:'#C4A882',desc:'炭黑背景，金棕點綴'},
+  {id:'light',label:'亮底簡約',bg:'#FAFAF7',text:'#1C1C1A',accent:'#8B6F47',desc:'暖白底，乾淨留白'},
+  {id:'warm',label:'暖米氛圍',bg:'#F5F0E8',text:'#1C1C1A',accent:'#8B6F47',desc:'暖米底，柔和質感'},
+];
+
+const SIZES=[
+  {id:'feed',label:'FB Feed',w:1080,h:1080},
+  {id:'story',label:'Reels/Story',w:1080,h:1920},
+  {id:'line',label:'LINE Push',w:800,h:400},
+];
+
+let studioData={};// model→{images:[],uploads:[],pickedImg:null,results:[]}
+let activeStudioSku=null;
+
+const DESIGN_SYSTEM=`品牌：EnamoR 恩娜茉兒
+色碼：炭黑#1C1C1A、暖白#FAFAF7、暖米#F5F0E8、金棕#8B6F47、金棕淡#C4A882、中灰#5C5C58
+字型：Georgia（標題）、Noto Sans TC weight 300（內文）
+規則：禁用 font-weight 600/700、禁用驚嘆號、不花俏不促銷感
+文案風格：平鋪直述、不煽情、口語但不隨便、關鍵處留白、關鍵詞用斜體
+Logo：左上角顯示 EnamoR，右下角 enamorshop.com
+元素：MIT SGS CERTIFIED 小標、系列名標籤（如 ZERO-TEX）`;
+
+const BRAND_VOICE=`語感參考：
+- 自己生的孩子自己留下來賣
+- 成為數據與感性之間的橋
+- 質量穩定了才有資格談成長
+- 不舒服的時候，你一整天都在想它；舒服的時候，你會忘記自己有穿
+- 穿了就忘了
+- 摸起來澀澀的，就是乾爽的感覺
+- 捲邊的內褲，你忍了多久？`;
+
+function openStudio(){
+  const sec=document.getElementById('studioSec');
+  sec.classList.remove('hidden');
+  sec.scrollIntoView({behavior:'smooth'});
+  document.getElementById('studioBadge').textContent=selected.size+' 品項';
+  initStudio();
+}
+
+async function initStudio(){
+  const skus=getSkuData().filter(s=>selected.has(s.model));
+  if(!skus.length){document.getElementById('studioWork').innerHTML='<div class="loading">請從上方 SKU 排行勾選品項</div>';return}
+  // Init data & fetch images
+  for(const s of skus){
+    if(!studioData[s.model])studioData[s.model]={images:[],uploads:[],pickedImg:null,results:[]};
+    if(studioData[s.model].images.length===0){
+      const handle=(s.model||'').toLowerCase();
+      try{const r=await fetch(`https://enamorshop.com/products/${handle}.json`);if(r.ok){const d=await r.json();studioData[s.model].images=(d.product?.images||[]).map(i=>i.src).slice(0,6)}}catch(e){}
+    }
+  }
+  // SKU chips
+  const chips=document.getElementById('studioSkuChips');
+  chips.innerHTML=skus.map(s=>`<div class="chip ${activeStudioSku===s.model?'active':''}" onclick="activeStudioSku='${s.model}';renderWork()">${s.name||s.model} <span style="opacity:.5">${s.qty}</span></div>`).join('');
+  if(!activeStudioSku||!selected.has(activeStudioSku))activeStudioSku=skus[0].model;
+  renderWork();
+}
+
+function renderWork(){
+  const s=getSkuData().find(x=>x.model===activeStudioSku);
+  if(!s){document.getElementById('studioWork').innerHTML='<div class="loading">選擇品項</div>';return}
+  const d=studioData[s.model];
+  const tags=[s.series,s.mat,s.rise,s.spec,s.feat].filter(Boolean);
+  // Re-highlight chip
+  document.querySelectorAll('#studioSkuChips .chip').forEach(c=>c.classList.toggle('active',c.textContent.includes(s.model)||c.textContent.includes(s.name)));
+
+  document.getElementById('studioWork').innerHTML=`
+    <div style="margin-bottom:12px">
+      <h4 style="font-size:16px;font-weight:600;margin-bottom:4px">${s.name||s.model}</h4>
+      <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">${s.model} · ${tags.map(t=>`<span class="tag-chip">${t}</span>`).join('')}</div>
+    </div>
+    <div class="ws-grid">
+      <div class="ws-left">
+        <!-- 照片選擇 -->
+        <div class="ws-panel">
+          <div class="ws-panel-title">選擇照片</div>
+          <div class="photo-grid">
+            ${d.images.map((u,i)=>`<img class="photo-thumb ${d.pickedImg===u?'picked':''}" src="${u}&width=300" onclick="pickImg('${s.model}',${i})">`).join('')}
+            <div class="upload-mini" onclick="this.querySelector('input').click()">
+              <input type="file" accept="image/*" onchange="uploadImg('${s.model}',this)" multiple>
+              <span style="font-size:18px">+</span>
+              <span>上傳</span>
+            </div>
+          </div>
+          ${d.uploads.length?`<div style="margin-top:8px;font-size:10px;color:var(--muted)">已上傳 ${d.uploads.length} 張</div>`:''}
+        </div>
+        <!-- 角度選擇 -->
+        <div class="ws-panel">
+          <div class="ws-panel-title">文案角度</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">
+            ${ANGLES.map(a=>`<span class="angle-chip" id="angle-${a.id}" onclick="toggleAngle(this,'${a.id}')">${a.label}</span>`).join('')}
+          </div>
+        </div>
+        <!-- 模板選擇 -->
+        <div class="ws-panel">
+          <div class="ws-panel-title">設計風格</div>
+          <div class="tpl-grid">
+            ${TEMPLATES.map(t=>`<div class="tpl-card" id="tpl-${t.id}" onclick="pickTpl('${t.id}')">
+              <div class="tpl-preview" style="background:${t.bg};display:flex;align-items:center;justify-content:center"><span style="color:${t.accent};font-family:Georgia;font-size:12px">Aa</span></div>
+              <div class="tpl-name">${t.label}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+        <!-- 生成按鈕 -->
+        <button class="gen-btn" id="genBtn" onclick="generateCreative()">✨ 生成素材</button>
+      </div>
+      <div class="ws-right">
+        <!-- 預覽區 -->
+        <div class="ws-panel" style="flex:1">
+          <div class="ws-panel-title">預覽</div>
+          <div class="preview-tabs">
+            ${SIZES.map((sz,i)=>`<div class="preview-tab ${i===0?'active':''}" onclick="switchPreview('${sz.id}',this)">${sz.label}<span style="opacity:.4;margin-left:4px">${sz.w}×${sz.h}</span></div>`).join('')}
+          </div>
+          <div class="preview-frame" id="previewFrame" style="margin-top:8px">
+            <div style="color:var(--muted);font-size:12px">選擇照片和角度後，點擊生成</div>
+          </div>
+        </div>
+        <!-- 已生成的結果 -->
+        <div id="resultsArea"></div>
+      </div>
+    </div>`;
+  // Render past results
+  renderResults();
+}
+
+function pickImg(model,idx){
+  const d=studioData[model];
+  const allImgs=[...d.images,...d.uploads];
+  d.pickedImg=allImgs[idx]||d.images[idx];
+  renderWork();
+}
+
+function uploadImg(model,input){
+  const files=Array.from(input.files);
+  files.forEach(f=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      studioData[model].uploads.push(e.target.result);
+      studioData[model].images.push(e.target.result);
+      renderWork();
+    };
+    reader.readAsDataURL(f);
+  });
+  input.value='';
+}
+
+let pickedAngle=null,pickedTpl='dark';
+function toggleAngle(el,id){
+  document.querySelectorAll('.angle-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  pickedAngle=id;
+}
+function pickTpl(id){
+  document.querySelectorAll('.tpl-card').forEach(c=>c.classList.remove('picked'));
+  document.getElementById('tpl-'+id)?.classList.add('picked');
+  pickedTpl=id;
+}
+
+let activePreview='feed';
+function switchPreview(id,el){
+  activePreview=id;
+  document.querySelectorAll('.preview-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  // Show matching result if exists
+  const d=studioData[activeStudioSku];
+  if(!d)return;
+  const result=d.results.find(r=>r.sizeId===id&&r.angleId===pickedAngle&&r.tplId===pickedTpl);
+  if(result)showPreview(result.html,id);
+}
+
+function showPreview(html,sizeId){
+  const sz=SIZES.find(s=>s.id===sizeId)||SIZES[0];
+  const frame=document.getElementById('previewFrame');
+  const scale=Math.min(frame.clientWidth/sz.w,400/sz.h,1);
+  const sw=Math.round(sz.w*scale),sh=Math.round(sz.h*scale);
+  frame.innerHTML=`<iframe width="${sw}" height="${sh}" srcdoc="${html.replace(/"/g,'&quot;')}" style="transform-origin:top left"></iframe>`;
+}
+
+async function generateCreative(){
+  const s=getSkuData().find(x=>x.model===activeStudioSku);
+  if(!s){toast('請選擇品項');return}
+  const d=studioData[s.model];
+  if(!d.pickedImg){toast('請先選擇一張照片');return}
+  if(!pickedAngle){toast('請選擇文案角度');return}
+  const angle=ANGLES.find(a=>a.id===pickedAngle);
+  const tpl=TEMPLATES.find(t=>t.id===pickedTpl);
+  const tags=[s.series,s.mat,s.rise,s.spec,s.feat].filter(Boolean).join('、');
+  const sz=SIZES.find(si=>si.id===activePreview);
+
+  // 已產過的文案作為排除
+  const existing=d.results.map(r=>r.headline).filter(Boolean).join('\n');
+  const excludeNote=existing?`\n\n以下文案已經用過，請避免重複：\n${existing}`:'';
+
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true;btn.innerHTML='<span class="gen-spinner"></span>生成中...';
+
+  const imgNote=d.pickedImg.startsWith('data:')?'使用者上傳的模特照片（無法提供 URL，請使用純色背景替代）':`背景圖片 URL：${d.pickedImg}&width=${sz.w}`;
+
+  const prompt=`你是 EnamoR 恩娜茉兒的廣告素材設計師。請產出一個完整的 HTML 廣告素材。
+
+${DESIGN_SYSTEM}
+
+${BRAND_VOICE}
+
+商品：${s.name||s.model}
+商品標籤：${tags}
+文案角度：${angle.label} — ${angle.prompt}
+設計風格：${tpl.label}（背景色 ${tpl.bg}，文字色 ${tpl.text}，點綴色 ${tpl.accent}）
+版位尺寸：${sz.label} ${sz.w}×${sz.h}px
+${imgNote}
+
+要求：
+1. 產出完整獨立的 HTML（含 inline CSS，不要外部引用字型）
+2. 尺寸精確 ${sz.w}×${sz.h}px，用 body { width:${sz.w}px; height:${sz.h}px; margin:0; overflow:hidden; }
+3. ${d.pickedImg.startsWith('data:')?'用設計風格的背景色':`用 background-image: url('${d.pickedImg}&width=${sz.w}') 作為背景，object-fit:cover`}
+4. 文字排版要有層次：系列標籤（小字全大寫）→ 主標題（Georgia 大字）→ 副文案（Noto Sans TC 300）→ 底部品牌標記
+5. 主標題要有力量，不超過 15 個字
+6. 左下或右下放 EnamoR logo 文字 + MIT · SGS CERTIFIED
+7. 底部放 CTA 按鈕（如「了解更多 →」）
+8. 整體風格要像高端內衣品牌的廣告，不是電商促銷
+${excludeNote}
+
+直接回傳 HTML 代碼，不要用 markdown code block，不要任何解釋。`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await r.json();
+    let html=(data.content?.map(c=>c.text||'').join('')||'').trim();
+    // 清除可能的 markdown 包裝
+    html=html.replace(/^```html?\n?/,'').replace(/\n?```$/,'').trim();
+    if(!html||html.length<50){toast('生成失敗');btn.disabled=false;btn.innerHTML='✨ 生成素材';return}
+    // 提取主標題（從 HTML 裡找最大的文字）
+    const headlineMatch=html.match(/<h1[^>]*>([^<]+)<\/h1>/i)||html.match(/font-size:\s*(?:2[4-9]|[3-9]\d)px[^>]*>([^<]+)</i);
+    const headline=headlineMatch?headlineMatch[1].trim():'';
+    // 存結果
+    const result={id:Date.now(),sizeId:activePreview,angleId:pickedAngle,tplId:pickedTpl,html,headline,angle:angle.label,tpl:tpl.label,size:sz.label};
+    d.results.push(result);
+    showPreview(html,activePreview);
+    renderResults();
+    toast('✓ 素材已生成');
+  }catch(e){
+    toast('生成失敗：'+e.message);
+  }
+  btn.disabled=false;btn.innerHTML='✨ 生成素材';
+}
+
+function renderResults(){
+  const d=studioData[activeStudioSku];
+  if(!d||!d.results.length){document.getElementById('resultsArea').innerHTML='';return}
+  document.getElementById('resultsArea').innerHTML=`
+    <div class="ws-panel-title" style="margin-top:12px">已生成素材 (${d.results.length})</div>
+    ${d.results.map(r=>`<div class="result-card">
+      <div class="result-header">
+        <span>${r.angle}</span><span class="tag-chip">${r.tpl}</span><span class="tag-chip">${r.size}</span>
+        ${r.headline?`<span style="color:var(--text);font-weight:600;margin-left:4px">${r.headline}</span>`:''}
+        <div class="result-actions">
+          <button class="copy-btn" onclick="showPreview(studioData['${activeStudioSku}'].results.find(x=>x.id===${r.id}).html,'${r.sizeId}')">預覽</button>
+          <button class="copy-btn" onclick="copyHtml(${r.id})">複製 HTML</button>
+          <button class="copy-btn" onclick="downloadHtml(${r.id})" style="border-color:var(--green);color:var(--green)">下載</button>
+        </div>
+      </div>
+    </div>`).join('')}`;
+}
+
+function copyHtml(resultId){
+  const d=studioData[activeStudioSku];
+  const r=d?.results.find(x=>x.id===resultId);
+  if(r){navigator.clipboard.writeText(r.html);toast('HTML 已複製')}
+}
+
+function downloadHtml(resultId){
+  const d=studioData[activeStudioSku];
+  const r=d?.results.find(x=>x.id===resultId);
+  if(!r)return;
+  const blob=new Blob([r.html],{type:'text/html;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`${activeStudioSku}_${r.angle}_${r.size}_${r.id}.html`;
+  a.click();
+  toast('✓ 已下載');
+}
+
+function exportStudio(){
+  const skus=getSkuData().filter(s=>selected.has(s.model));
+  if(!skus.length){toast('沒有選品');return}
+  const wb=XLSX.utils.book_new();
+  const rows=[['商品條碼','商品名稱','角度','風格','版位','主標題']];
+  skus.forEach(s=>{
+    const d=studioData[s.model]||{results:[]};
+    d.results.forEach(r=>rows.push([s.model,s.name,r.angle,r.tpl,r.size,r.headline]));
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'素材清單');
+  XLSX.writeFile(wb,`${new Date().toISOString().slice(0,10).replace(/-/g,'')}_素材工作站.xlsx`);
+  toast('✓ 已匯出');
+}
 </script>
 </body>
 </html>
