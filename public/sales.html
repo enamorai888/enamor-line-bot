@@ -630,66 +630,161 @@ async function generateCreative(){
   const tpl=TEMPLATES.find(t=>t.id===pickedTpl);
   const tags=[s.series,s.mat,s.rise,s.spec,s.feat].filter(Boolean).join('、');
   const sz=SIZES.find(si=>si.id===activePreview);
+  const seriesLabel=(s.series||'ZERO-TEX').toUpperCase();
 
-  // 已產過的文案作為排除
   const existing=d.results.map(r=>r.headline).filter(Boolean).join('\n');
-  const excludeNote=existing?`\n\n以下文案已經用過，請避免重複：\n${existing}`:'';
+  const excludeNote=existing?`\n\n以下主標題已經用過，請避免重複：\n${existing}`:'';
 
   const btn=document.getElementById('genBtn');
-  btn.disabled=true;btn.innerHTML='<span class="gen-spinner"></span>生成中...';
+  btn.disabled=true;btn.innerHTML='<span class="gen-spinner"></span>文案生成中...';
 
-  const imgNote=d.pickedImg.startsWith('data:')?'使用者上傳的模特照片（無法提供 URL，請使用純色背景替代）':`背景圖片 URL：${d.pickedImg}&width=${sz.w}`;
-
-  const prompt=`你是 EnamoR 恩娜茉兒的廣告素材設計師。請產出一個完整的 HTML 廣告素材。
-
-${DESIGN_SYSTEM}
-
+  // Step 1: Claude API 只產文案（不產 HTML）
+  const prompt=`你是 EnamoR 恩娜茉兒的文案寫手。
+品牌風格：平鋪直述、不煽情、口語但不隨便、關鍵處留白。
+禁用「超值」「限時」「搶購」「最好」「第一」和驚嘆號。
 ${BRAND_VOICE}
 
 商品：${s.name||s.model}
-商品標籤：${tags}
+標籤：${tags}
 文案角度：${angle.label} — ${angle.prompt}
-設計風格：${tpl.label}（背景色 ${tpl.bg}，文字色 ${tpl.text}，點綴色 ${tpl.accent}）
-版位尺寸：${sz.label} ${sz.w}×${sz.h}px
-${imgNote}
-
-要求：
-1. 產出完整獨立的 HTML（含 inline CSS，不要外部引用字型）
-2. 尺寸精確 ${sz.w}×${sz.h}px，用 body { width:${sz.w}px; height:${sz.h}px; margin:0; overflow:hidden; }
-3. ${d.pickedImg.startsWith('data:')?'用設計風格的背景色':`用 background-image: url('${d.pickedImg}&width=${sz.w}') 作為背景，object-fit:cover`}
-4. 文字排版要有層次：系列標籤（小字全大寫）→ 主標題（Georgia 大字）→ 副文案（Noto Sans TC 300）→ 底部品牌標記
-5. 主標題要有力量，不超過 15 個字
-6. 左下或右下放 EnamoR logo 文字 + MIT · SGS CERTIFIED
-7. 底部放 CTA 按鈕（如「了解更多 →」）
-8. 整體風格要像高端內衣品牌的廣告，不是電商促銷
 ${excludeNote}
 
-直接回傳 HTML 代碼，不要用 markdown code block，不要任何解釋。`;
+請用 JSON 格式回傳，不要 markdown，不要解釋：
+{"headline":"主標題（7-12字，有力量）","sub":"副文案（兩行，每行10-15字，用\\n分隔）","caption":"底部一句話（10-18字）","cta":"CTA按鈕文字（3-5字）"}`;
 
+  let copy={headline:'穿了就忘了',sub:'不緊繃的自由感\n不捲邊的舒適度',caption:'杜邦萊卡高彈力，一整天不捲不滑',cta:'了解更多'};
   try{
     const r=await fetch('https://enamor-line-bot.vercel.app/api/claude-proxy',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-proxy-token':'28447208'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:4000,messages:[{role:'user',content:prompt}]})
+      method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':'28447208'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})
     });
     const data=await r.json();
-    let html=(data.content?.map(c=>c.text||'').join('')||'').trim();
-    // 清除可能的 markdown 包裝
-    html=html.replace(/^```html?\n?/,'').replace(/\n?```$/,'').trim();
-    if(!html||html.length<50){toast('生成失敗');btn.disabled=false;btn.innerHTML='✨ 生成素材';return}
-    // 提取主標題（從 HTML 裡找最大的文字）
-    const headlineMatch=html.match(/<h1[^>]*>([^<]+)<\/h1>/i)||html.match(/font-size:\s*(?:2[4-9]|[3-9]\d)px[^>]*>([^<]+)</i);
-    const headline=headlineMatch?headlineMatch[1].trim():'';
-    // 存結果
-    const result={id:Date.now(),sizeId:activePreview,angleId:pickedAngle,tplId:pickedTpl,html,headline,angle:angle.label,tpl:tpl.label,size:sz.label};
-    d.results.push(result);
-    showPreview(html,activePreview);
-    renderResults();
-    toast('✓ 素材已生成');
-  }catch(e){
-    toast('生成失敗：'+e.message);
-  }
+    let txt=(data.content?.map(c=>c.text||'').join('')||'').trim();
+    txt=txt.replace(/^```json?\n?/,'').replace(/\n?```$/,'').trim();
+    try{copy=JSON.parse(txt)}catch(e){console.warn('JSON parse fail, using default copy',txt)}
+  }catch(e){toast('文案生成失敗：'+e.message)}
+
+  // Step 2: 用預製模板填入文案 + 照片
+  const imgUrl=d.pickedImg.startsWith('data:')?d.pickedImg:`${d.pickedImg}&width=${Math.max(sz.w,sz.h)}`;
+  const html=buildTemplate(tpl,sz,imgUrl,copy,seriesLabel);
+
+  const result={id:Date.now(),sizeId:activePreview,angleId:pickedAngle,tplId:pickedTpl,html,headline:copy.headline,angle:angle.label,tpl:tpl.label,size:sz.label};
+  d.results.push(result);
+  showPreview(html,activePreview);
+  renderResults();
+  toast('✓ 素材已生成');
   btn.disabled=false;btn.innerHTML='✨ 生成素材';
+}
+
+function buildTemplate(tpl,sz,imgUrl,copy,seriesLabel){
+  const w=sz.w,h=sz.h;
+  const subLines=(copy.sub||'').split('\n').map(l=>`<div>${l}</div>`).join('');
+  const isStory=sz.id==='story';
+  const isLine=sz.id==='line';
+
+  if(tpl.id==='dark') return tplDark(w,h,imgUrl,copy,subLines,seriesLabel,isStory,isLine);
+  if(tpl.id==='light') return tplLight(w,h,imgUrl,copy,subLines,seriesLabel,isStory,isLine);
+  return tplWarm(w,h,imgUrl,copy,subLines,seriesLabel,isStory,isLine);
+}
+
+// 模板 A：暗底質感（照片全屏 + 深色漸層覆蓋 + 左下文案）
+function tplDark(w,h,img,c,subHtml,series,isStory,isLine){
+  const hFS=isLine?'28px':isStory?'52px':'44px';
+  const subFS=isLine?'12px':isStory?'18px':'15px';
+  const capFS=isLine?'10px':'12px';
+  const pad=isLine?'24px':'48px';
+  const logoFS=isLine?'14px':'18px';
+  const ctaPad=isLine?'8px 20px':'14px 40px';
+  const tagFS=isLine?'8px':'10px';
+  const gradDir=isLine?'to left':'to top';
+
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;position:relative;font-family:Georgia,'Noto Sans TC',sans-serif">
+<div style="position:absolute;inset:0;background:url('${img}') center/cover no-repeat"></div>
+<div style="position:absolute;inset:0;background:linear-gradient(${gradDir},rgba(28,28,26,.92) ${isLine?'55%':'45%'},rgba(28,28,26,.4) 70%,transparent)"></div>
+<div style="position:absolute;${isLine?'left:24px;top:50%;transform:translateY(-50%)':'bottom:0;left:0;right:0;padding:'+pad};${isLine?'':'padding-bottom:'+pad};color:#FAFAF7;z-index:2">
+  <div style="font-size:${tagFS};letter-spacing:4px;text-transform:uppercase;color:#C4A882;margin-bottom:${isLine?'6px':'14px'}">${series}</div>
+  <div style="font-family:Georgia,serif;font-size:${hFS};font-weight:300;line-height:1.25;margin-bottom:${isLine?'6px':'16px'}">${c.headline}</div>
+  <div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${subFS};line-height:1.8;color:rgba(250,250,247,.75);margin-bottom:${isLine?'8px':'20px'}">${subHtml}</div>
+  ${isLine?'':`<div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${capFS};color:rgba(250,250,247,.5);margin-bottom:20px;letter-spacing:.5px">${c.caption}</div>`}
+  <div style="display:flex;align-items:center;gap:${isLine?'12px':'20px'};${isLine?'':'margin-top:8px'}">
+    <div style="border:1px solid rgba(250,250,247,.4);padding:${ctaPad};font-family:'Noto Sans TC',sans-serif;font-size:${isLine?'10px':'12px'};letter-spacing:3px;color:#FAFAF7;text-transform:uppercase">${c.cta}　→</div>
+  </div>
+</div>
+<div style="position:absolute;top:${isLine?'16px':'32px'};left:${isLine?'24px':pad};font-family:Georgia,serif;font-size:${logoFS};color:#FAFAF7;letter-spacing:2px;z-index:2">EnamoR</div>
+<div style="position:absolute;${isLine?'top:16px;right:16px':'top:32px;right:'+pad};font-size:${isLine?'7px':'9px'};letter-spacing:2px;color:rgba(250,250,247,.35);text-transform:uppercase;z-index:2">enamorshop.com</div>
+${isLine?'':`<div style="position:absolute;bottom:${pad};right:${pad};font-size:8px;letter-spacing:1.5px;color:rgba(250,250,247,.3);text-transform:uppercase;z-index:2">MIT · SGS CERTIFIED</div>`}
+</body></html>`;
+}
+
+// 模板 B：亮底簡約（照片左半 + 暖白右半文案）
+function tplLight(w,h,img,c,subHtml,series,isStory,isLine){
+  const imgW=isLine?'45%':isStory?'100%':'50%';
+  const isHoriz=!isStory;
+  const hFS=isLine?'24px':isStory?'42px':'38px';
+  const subFS=isLine?'11px':isStory?'16px':'14px';
+  const pad=isLine?'20px':isStory?'36px':'44px';
+
+  if(isStory){
+    return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;background:#FAFAF7;font-family:Georgia,'Noto Sans TC',sans-serif;display:flex;flex-direction:column">
+<div style="flex:1;background:url('${img}') center/cover no-repeat"></div>
+<div style="padding:${pad};flex:0 0 auto">
+  <div style="font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#8B6F47;margin-bottom:14px">${series}</div>
+  <div style="font-family:Georgia,serif;font-size:${hFS};font-weight:300;color:#1C1C1A;line-height:1.3;margin-bottom:16px">${c.headline}</div>
+  <div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${subFS};line-height:1.8;color:#5C5C58;margin-bottom:16px">${subHtml}</div>
+  <div style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#9C9A92;margin-bottom:20px">${c.caption}</div>
+  <div style="display:inline-block;border:1px solid #1C1C1A;padding:12px 36px;font-family:'Noto Sans TC',sans-serif;font-size:12px;letter-spacing:3px;color:#1C1C1A">${c.cta}　→</div>
+  <div style="margin-top:24px;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-family:Georgia,serif;font-size:15px;color:#1C1C1A;letter-spacing:2px">EnamoR</span>
+    <span style="font-size:8px;letter-spacing:1.5px;color:#9C9A92;text-transform:uppercase">MIT · SGS CERTIFIED</span>
+  </div>
+</div></body></html>`;
+  }
+
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;background:#FAFAF7;font-family:Georgia,'Noto Sans TC',sans-serif;display:flex;${isLine?'flex-direction:row':''}">
+<div style="width:${imgW};height:100%;background:url('${img}') center/cover no-repeat;flex-shrink:0"></div>
+<div style="flex:1;padding:${pad};display:flex;flex-direction:column;justify-content:center">
+  <div style="font-size:${isLine?'8px':'10px'};letter-spacing:4px;text-transform:uppercase;color:#8B6F47;margin-bottom:${isLine?'8px':'16px'}">${series}</div>
+  <div style="font-family:Georgia,serif;font-size:${hFS};font-weight:300;color:#1C1C1A;line-height:1.3;margin-bottom:${isLine?'6px':'18px'}">${c.headline}</div>
+  <div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${subFS};line-height:1.8;color:#5C5C58;margin-bottom:${isLine?'6px':'18px'}">${subHtml}</div>
+  ${isLine?'':`<div style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#9C9A92;margin-bottom:24px">${c.caption}</div>`}
+  <div style="display:inline-block;border:1px solid #1C1C1A;padding:${isLine?'6px 16px':'12px 36px'};font-family:'Noto Sans TC',sans-serif;font-size:${isLine?'10px':'12px'};letter-spacing:3px;color:#1C1C1A;align-self:flex-start">${c.cta}　→</div>
+  ${isLine?'':`<div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:20px">
+    <span style="font-family:Georgia,serif;font-size:15px;color:#1C1C1A;letter-spacing:2px">EnamoR</span>
+    <span style="font-size:8px;letter-spacing:1.5px;color:#9C9A92;text-transform:uppercase">MIT · SGS CERTIFIED</span>
+  </div>`}
+</div></body></html>`;
+}
+
+// 模板 C：暖米氛圍（照片全屏 + 暖米半透明覆蓋 + 中央文案）
+function tplWarm(w,h,img,c,subHtml,series,isStory,isLine){
+  const hFS=isLine?'26px':isStory?'48px':'42px';
+  const subFS=isLine?'11px':isStory?'17px':'15px';
+  const pad=isLine?'24px':'48px';
+  const overlayW=isLine?'55%':isStory?'80%':'55%';
+  const pos=isLine?'right:0;top:0;bottom:0':'right:0;top:0;bottom:0';
+
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"></head>
+<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;position:relative;font-family:Georgia,'Noto Sans TC',sans-serif">
+<div style="position:absolute;inset:0;background:url('${img}') center/cover no-repeat"></div>
+<div style="position:absolute;${pos};width:${overlayW};background:rgba(245,240,232,.88);display:flex;flex-direction:column;justify-content:center;padding:${pad};z-index:2">
+  <div style="font-size:${isLine?'8px':'10px'};letter-spacing:4px;text-transform:uppercase;color:#8B6F47;margin-bottom:${isLine?'6px':'14px'}">${series}</div>
+  <div style="font-family:Georgia,serif;font-size:${hFS};font-weight:300;color:#1C1C1A;line-height:1.3;margin-bottom:${isLine?'6px':'18px'}">${c.headline}</div>
+  <div style="font-family:'Noto Sans TC',sans-serif;font-weight:300;font-size:${subFS};line-height:1.8;color:#5C5C58;margin-bottom:${isLine?'6px':'16px'}">${subHtml}</div>
+  ${isLine?'':`<div style="font-family:'Noto Sans TC',sans-serif;font-size:11px;color:#9C9A92;margin-bottom:20px">${c.caption}</div>`}
+  <div style="display:flex;align-items:center;gap:16px;${isLine?'':'margin-top:8px'}">
+    <div style="display:inline-block;border:1px solid #1C1C1A;padding:${isLine?'6px 16px':'12px 36px'};font-family:'Noto Sans TC',sans-serif;font-size:${isLine?'10px':'12px'};letter-spacing:3px;color:#1C1C1A">${c.cta}　→</div>
+  </div>
+  ${isLine?'':`<div style="margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding-top:20px">
+    <span style="font-family:Georgia,serif;font-size:15px;color:#1C1C1A;letter-spacing:2px">EnamoR</span>
+    <span style="font-size:8px;letter-spacing:1.5px;color:#9C9A92;text-transform:uppercase">MIT · SGS CERTIFIED</span>
+  </div>`}
+</div>
+<div style="position:absolute;top:${isLine?'12px':'28px'};left:${isLine?'16px':'32px'};font-family:Georgia,serif;font-size:${isLine?'12px':'16px'};color:#1C1C1A;letter-spacing:2px;z-index:1">EnamoR</div>
+<div style="position:absolute;top:${isLine?'12px':'28px'};right:${isLine?'16px':'32px'};font-size:${isLine?'7px':'9px'};letter-spacing:2px;color:rgba(28,28,26,.3);text-transform:uppercase;z-index:1">enamorshop.com</div>
+</body></html>`;
 }
 
 function renderResults(){
