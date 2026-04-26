@@ -84,19 +84,41 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
       <input class="search-input" placeholder="搜尋..." oninput="sQ=this.value;renderTbl()">
     </div>
     <div id="tblArea"></div>
+
+    <!-- 上傳採購確認單 -->
+    <div class="sec-upload" style="background:#fff;border:1px solid var(--border);border-radius:8px;margin-top:24px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        <h3 style="font-size:14px;font-weight:600">📤 上傳廠商確認單 → OMS</h3>
+        <span style="font-size:11px;color:var(--muted)">上傳廠商回傳的 Excel，自動比對條碼後送 OMS 建立採購單</span>
+      </div>
+      <div style="padding:18px">
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+          <input type="file" id="poFile" accept=".xlsx,.xls" style="font-family:'DM Mono',monospace;font-size:12px">
+          <button class="btn btn-primary" onclick="parsePoFile()" id="btnParse">解析 Excel</button>
+          <span id="parseSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+        </div>
+        <div id="poPreview" class="hidden"></div>
+        <div id="poActions" class="hidden" style="margin-top:16px;display:flex;gap:12px;align-items:center">
+          <button class="btn btn-green" onclick="submitToOms()" id="btnSubmit">🚀 送出到 OMS</button>
+          <span id="submitSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
 const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
-const LK='enamor_po_oms_v2',SD=14;
-let supMap={},stockD=[],skuSal={},pendPO={},merged=[],vCfg={},cF='all',sQ='';
+const LK='enamor_po_oms_v2',SD=30;
+let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},merged=[],vCfg={},cF='all',sQ='';
 function ldCfg(){try{vCfg=JSON.parse(localStorage.getItem(LK)||'{}')}catch(e){vCfg={}}}
 function svCfg(){localStorage.setItem(LK,JSON.stringify(vCfg))}
 function gVC(v){if(!vCfg[v])vCfg[v]={ld:7,sf:7};return vCfg[v]}
 async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({endpoint:ep,body:b})});return r.json()}
-async function ldSup(){const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:Q?key=${SK}`;const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');const h=rows[0],ci=n=>h.indexOf(n);const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明'),iAct=ci('Shopify啟用');supMap={};rows.slice(1).forEach(r=>{const c=(r[iC]||'').trim();const active=(r[iAct]||'').trim();if(c&&active==='V'&&!supMap[c])supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs:(r[iS]||'').trim(),vsz:(r[iSz]||'').trim(),vc:(r[iCo]||'').trim()}});return Object.keys(supMap).length}
+let revMap={};// 反向：vs+vc+vsz → {bc, nm}
+async function ldSup(){const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:Q?key=${SK}`;const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');const h=rows[0],ci=n=>h.indexOf(n);const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明'),iAct=ci('Shopify啟用'),iNm=ci('商品名稱');supMap={};revMap={};rows.slice(1).forEach(r=>{const c=(r[iC]||'').trim();const active=(r[iAct]||'').trim();if(c&&active==='V'&&!supMap[c]){const vs=(r[iS]||'').trim(),vc=(r[iCo]||'').trim(),vsz=(r[iSz]||'').trim(),nm=iNm>=0?(r[iNm]||'').trim():'';supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs,vsz,vc,nm};const rk=`${vs}|||${vc}|||${vsz}`;if(!revMap[rk])revMap[rk]={bc:c,nm}}});return Object.keys(supMap).length}
 
 async function fetchAll(){
   const btn=document.getElementById('btnFetch');btn.disabled=true;
@@ -105,10 +127,14 @@ async function fetchAll(){
   try{
     sL('載入供應商對照表...');const sc=await ldSup();sS('sbSup',1,`對照表 ${sc}`);
     sL('拉取庫存...');const sr=await oP('/api/v2/default/getStocksData/searchList',{"view_products_stock.stock_group":"10"});stockD=sr.retval||[];sS('sbOms',1,'OMS 正常');sS('sbStk',1,`庫存 ${stockD.length}`);
-    sL('拉取14天訂單明細...');const dd=new Date();dd.setDate(dd.getDate()-SD);const ds=dd.toISOString().slice(0,10);
+    sL('拉取30天訂單明細...');const dd=new Date();dd.setDate(dd.getDate()-SD);const ds=dd.toISOString().slice(0,10);
     const or=await oP('/api/v2/default/apiOrderList/searchDetail',{"orders.created_at@start":[">=",ds]});
-    const rv=or.retval||{};const oi=rv['訂單明細']||[];sS('sbSal',1,`明細 ${oi.length}（${SD}天）`);
-    skuSal={};oi.forEach(i=>{const m=(i['orders_products.products_model']||'').trim();const q=parseInt(i['orders_products.products_quantity']||0);if(m&&q>0){skuSal[m]=(skuSal[m]||0)+q}});
+    const rv=or.retval||{};const oi=rv['訂單明細']||[];const ob=rv['基本資料']||[];
+    sS('sbSal',1,`明細 ${oi.length}（${SD}天）`);
+    // 建 orderId → date mapping
+    const odMap={};ob.forEach(o=>{const oid=(o['orders.orders_id']||'').trim();const dt=(o['orders.created_at']||'').slice(0,10);if(oid&&dt)odMap[oid]=dt});
+    skuSal={};skuDates={};
+    oi.forEach(i=>{const m=(i['orders_products.products_model']||'').trim();const q=parseInt(i['orders_products.products_quantity']||0);const oid=(i['orders_products.orders_id']||'').trim();if(m&&q>0){skuSal[m]=(skuSal[m]||0)+q;const dt=odMap[oid];if(dt){if(!skuDates[m])skuDates[m]={first:dt,last:dt};if(dt<skuDates[m].first)skuDates[m].first=dt;if(dt>skuDates[m].last)skuDates[m].last=dt}}});
     sL('拉取待處理採購單...');const pr=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.status":"60"});
     const pv=pr.retval||{};const pi=pv.purchase||pv['purchase']||[];pendPO={};
     if(Array.isArray(pi)){pi.forEach(p=>{const m=(p['purchase.products_model']||'').trim();const pq=parseInt(p['purchase.purchase_quantity']||0);const sq=parseInt(p['purchase.stock_quantity']||0);const rem=pq-sq;if(m&&rem>0)pendPO[m]=(pendPO[m]||0)+rem})}
@@ -139,18 +165,46 @@ function doMerge(){
   const sm={};
   stockD.forEach(s=>{const m=(s['view_products_stock.products_model']||'').trim();const q=parseInt(s['view_products_stock.stock_qty']||0);const n=(s['view_products_stock.products_name']||'').trim();if(!m)return;if(!sm[m])sm[m]={stk:0,nm:n};sm[m].stk+=q});
   merged=[];
+  const today=new Date().toISOString().slice(0,10);
   // 只處理供應商對照表裡有的 SKU（= Shopify 上架中）
   Object.entries(sm).forEach(([bc,inf])=>{
     const sp=supMap[bc];
     if(!sp)return;// 不在對照表 = 不在 Shopify，跳過
-    const sold=skuSal[bc]||0;const da=Math.round((sold/SD)*100)/100;const po=pendPO[bc]||0;
+    const sold=skuSal[bc]||0;const po=pendPO[bc]||0;
     const vid=sp.vid;const vc=gVC(vid);
+    // ── 倖存者偏差修正 ──
+    // 如果庫存=0 + 有歷史銷量 + 最後銷售日距今>7天 → 斷貨SKU，用有銷售期間天數算日均
+    let effDays=SD; // 預設30天
+    let isStockout=false;
+    const dates=skuDates[bc];
+    if(inf.stk===0 && sold>0 && dates){
+      const lastMs=new Date(dates.last).getTime();
+      const todayMs=new Date(today).getTime();
+      const daysSinceLast=Math.round((todayMs-lastMs)/(86400000));
+      if(daysSinceLast>7){
+        // 斷貨：用第一筆到最後一筆的天數跨度
+        const firstMs=new Date(dates.first).getTime();
+        const span=Math.round((lastMs-firstMs)/(86400000))+1;
+        effDays=Math.max(1,span);
+        isStockout=true;
+      }
+    }
+    const da=Math.round((sold/effDays)*100)/100;
     const rop=Math.ceil(da*(vc.ld+vc.sf));const eff=inf.stk+po;
     const rawSug=Math.max(0,rop-eff);const sug=rawSug>0?Math.ceil(rawSug/10)*10:0;const need=eff<rop&&da>0;
     const dl=da>0?Math.floor(inf.stk/da):999;
-    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s14:sold,da,po,rop,sug,need,dl});
+    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s30:sold,da,po,rop,sug,need,dl,isStockout,effDays});
   });
   merged.sort((a,b)=>{if(a.need!==b.need)return a.need?-1:1;return a.dl-b.dl});
+  // 用 OMS 品名回寫 revMap 和 supMap
+  Object.entries(sm).forEach(([bc,inf])=>{
+    if(supMap[bc]&&inf.nm){
+      supMap[bc].nm=inf.nm;
+      const sp=supMap[bc];
+      const rk=`${sp.vs}|||${sp.vc}|||${sp.vsz}`;
+      if(revMap[rk])revMap[rk].nm=inf.nm;
+    }
+  });
 }
 
 function renderAll(){renderSum();renderVC();renderTbl()}
@@ -161,12 +215,14 @@ function renderSum(){
   const tStk=merged.reduce((s,i)=>s+i.stk,0);const tPo=merged.reduce((s,i)=>s+i.po,0);
   const shopifyTotal=Object.keys(supMap).length;
   const omsMatch=merged.length;
+  const soCount=merged.filter(i=>i.isStockout).length;
   document.getElementById('sumGrid').innerHTML=`
     <div class="card ${al.length?'card-alert':''}"><div class="card-lbl">需採購</div><div class="card-val">${al.length}</div><div class="card-sub">SKU 低於再訂購點</div></div>
     <div class="card"><div class="card-lbl">建議採購量</div><div class="card-val" style="color:var(--green)">${ts.toLocaleString()}</div><div class="card-sub">件（10入倍數）</div></div>
     <div class="card"><div class="card-lbl">追蹤 SKU</div><div class="card-val">${omsMatch}</div><div class="card-sub">Shopify ${shopifyTotal} · ${vs.size} 供應商</div></div>
     <div class="card"><div class="card-lbl">總庫存</div><div class="card-val">${tStk.toLocaleString()}</div><div class="card-sub">良品</div></div>
-    <div class="card"><div class="card-lbl">採購中</div><div class="card-val" style="color:var(--orange)">${tPo.toLocaleString()}</div><div class="card-sub">已下單未到</div></div>`;
+    <div class="card"><div class="card-lbl">採購中</div><div class="card-val" style="color:var(--orange)">${tPo.toLocaleString()}</div><div class="card-sub">已下單未到</div></div>
+    <div class="card"><div class="card-lbl">斷貨修正</div><div class="card-val" style="color:${soCount?'var(--orange)':'var(--muted)'}">${soCount}</div><div class="card-sub">用有銷售期間日均</div></div>`;
 }
 
 function renderVC(){
@@ -187,7 +243,7 @@ function renderTbl(){
     const al=inf.it.filter(i=>i.need);const ts=al.reduce((s,i)=>s+i.sug,0);
     const d=document.createElement('div');d.className='vendor-block';
     d.innerHTML=`<div class="vendor-head"><span class="vbadge">${v}</span><h3>${inf.n||v}</h3>${al.length?`<span style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;font-weight:600">⚠ ${al.length} 需採購</span>`:''}<span class="vtotal">${inf.it.length} SKU${ts?` · 建議 ${ts} 件`:''}</span>${al.length?`<button class="btn-dl" onclick="expV('${v}')">⬇ ${v}.xlsx</button>`:''}</div>
-    <table><thead><tr><th>商品條碼</th><th>廠商貨號</th><th>顏色</th><th>尺寸</th><th>商品名稱</th><th class="text-right">庫存</th><th class="text-right">採購中</th><th class="text-right">14天銷</th><th class="text-right">日均</th><th class="text-right">ROP</th><th class="text-right">可用</th><th class="text-right" style="color:var(--green);font-weight:700">建議</th></tr></thead>
+    <table><thead><tr><th>商品條碼</th><th>廠商貨號</th><th>顏色</th><th>尺寸</th><th>商品名稱</th><th class="text-right">庫存</th><th class="text-right">採購中</th><th class="text-right">30天銷</th><th class="text-right">日均</th><th class="text-right">ROP</th><th class="text-right">可用</th><th class="text-right" style="color:var(--green);font-weight:700">建議</th></tr></thead>
     <tbody>${inf.it.map(rR).join('')}</tbody></table>`;
     area.appendChild(d);
   });
@@ -195,7 +251,8 @@ function renderTbl(){
 
 function rR(i){
   const c=i.need?'alert-row':'';const dc=i.dl<=7?'var(--red)':i.dl<=14?'var(--orange)':'var(--muted)';
-  return`<tr class="${c}"><td class="mono" style="font-size:11px;color:var(--muted)">${i.bc}</td><td class="mono" style="font-size:11px">${i.vs||i.bc}</td><td style="font-size:12px">${i.vc2||'—'}</td><td>${i.vsz?`<span class="size-tag">${i.vsz}</span>`:'—'}</td><td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.nm}">${i.nm||'—'}</td><td class="mono text-right" style="font-weight:600">${i.stk}</td><td class="mono text-right" style="color:${i.po?'var(--orange)':'var(--muted)'}">${i.po||'—'}</td><td class="mono text-right">${i.s14}</td><td class="mono text-right">${i.da.toFixed(1)}</td><td class="mono text-right">${i.rop}</td><td class="mono text-right" style="color:${dc};font-weight:${i.dl<=14?'700':'400'}">${i.dl>=999?'∞':i.dl+'天'}</td><td class="mono text-right" style="font-weight:700;font-size:14px;color:${i.need?'var(--red)':'var(--muted)'}">${i.sug>0?i.sug:'—'}</td></tr>`;
+  const soTag=i.isStockout?`<span style="font-size:9px;color:#fff;background:var(--orange);padding:1px 5px;border-radius:3px;margin-left:4px" title="斷貨修正：用${i.effDays}天算日均">斷貨</span>`:'';
+  return`<tr class="${c}"><td class="mono" style="font-size:11px;color:var(--muted)">${i.bc}</td><td class="mono" style="font-size:11px">${i.vs||i.bc}</td><td style="font-size:12px">${i.vc2||'—'}</td><td>${i.vsz?`<span class="size-tag">${i.vsz}</span>`:'—'}</td><td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.nm}">${i.nm||'—'}</td><td class="mono text-right" style="font-weight:600">${i.stk}</td><td class="mono text-right" style="color:${i.po?'var(--orange)':'var(--muted)'}">${i.po||'—'}</td><td class="mono text-right">${i.s30}</td><td class="mono text-right">${i.da.toFixed(1)}${soTag}</td><td class="mono text-right">${i.rop}</td><td class="mono text-right" style="color:${dc};font-weight:${i.dl<=14?'700':'400'}">${i.dl>=999?'∞':i.dl+'天'}</td><td class="mono text-right" style="font-weight:700;font-size:14px;color:${i.need?'var(--red)':'var(--muted)'}">${i.sug>0?i.sug:'—'}</td></tr>`;
 }
 
 function setF(v,el){cF=v;document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTbl()}
@@ -222,6 +279,133 @@ function exportAll(){
   XLSX.writeFile(wb,`${tdy()}_OMS採購建議.xlsx`);toast('✓ 採購建議已匯出');
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+
+// ── 上傳採購確認單 ──
+let poItems=[];// 解析後的待送項目
+
+function parsePoFile(){
+  const fileEl=document.getElementById('poFile');
+  if(!fileEl.files.length){toast('請選擇檔案');return}
+  if(Object.keys(revMap).length===0){toast('請先拉取數據（需要對照表）');return}
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      poItems=[];
+      let unmatchCount=0;
+      wb.SheetNames.forEach(sn=>{
+        const ws=wb.Sheets[sn];
+        const data=XLSX.utils.sheet_to_json(ws,{defval:''});
+        data.forEach(row=>{
+          const vs=(row['廠商貨號']||'').toString().trim();
+          const vc=(row['廠商顏色說明']||'').toString().trim();
+          const vsz=(row['尺寸說明']||'').toString().trim();
+          const qty=parseInt(row['建議採購量']||row['採購量']||row['數量']||0);
+          const memo=(row['備註']||'').toString().trim();
+          if(!vs||qty<=0)return;
+          const rk=`${vs}|||${vc}|||${vsz}`;
+          const match=revMap[rk];
+          if(match){
+            // 從 supMap 拿完整資料
+            const sup=supMap[match.bc]||{};
+            poItems.push({
+              vs,vc,vsz,qty,memo,
+              bc:match.bc,
+              nm:sup.nm||match.nm||'',
+              vid:sup.vid||'',
+              vn:sup.vn||'',
+              matched:true
+            });
+          }else{
+            poItems.push({vs,vc,vsz,qty,memo,bc:'',nm:'',vid:'',vn:'',matched:false});
+            unmatchCount++;
+          }
+        });
+      });
+      if(poItems.length===0){toast('Excel 中沒有有效的採購項目');return}
+      document.getElementById('parseSt').textContent=`解析完成：${poItems.length} 筆${unmatchCount>0?`，${unmatchCount} 筆未對照`:''}`
+      renderPoPreview();
+      document.getElementById('poPreview').classList.remove('hidden');
+      document.getElementById('poActions').classList.remove('hidden');
+      document.getElementById('poActions').style.display='flex';
+    }catch(err){
+      toast('解析失敗：'+err.message);console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(fileEl.files[0]);
+}
+
+function renderPoPreview(){
+  const matched=poItems.filter(i=>i.matched);
+  const unmatched=poItems.filter(i=>!i.matched);
+  const totalQty=matched.reduce((s,i)=>s+i.qty,0);
+  let html=`<div style="margin-bottom:12px;font-size:13px">
+    <span style="color:var(--green);font-weight:600">✓ 可送出 ${matched.length} 筆（${totalQty} 件）</span>
+    ${unmatched.length?`<span style="color:var(--red);margin-left:16px;font-weight:600">✗ 未對照 ${unmatched.length} 筆（不會送出）</span>`:''}
+  </div>`;
+  html+=`<table><thead><tr>
+    <th>狀態</th><th>商品條碼</th><th>廠商貨號</th><th>顏色</th><th>尺寸</th><th>品名</th><th class="text-right">數量</th><th>備註</th>
+  </tr></thead><tbody>`;
+  poItems.forEach(i=>{
+    const cls=i.matched?'':'alert-row';
+    const st=i.matched?'<span style="color:var(--green);font-weight:700">✓</span>':'<span style="color:var(--red);font-weight:700">✗</span>';
+    html+=`<tr class="${cls}">
+      <td>${st}</td>
+      <td class="mono" style="font-size:11px">${i.bc||'—'}</td>
+      <td class="mono" style="font-size:11px">${i.vs}</td>
+      <td style="font-size:12px">${i.vc||'—'}</td>
+      <td>${i.vsz?`<span class="size-tag">${i.vsz}</span>`:'—'}</td>
+      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.nm||'—'}</td>
+      <td class="mono text-right" style="font-weight:700">${i.qty}</td>
+      <td style="font-size:12px;color:var(--muted)">${i.memo||''}</td>
+    </tr>`;
+  });
+  html+='</tbody></table>';
+  document.getElementById('poPreview').innerHTML=html;
+}
+
+async function submitToOms(){
+  const matched=poItems.filter(i=>i.matched);
+  if(!matched.length){toast('沒有可送出的項目');return}
+  const btn=document.getElementById('btnSubmit');
+  const st=document.getElementById('submitSt');
+  btn.disabled=true;
+  st.textContent='送出中...';
+
+  // 產生採購單號：PO-YYYYMMDD-001
+  const poNo=`PO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}`;
+
+  // 組 createPurchase body
+  const body=matched.map(i=>({
+    purchase_no: poNo,
+    purchase_type: 'default',
+    supplier_model: i.vs,
+    products_model: i.bc,
+    products_ean: i.bc,// EAN 和 model 相同（EnamoR 的條碼系統）
+    name: i.nm||i.vs,
+    warehouse_no: '1',
+    purchase_quantity: i.qty,
+    memo: i.memo||'採購平台自動上傳'
+  }));
+
+  try{
+    const res=await oP('/api/v2/default/action/createPurchase',body);
+    if(res.result){
+      st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 成功送出 ${matched.length} 筆，採購單號 ${poNo}</span>`;
+      toast('✓ 採購單已送出到 OMS');
+    }else{
+      st.innerHTML=`<span style="color:var(--red);font-weight:600">✗ OMS 回傳錯誤：${res.msg||'未知錯誤'}</span>`;
+      toast('送出失敗：'+res.msg);
+    }
+    console.log('createPurchase response:',res);
+  }catch(err){
+    st.innerHTML=`<span style="color:var(--red)">✗ 送出失敗：${err.message}</span>`;
+    toast('送出失敗：'+err.message);
+    console.error(err);
+  }
+  btn.disabled=false;
+}
+
 ldCfg();
 </script>
 </body>
