@@ -134,9 +134,11 @@ async function fetchAll(){
 function sL(m){document.getElementById('ldMsg').textContent=m}
 function sS(id,ok,t){const e=document.getElementById(id);e.className='sb-item'+(ok?' ok':'');e.innerHTML=`<div class="dot"></div>${t}`}
 
+const SKIP=new Set(['999999','platform_coin','platform_coin_16','SHIPFEE','seller_discount','Discount','universal_products','enprice','free01','luckybag','luckybagp3','VIP_BDG','VVIP_BDG']);
+
 function doMerge(){
   const sm={};
-  stockD.forEach(s=>{const m=(s['view_products_stock.products_model']||'').trim();const q=parseInt(s['view_products_stock.stock_qty']||0);const n=(s['view_products_stock.products_name']||'').trim();if(!m)return;if(!sm[m])sm[m]={stk:0,nm:n};sm[m].stk+=q});
+  stockD.forEach(s=>{const m=(s['view_products_stock.products_model']||'').trim();const q=parseInt(s['view_products_stock.stock_qty']||0);const n=(s['view_products_stock.products_name']||'').trim();if(!m||SKIP.has(m))return;if(!sm[m])sm[m]={stk:0,nm:n};sm[m].stk+=q});
   merged=[];
   Object.entries(sm).forEach(([bc,inf])=>{
     const sp=supMap[bc];const sold=skuSal[bc]||0;const da=Math.round((sold/SD)*100)/100;const po=pendPO[bc]||0;
