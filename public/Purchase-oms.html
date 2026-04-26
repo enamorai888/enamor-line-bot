@@ -81,7 +81,6 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
       <div class="chip active" onclick="setF('all',this)">全部</div>
       <div class="chip alert" onclick="setF('alert',this)">⚠ 需採購</div>
       <div class="chip" onclick="setF('ok',this)">充足</div>
-      <div class="chip" onclick="setF('un',this)">未對照</div>
       <input class="search-input" placeholder="搜尋..." oninput="sQ=this.value;renderTbl()">
     </div>
     <div id="tblArea"></div>
@@ -138,15 +137,18 @@ const SKIP=new Set(['999999','platform_coin','platform_coin_16','SHIPFEE','selle
 
 function doMerge(){
   const sm={};
-  stockD.forEach(s=>{const m=(s['view_products_stock.products_model']||'').trim();const q=parseInt(s['view_products_stock.stock_qty']||0);const n=(s['view_products_stock.products_name']||'').trim();if(!m||SKIP.has(m))return;if(!sm[m])sm[m]={stk:0,nm:n};sm[m].stk+=q});
+  stockD.forEach(s=>{const m=(s['view_products_stock.products_model']||'').trim();const q=parseInt(s['view_products_stock.stock_qty']||0);const n=(s['view_products_stock.products_name']||'').trim();if(!m)return;if(!sm[m])sm[m]={stk:0,nm:n};sm[m].stk+=q});
   merged=[];
+  // 只處理供應商對照表裡有的 SKU（= Shopify 上架中）
   Object.entries(sm).forEach(([bc,inf])=>{
-    const sp=supMap[bc];const sold=skuSal[bc]||0;const da=Math.round((sold/SD)*100)/100;const po=pendPO[bc]||0;
-    const vid=sp?sp.vid:'未對照';const vc=gVC(vid);
+    const sp=supMap[bc];
+    if(!sp)return;// 不在對照表 = 不在 Shopify，跳過
+    const sold=skuSal[bc]||0;const da=Math.round((sold/SD)*100)/100;const po=pendPO[bc]||0;
+    const vid=sp.vid;const vc=gVC(vid);
     const rop=Math.ceil(da*(vc.ld+vc.sf));const eff=inf.stk+po;
     const rawSug=Math.max(0,rop-eff);const sug=rawSug>0?Math.ceil(rawSug/10)*10:0;const need=eff<rop&&da>0;
     const dl=da>0?Math.floor(inf.stk/da):999;
-    merged.push({bc,nm:inf.nm,vid,vn:sp?.vn||'',vs:sp?.vs||'',vc2:sp?.vc||'',vsz:sp?.vsz||'',stk:inf.stk,s14:sold,da,po,rop,sug,need,dl});
+    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s14:sold,da,po,rop,sug,need,dl});
   });
   merged.sort((a,b)=>{if(a.need!==b.need)return a.need?-1:1;return a.dl-b.dl});
 }
@@ -155,20 +157,20 @@ function renderAll(){renderSum();renderVC();renderTbl()}
 
 function renderSum(){
   const al=merged.filter(i=>i.need);const ts=al.reduce((s,i)=>s+i.sug,0);
-  const vs=new Set(merged.filter(i=>i.vid!=='未對照').map(i=>i.vid));
-  const um=merged.filter(i=>i.vid==='未對照').length;
+  const vs=new Set(merged.map(i=>i.vid));
   const tStk=merged.reduce((s,i)=>s+i.stk,0);const tPo=merged.reduce((s,i)=>s+i.po,0);
+  const shopifyTotal=Object.keys(supMap).length;
+  const omsMatch=merged.length;
   document.getElementById('sumGrid').innerHTML=`
     <div class="card ${al.length?'card-alert':''}"><div class="card-lbl">需採購</div><div class="card-val">${al.length}</div><div class="card-sub">SKU 低於再訂購點</div></div>
-    <div class="card"><div class="card-lbl">建議採購量</div><div class="card-val" style="color:var(--green)">${ts.toLocaleString()}</div><div class="card-sub">件</div></div>
-    <div class="card"><div class="card-lbl">庫存 SKU</div><div class="card-val">${merged.length}</div><div class="card-sub">${vs.size} 供應商</div></div>
+    <div class="card"><div class="card-lbl">建議採購量</div><div class="card-val" style="color:var(--green)">${ts.toLocaleString()}</div><div class="card-sub">件（10入倍數）</div></div>
+    <div class="card"><div class="card-lbl">追蹤 SKU</div><div class="card-val">${omsMatch}</div><div class="card-sub">Shopify ${shopifyTotal} · ${vs.size} 供應商</div></div>
     <div class="card"><div class="card-lbl">總庫存</div><div class="card-val">${tStk.toLocaleString()}</div><div class="card-sub">良品</div></div>
-    <div class="card"><div class="card-lbl">採購中</div><div class="card-val" style="color:var(--orange)">${tPo.toLocaleString()}</div><div class="card-sub">已下單未到</div></div>
-    <div class="card"><div class="card-lbl">未對照</div><div class="card-val" style="color:${um?'var(--orange)':'var(--muted)'}">${um}</div><div class="card-sub">無供應商</div></div>`;
+    <div class="card"><div class="card-lbl">採購中</div><div class="card-val" style="color:var(--orange)">${tPo.toLocaleString()}</div><div class="card-sub">已下單未到</div></div>`;
 }
 
 function renderVC(){
-  const vs={};merged.forEach(i=>{if(i.vid==='未對照')return;if(!vs[i.vid])vs[i.vid]={n:i.vn,c:0,a:0};vs[i.vid].c++;if(i.need)vs[i.vid].a++});
+  const vs={};merged.forEach(i=>{if(!vs[i.vid])vs[i.vid]={n:i.vn,c:0,a:0};vs[i.vid].c++;if(i.need)vs[i.vid].a++});
   document.getElementById('vcR').innerHTML=Object.entries(vs).sort((a,b)=>b[1].a-a[1].a||a[0].localeCompare(b[0])).map(([v,inf])=>{
     const c=gVC(v);return`<tr><td class="mono" style="font-weight:600">${v}</td><td>${inf.n}</td><td class="mono text-center">${inf.c}</td><td class="mono text-center" style="color:${inf.a?'var(--red)':'var(--muted)'};font-weight:${inf.a?'700':'400'}">${inf.a}</td><td><input class="vc-input" type="number" min="1" max="90" value="${c.ld}" onchange="uVC('${v}','ld',this.value)"></td><td><input class="vc-input" type="number" min="0" max="90" value="${c.sf}" onchange="uVC('${v}','sf',this.value)"></td><td class="mono text-center" style="font-weight:600">${c.ld+c.sf}天</td></tr>`}).join('');
 }
@@ -176,8 +178,7 @@ function renderVC(){
 function renderTbl(){
   let items=merged;
   if(cF==='alert')items=items.filter(i=>i.need);
-  if(cF==='ok')items=items.filter(i=>!i.need&&i.vid!=='未對照');
-  if(cF==='un')items=items.filter(i=>i.vid==='未對照');
+  if(cF==='ok')items=items.filter(i=>!i.need);
   if(sQ){const q=sQ.toLowerCase();items=items.filter(i=>i.bc.toLowerCase().includes(q)||i.nm.toLowerCase().includes(q)||(i.vs||'').toLowerCase().includes(q)||(i.vid||'').toLowerCase().includes(q))}
   const vs={};items.forEach(i=>{if(!vs[i.vid])vs[i.vid]={n:i.vn,it:[]};vs[i.vid].it.push(i)});
   const area=document.getElementById('tblArea');area.innerHTML='';
