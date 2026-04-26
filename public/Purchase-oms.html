@@ -142,7 +142,7 @@ function doMerge(){
     const sp=supMap[bc];const sold=skuSal[bc]||0;const da=Math.round((sold/SD)*100)/100;const po=pendPO[bc]||0;
     const vid=sp?sp.vid:'未對照';const vc=gVC(vid);
     const rop=Math.ceil(da*(vc.ld+vc.sf));const eff=inf.stk+po;
-    const sug=Math.max(0,rop-eff);const need=eff<rop&&da>0;
+    const rawSug=Math.max(0,rop-eff);const sug=rawSug>0?Math.ceil(rawSug/10)*10:0;const need=eff<rop&&da>0;
     const dl=da>0?Math.floor(inf.stk/da):999;
     merged.push({bc,nm:inf.nm,vid,vn:sp?.vn||'',vs:sp?.vs||'',vc2:sp?.vc||'',vsz:sp?.vsz||'',stk:inf.stk,s14:sold,da,po,rop,sug,need,dl});
   });
