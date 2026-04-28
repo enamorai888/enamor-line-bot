@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnamoR 素材工作站</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:wght@400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f7f7f5;--surface:#fff;--surface2:#f3f3f0;--border:#e2dedd;--text:#1a1a1a;--muted:#888;--muted2:#bbb;--purple:#6c5ce7;--purple-light:#f3f0ff;--green:#2d7a3a;--green-light:#f0f7f1;--accent:#8B6F47;--charcoal:#1C1C1A;--warm-white:#FAFAF7;--cream:#F5F0E8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-weight:300;min-height:100vh}
+header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.logo-img{height:28px}
+.header-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px}
+.spacer{flex:1}
+.back-btn{padding:6px 14px;border-radius:5px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;text-decoration:none;transition:all .15s}.back-btn:hover{border-color:var(--text);color:var(--text)}
+.wrap{max-width:1400px;margin:0 auto;padding:20px 24px}
+/* SKU chips */
+.sku-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;padding:12px 0;border-bottom:1px solid var(--border)}
+.chip{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap}.chip:hover{border-color:var(--text);color:var(--text)}.chip.active{background:var(--text);border-color:var(--text);color:#fff}
+/* workspace grid */
+.ws{display:grid;grid-template-columns:280px 1fr;gap:20px;min-height:500px}
+@media(max-width:900px){.ws{grid-template-columns:1fr}}
+.ws-left{display:flex;flex-direction:column;gap:12px}
+.ws-right{display:flex;flex-direction:column;gap:12px}
+.panel{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px}
+.panel-t{font-size:10px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px}
+/* photo grid */
+.photo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.photo-thumb{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:6px;border:2px solid transparent;cursor:pointer;transition:all .15s}.photo-thumb:hover{border-color:var(--purple)}.photo-thumb.picked{border-color:var(--purple);box-shadow:0 0 0 2px var(--purple-light)}
+.upload-box{border:2px dashed var(--border);border-radius:6px;aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:11px;color:var(--muted);gap:4px;position:relative;transition:all .15s}.upload-box:hover{border-color:var(--purple);color:var(--purple)}.upload-box input{position:absolute;inset:0;opacity:0;cursor:pointer}
+/* angle chips */
+.angle-chip{display:inline-block;padding:4px 12px;border-radius:12px;font-size:11px;font-family:'DM Mono',monospace;margin:2px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--muted);transition:all .15s}.angle-chip:hover{border-color:var(--purple)}.angle-chip.active{background:var(--purple);border-color:var(--purple);color:#fff}
+/* template cards */
+.tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tpl-card{border:2px solid var(--border);border-radius:6px;padding:10px;cursor:pointer;transition:all .15s;text-align:center}.tpl-card:hover{border-color:var(--purple)}.tpl-card.picked{border-color:var(--purple);background:var(--purple-light)}
+.tpl-preview{height:40px;border-radius:4px;margin-bottom:6px;display:flex;align-items:center;justify-content:center}
+.tpl-name{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted)}
+/* gen button */
+.gen-btn{padding:12px 24px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;background:var(--purple);color:#fff;width:100%;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}.gen-btn:hover{background:#5a4bd6}.gen-btn:disabled{opacity:.5;cursor:not-allowed}
+.gen-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* preview area */
+.preview-tabs{display:flex;gap:0;border-bottom:1px solid var(--border)}
+.preview-tab{flex:1;padding:8px;text-align:center;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}.preview-tab:hover{color:var(--text)}.preview-tab.active{color:var(--purple);border-bottom-color:var(--purple);font-weight:500}
+.preview-frame{background:#e8e8e5;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:350px;margin-top:8px;position:relative}
+.preview-frame iframe{border:none;background:#fff}
+/* adjustments */
+.adj-panel{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px}
+.adj-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)}
+.adj-label{width:80px;flex-shrink:0}
+.adj-range{flex:1;accent-color:var(--purple)}
+.adj-val{width:40px;text-align:right;font-size:11px}
+/* results */
+.result-card{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.result-header{padding:10px 14px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:11px;font-family:'DM Mono',monospace;flex-wrap:wrap}
+.result-actions{margin-left:auto;display:flex;gap:6px}
+.tag-chip{display:inline-block;font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);color:var(--muted);margin:1px 2px}
+.copy-btn{padding:3px 10px;border-radius:4px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s}.copy-btn:hover{border-color:var(--text);color:var(--text)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}.toast.show{opacity:1;transform:translateY(0)}
+.hidden{display:none!important}
+.empty{text-align:center;padding:60px;color:var(--muted);font-size:13px;font-family:'DM Mono',monospace}
+.export-bar{display:flex;gap:8px;margin-bottom:16px}
+.btn{padding:8px 16px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#256132}
+</style>
+</head>
+<body>
+<header>
+  <img class="logo-img" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
+  <span class="header-title">素材工作站</span>
+  <div class="spacer"></div>
+  <a href="sales.html" class="back-btn">← 回銷售分析</a>
+</header>
+
+<div class="wrap">
+  <!-- SKU Chips -->
+  <div class="sku-bar" id="skuBar"></div>
+
+  <!-- Export bar -->
+  <div class="export-bar">
+    <button class="btn btn-green" onclick="exportAll()">⬇ 匯出全部素材</button>
+    <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;line-height:32px" id="resultCount"></span>
+  </div>
+
+  <div class="ws">
+    <div class="ws-left">
+      <!-- 照片選擇 -->
+      <div class="panel">
+        <div class="panel-t">選擇照片</div>
+        <div class="photo-grid" id="photoGrid"></div>
+      </div>
+      <!-- 角度 -->
+      <div class="panel">
+        <div class="panel-t">文案角度</div>
+        <div id="angleChips"></div>
+      </div>
+      <!-- 風格 -->
+      <div class="panel">
+        <div class="panel-t">設計風格</div>
+        <div class="tpl-grid" id="tplGrid"></div>
+      </div>
+      <!-- 微調 -->
+      <div class="adj-panel">
+        <div class="panel-t">微調</div>
+        <div class="adj-row"><span class="adj-label">Logo 大小</span><input type="range" class="adj-range" min="10" max="40" value="22" id="adjLogoSize" oninput="adjVal('logoSize')"><span class="adj-val" id="valLogoSize">22</span></div>
+        <div class="adj-row"><span class="adj-label">Logo X</span><input type="range" class="adj-range" min="0" max="100" value="5" id="adjLogoX" oninput="adjVal('logoX')"><span class="adj-val" id="valLogoX">5%</span></div>
+        <div class="adj-row"><span class="adj-label">Logo Y</span><input type="range" class="adj-range" min="0" max="100" value="3" id="adjLogoY" oninput="adjVal('logoY')"><span class="adj-val" id="valLogoY">3%</span></div>
+        <div class="adj-row"><span class="adj-label">標題字級</span><input type="range" class="adj-range" min="20" max="56" value="36" id="adjHeadFS" oninput="adjVal('headFS')"><span class="adj-val" id="valHeadFS">36</span></div>
+        <div class="adj-row"><span class="adj-label">副文字級</span><input type="range" class="adj-range" min="10" max="24" value="14" id="adjSubFS" oninput="adjVal('subFS')"><span class="adj-val" id="valSubFS">14</span></div>
+        <div class="adj-row"><span class="adj-label">文案 X</span><input type="range" class="adj-range" min="0" max="60" value="5" id="adjTextX" oninput="adjVal('textX')"><span class="adj-val" id="valTextX">5%</span></div>
+        <div class="adj-row"><span class="adj-label">文案 Y</span><input type="range" class="adj-range" min="0" max="80" value="65" id="adjTextY" oninput="adjVal('textY')"><span class="adj-val" id="valTextY">65%</span></div>
+      </div>
+      <!-- 生成 -->
+      <button class="gen-btn" id="genBtn" onclick="generate()">✨ 生成素材</button>
+    </div>
+    <div class="ws-right">
+      <!-- 預覽 -->
+      <div class="panel" style="flex:1">
+        <div class="panel-t">預覽</div>
+        <div class="preview-tabs" id="sizeTabs"></div>
+        <div class="preview-frame" id="previewFrame">
+          <div class="empty">選擇照片和角度後，點擊生成</div>
+        </div>
+      </div>
+      <!-- 結果 -->
+      <div id="resultsArea"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──
+const PROXY='https://enamor-line-bot.vercel.app/api/claude-proxy';
+const PROXY_TK='28447208';
+const LOGO_W='https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-W.png';
+const LOGO_B='https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png';
+
+const ANGLES=[
+  {id:'comfort',label:'舒適體感',prompt:'強調穿著舒適、像沒穿一樣的體感，用身體記憶的描述'},
+  {id:'stretch',label:'彈性包覆',prompt:'強調彈性好、不緊繃、自由伸展、不捲邊'},
+  {id:'cool',label:'涼感乾爽',prompt:'強調透氣涼感、夏天不悶熱、乾爽的觸感'},
+  {id:'texture',label:'觸感反差',prompt:'強調摸到的第一秒觸感差異、跟普通內褲的對比'},
+  {id:'quality',label:'品質工藝',prompt:'強調台灣製造、SGS認證、萊卡材質等品質細節'},
+  {id:'daily',label:'日常小奢',prompt:'用一杯咖啡的價格換一整天的觸感升級，日常犒賞自己'},
+];
+const TEMPLATES=[
+  {id:'dark',label:'暗底質感',bg:'#1C1C1A',text:'#FAFAF7',accent:'#C4A882'},
+  {id:'light',label:'亮底簡約',bg:'#F5F0E8',text:'#1C1C1A',accent:'#8B6F47'},
+  {id:'warm',label:'大圖沉浸',bg:'#FAFAF7',text:'#1C1C1A',accent:'#8B6F47'},
+];
+const SIZES=[
+  {id:'feed',label:'FB Feed',w:1080,h:1080},
+  {id:'story',label:'Reels/Story',w:1080,h:1920},
+  {id:'line',label:'LINE Push',w:800,h:400},
+];
+const BRAND_VOICE=`語感參考：自己生的孩子自己留下來賣 / 穿了就忘了 / 摸起來澀澀的，就是乾爽的感覺 / 捲邊的內褲，你忍了多久？/ 不舒服的時候你一整天都在想它，舒服的時候你會忘記自己有穿`;
+const ANIM_CSS=`@keyframes slideUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}`;
+const GRAIN_DIV=`<div style="position:absolute;inset:0;background-image:url('data:image/svg+xml,%3Csvg viewBox=%270 0 256 256%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cfilter id=%27n%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%270.9%27 numOctaves=%274%27 stitchTiles=%27stitch%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27 opacity=%270.04%27/%3E%3C/svg%3E');pointer-events:none;z-index:50;opacity:.35"></div>`;
+
+// ── STATE ──
+let skus=[];
+let activeSku=null;
+let studioData={};// model→{images:[],uploads:[],pickedImg:null,results:[]}
+let pickedAngle=null, pickedTpl='dark', activeSize='feed';
+let adj={logoSize:22,logoX:5,logoY:3,headFS:36,subFS:14,textX:5,textY:65};
+let lastCopy=null;
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded',async()=>{
+  // Auth check
+  if(sessionStorage.getItem('enamor_auth')!=='1'){
+    if(prompt('請輸入密碼')!=='28447208'){document.body.innerHTML='<div class="empty">密碼錯誤</div>';return}
+    sessionStorage.setItem('enamor_auth','1');
+  }
+  // Load SKUs from sessionStorage
+  try{skus=JSON.parse(sessionStorage.getItem('enamor_studio_skus')||'[]')}catch(e){skus=[]}
+  if(!skus.length){document.querySelector('.wrap').innerHTML='<div class="empty">沒有選品資料。請從<a href="sales.html">銷售分析</a>勾選品項後進入。</div>';return}
+  // Init studioData
+  skus.forEach(s=>{if(!studioData[s.model])studioData[s.model]={images:[],uploads:[],pickedImg:null,results:[]}});
+  activeSku=skus[0].model;
+  renderSkuBar();
+  renderAngles();
+  renderTemplates();
+  renderSizeTabs();
+  await fetchImages();
+  renderPhotos();
+});
+
+// ── RENDER ──
+function renderSkuBar(){
+  document.getElementById('skuBar').innerHTML=skus.map(s=>
+    `<div class="chip ${activeSku===s.model?'active':''}" onclick="switchSku('${s.model}')">${s.name||s.model} <span style="opacity:.5">${s.qty||''}</span></div>`
+  ).join('');
+}
+function renderAngles(){
+  document.getElementById('angleChips').innerHTML=ANGLES.map(a=>
+    `<span class="angle-chip ${pickedAngle===a.id?'active':''}" onclick="pickAngle('${a.id}')">${a.label}</span>`
+  ).join('');
+}
+function renderTemplates(){
+  document.getElementById('tplGrid').innerHTML=TEMPLATES.map(t=>
+    `<div class="tpl-card ${pickedTpl===t.id?'picked':''}" onclick="pickTpl('${t.id}')"><div class="tpl-preview" style="background:${t.bg}"><span style="color:${t.accent};font-family:Georgia;font-size:12px">Aa</span></div><div class="tpl-name">${t.label}</div></div>`
+  ).join('');
+}
+function renderSizeTabs(){
+  document.getElementById('sizeTabs').innerHTML=SIZES.map(s=>
+    `<div class="preview-tab ${activeSize===s.id?'active':''}" onclick="switchSize('${s.id}',this)">${s.label} <span style="opacity:.4">${s.w}×${s.h}</span></div>`
+  ).join('');
+}
+function renderPhotos(){
+  const d=studioData[activeSku];
+  const allImgs=[...d.images,...d.uploads];
+  document.getElementById('photoGrid').innerHTML=
+    allImgs.map((u,i)=>`<img class="photo-thumb ${d.pickedImg===u?'picked':''}" src="${u.startsWith('data:')?u:u+'&width=300'}" onclick="pickImg(${i})">`).join('')+
+    `<div class="upload-box"><input type="file" accept="image/*" onchange="uploadImg(this)" multiple><span style="font-size:18px">+</span><span>上傳</span></div>`;
+}
+function renderResults(){
+  const d=studioData[activeSku];
+  if(!d||!d.results.length){document.getElementById('resultsArea').innerHTML='';document.getElementById('resultCount').textContent='';return}
+  const total=Object.values(studioData).reduce((s,d)=>s+d.results.length,0);
+  document.getElementById('resultCount').textContent=`共 ${total} 個素材`;
+  document.getElementById('resultsArea').innerHTML=
+    `<div class="panel-t" style="margin-top:8px">已生成 (${d.results.length})</div>`+
+    d.results.map(r=>`<div class="result-card"><div class="result-header">
+      <span>${r.angle}</span><span class="tag-chip">${r.tpl}</span><span class="tag-chip">${r.size}</span>
+      ${r.headline?`<span style="color:var(--text);font-weight:500">${r.headline}</span>`:''}
+      <div class="result-actions">
+        <button class="copy-btn" onclick="previewResult(${r.id})">預覽</button>
+        <button class="copy-btn" onclick="copyHtml(${r.id})">複製</button>
+        <button class="copy-btn" onclick="dlHtml(${r.id})" style="border-color:var(--green);color:var(--green)">下載</button>
+      </div>
+    </div></div>`).join('');
+}
+
+// ── INTERACTIONS ──
+async function switchSku(model){activeSku=model;renderSkuBar();await fetchImages();renderPhotos();renderResults()}
+function pickAngle(id){pickedAngle=id;renderAngles()}
+function pickTpl(id){pickedTpl=id;renderTemplates()}
+function switchSize(id,el){activeSize=id;document.querySelectorAll('.preview-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+function pickImg(idx){const d=studioData[activeSku];const all=[...d.images,...d.uploads];d.pickedImg=all[idx];renderPhotos()}
+function uploadImg(input){
+  Array.from(input.files).forEach(f=>{const r=new FileReader();r.onload=e=>{studioData[activeSku].uploads.push(e.target.result);studioData[activeSku].images.push(e.target.result);renderPhotos()};r.readAsDataURL(f)});input.value='';
+}
+function adjVal(key){
+  const el=document.getElementById('adj'+key.charAt(0).toUpperCase()+key.slice(1));
+  adj[key]=parseInt(el.value);
+  const valEl=document.getElementById('val'+key.charAt(0).toUpperCase()+key.slice(1));
+  valEl.textContent=['logoX','logoY','textX','textY'].includes(key)?adj[key]+'%':adj[key];
+}
+
+async function fetchImages(){
+  const d=studioData[activeSku];
+  if(d.images.length>0)return;
+  const handle=(activeSku||'').toLowerCase();
+  try{
+    const r=await fetch(`https://enamorshop.com/products/${handle}.json`);
+    if(r.ok){const j=await r.json();d.images=(j.product?.images||[]).map(i=>i.src).slice(0,6)}
+  }catch(e){}
+}
+
+function showPreview(html){
+  const sz=SIZES.find(s=>s.id===activeSize);
+  const frame=document.getElementById('previewFrame');
+  const maxW=frame.clientWidth-16;
+  const maxH=450;
+  const scale=Math.min(maxW/sz.w,maxH/sz.h,.5);
+  const sw=Math.round(sz.w*scale),sh=Math.round(sz.h*scale);
+  frame.innerHTML=`<iframe width="${sw}" height="${sh}" srcdoc="${html.replace(/"/g,'&quot;')}"></iframe>`;
+}
+function previewResult(id){const d=studioData[activeSku];const r=d?.results.find(x=>x.id===id);if(r){activeSize=r.sizeId;renderSizeTabs();showPreview(r.html)}}
+function copyHtml(id){const d=studioData[activeSku];const r=d?.results.find(x=>x.id===id);if(r){navigator.clipboard.writeText(r.html);toast('HTML 已複製')}}
+function dlHtml(id){const d=studioData[activeSku];const r=d?.results.find(x=>x.id===id);if(!r)return;const b=new Blob([r.html],{type:'text/html;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`${activeSku}_${r.angle}_${r.size}_${r.id}.html`;a.click();toast('✓ 已下載')}
+
+// ── GENERATE ──
+async function generate(){
+  const s=skus.find(x=>x.model===activeSku);
+  const d=studioData[activeSku];
+  if(!d.pickedImg){toast('請先選照片');return}
+  if(!pickedAngle){toast('請選文案角度');return}
+  const angle=ANGLES.find(a=>a.id===pickedAngle);
+  const tpl=TEMPLATES.find(t=>t.id===pickedTpl);
+  const sz=SIZES.find(si=>si.id===activeSize);
+  const tags=[s.series,s.mat,s.rise,s.spec,s.feat].filter(Boolean).join('、');
+  const series=(s.series||'ZERO-TEX').toUpperCase();
+  const existing=d.results.map(r=>r.headline).filter(Boolean).join('\n');
+  const excl=existing?`\n以下主標題已用過請避免：\n${existing}`:'';
+
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true;btn.innerHTML='<span class="gen-spinner"></span>文案生成中...';
+
+  const prompt=`你是 EnamoR 恩娜茉兒的文案寫手。品牌風格：平鋪直述、不煽情、口語但不隨便、關鍵處留白。禁用「超值」「限時」「搶購」「最好」「第一」和驚嘆號。
+${BRAND_VOICE}
+商品：${s.name||s.model}
+標籤：${tags}
+文案角度：${angle.label} — ${angle.prompt}${excl}
+請用 JSON 格式回傳，不要 markdown，不要解釋：
+{"headline":"主標題（7-12字，有力量）","sub":"副文案（兩行，每行10-15字，用\\n分隔）","caption":"底部一句話（10-18字）","cta":"CTA按鈕文字（3-5字）"}`;
+
+  let copy={headline:'穿了就忘了',sub:'不緊繃的自由感\n不捲邊的舒適度',caption:'杜邦萊卡高彈力，一整天不捲不滑',cta:'了解更多'};
+  try{
+    const r=await fetch(PROXY,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':PROXY_TK},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})});
+    const data=await r.json();
+    let txt=(data.content?.map(c=>c.text||'').join('')||'').trim().replace(/^```json?\n?/,'').replace(/\n?```$/,'').trim();
+    try{copy=JSON.parse(txt)}catch(e){console.warn('JSON parse fail',txt)}
+  }catch(e){toast('文案生成失敗：'+e.message)}
+  lastCopy=copy;
+
+  const imgUrl=d.pickedImg.startsWith('data:')?d.pickedImg:`${d.pickedImg}&width=${Math.max(sz.w,sz.h)}`;
+  const html=buildHtml(tpl,sz,imgUrl,copy,series);
+  const result={id:Date.now(),sizeId:activeSize,angleId:pickedAngle,tplId:pickedTpl,html,headline:copy.headline,angle:angle.label,tpl:tpl.label,size:sz.label};
+  d.results.push(result);
+  showPreview(html);
+  renderResults();
+  toast('✓ 素材已生成');
+  btn.disabled=false;btn.innerHTML='✨ 生成素材';
+}
+
+// ── TEMPLATE BUILDER ──
+function an(delay){return`opacity:0;animation:slideUp .8s ease ${delay}s forwards`}
+function anF(delay){return`opacity:0;animation:fadeIn .8s ease ${delay}s forwards`}
+
+function buildHtml(tpl,sz,img,c,series){
+  const w=sz.w,h=sz.h;
+  const sub=(c.sub||'').split('\n').map(l=>`<div>${l}</div>`).join('');
+  const isS=sz.id==='story',isL=sz.id==='line';
+  const hFS=adj.headFS*(isL?.6:isS?1.1:1);
+  const sFS=adj.subFS*(isL?.78:isS?1.1:1);
+  const lS=adj.logoSize*(isL?.7:1);
+  const lX=adj.logoX,lY=adj.logoY,tX=adj.textX,tY=adj.textY;
+  const isDark=tpl.id==='dark';
+  const logoUrl=isDark?LOGO_W:LOGO_B;
+  const textColor=isDark?'#FAFAF7':'#1C1C1A';
+  const subColor=isDark?'rgba(250,250,247,.7)':'#5C5C58';
+  const capColor=isDark?'rgba(250,250,247,.45)':'#9C9A92';
+  const accentColor='#C4A882';
+  const ctaBorder=isDark?'rgba(250,250,247,.35)':'#1C1C1A';
+  const certColor=isDark?'rgba(250,250,247,.3)':'#9C9A92';
+  const urlColor=isDark?'rgba(250,250,247,.3)':'rgba(28,28,26,.3)';
+
+  let overlay='';
+  if(tpl.id==='dark'){
+    const dir=isL?'to left':'to top';
+    overlay=`<div style="position:absolute;inset:0;background:linear-gradient(${dir},rgba(28,28,26,.85) 35%,rgba(28,28,26,.35) 55%,transparent)"></div>`;
+  }else if(tpl.id==='light'){
+    // 右半覆蓋
+    const ow=isL?'55%':'50%';
+    overlay=`<div style="position:absolute;right:0;top:0;bottom:0;width:${ow};background:rgba(245,240,232,.92);z-index:1"></div>`;
+  }else{
+    // warm: 底部漸層
+    overlay=`<div style="position:absolute;left:0;right:0;bottom:0;height:${isL?'100%':'40%'};background:linear-gradient(to top,rgba(250,250,247,.95) 50%,rgba(250,250,247,.5) 80%,transparent);z-index:1"></div>`;
+  }
+
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${ANIM_CSS}</style></head>
+<body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;position:relative;font-family:'Noto Sans TC',sans-serif;font-weight:300">
+<div style="position:absolute;inset:0;background:url('${img}') center/cover no-repeat"></div>
+${overlay}${GRAIN_DIV}
+<img src="${logoUrl}" style="position:absolute;top:${lY}%;left:${lX}%;height:${lS}px;z-index:60;${anF(0.2)}" onerror="this.outerHTML='<div style=\\'position:absolute;top:${lY}%;left:${lX}%;font-family:Georgia,serif;font-size:${Math.round(lS*.8)}px;color:${textColor};letter-spacing:2px;z-index:60\\'>EnamoR</div>'">
+<div style="position:absolute;top:${lY}%;right:${lX}%;font-size:${isL?7:9}px;letter-spacing:2px;color:${urlColor};z-index:60;${anF(2.0)}">enamorshop.com</div>
+<div style="position:absolute;left:${tX}%;top:${tY}%;max-width:${isL?'48%':'55%'};color:${textColor};z-index:60">
+  <div style="font-size:${isL?7:9}px;letter-spacing:4px;text-transform:uppercase;color:${accentColor};margin-bottom:${isL?4:12}px;${an(0.3)}">${series}</div>
+  <div style="font-family:Georgia,serif;font-size:${Math.round(hFS)}px;font-weight:300;line-height:1.3;margin-bottom:${isL?4:14}px;${an(0.6)}">${c.headline}</div>
+  <div style="font-size:${Math.round(sFS)}px;line-height:1.9;color:${subColor};margin-bottom:${isL?6:14}px;${an(0.9)}">${sub}</div>
+  ${isL?'':`<div style="font-size:11px;color:${capColor};margin-bottom:14px;letter-spacing:.3px;${an(1.2)}">${c.caption}</div>`}
+  <div style="display:flex;align-items:center;gap:16px;${an(isL?1.2:1.5)}">
+    ${isL?'':`<div style="font-size:8px;letter-spacing:1.5px;color:${certColor};text-transform:uppercase">MIT · SGS CERTIFIED</div>`}
+    <div style="border:1px solid ${ctaBorder};padding:${isL?'6px 14px':'12px 36px'};font-size:${isL?9:11}px;letter-spacing:3px;color:${textColor}">${c.cta}　→</div>
+  </div>
+</div>
+</body></html>`;
+}
+
+// ── EXPORT ──
+function exportAll(){
+  const wb=XLSX.utils.book_new();
+  const rows=[['商品條碼','商品名稱','角度','風格','版位','主標題']];
+  skus.forEach(s=>{const d=studioData[s.model]||{results:[]};d.results.forEach(r=>rows.push([s.model,s.name,r.angle,r.tpl,r.size,r.headline]))});
+  if(rows.length<2){toast('沒有素材');return}
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'素材清單');
+  XLSX.writeFile(wb,`${new Date().toISOString().slice(0,10).replace(/-/g,'')}_素材工作站.xlsx`);
+  toast('✓ 已匯出');
+}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+</script>
+</body>
+</html>
