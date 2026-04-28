@@ -173,6 +173,7 @@ let studioData={};// model→{images:[],uploads:[],pickedImg:null,results:[]}
 let pickedAngle=null, pickedTpl='dark', activeSize='feed';
 let adj={logoSize:22,logoX:5,logoY:3,headFS:36,subFS:14,textX:5,textY:65,imgX:50,imgY:30,imgScale:100};
 let lastCopy=null;
+let activeResultId=null;// 正在即時調整的 result id
 
 // ── INIT ──
 window.addEventListener('DOMContentLoaded',async()=>{
@@ -278,7 +279,34 @@ function showPreview(html){
   frame.style.height=sh+'px';
   frame.innerHTML=`<div style="width:${sw}px;height:${sh}px;overflow:hidden;position:relative"><iframe width="${sz.w}" height="${sz.h}" style="transform:scale(${scale});transform-origin:top left;position:absolute;top:0;left:0" srcdoc="${html.replace(/"/g,'&quot;')}"></iframe></div>`;
 }
-function previewResult(id){const d=studioData[activeSku];const r=d?.results.find(x=>x.id===id);if(r){activeSize=r.sizeId;renderSizeTabs();showPreview(r.html)}}
+function previewResult(id){
+  const d=studioData[activeSku];const r=d?.results.find(x=>x.id===id);
+  if(!r)return;
+  activeResultId=id;
+  activeSize=r.sizeId;
+  renderSizeTabs();
+  // 如果有存 adj 快照，回寫到滑桿
+  if(r.adjSnap){
+    Object.assign(adj,r.adjSnap);
+    Object.keys(r.adjSnap).forEach(k=>{
+      const el=document.getElementById('adj'+k.charAt(0).toUpperCase()+k.slice(1));
+      if(el)el.value=adj[k];
+      const valEl=document.getElementById('val'+k.charAt(0).toUpperCase()+k.slice(1));
+      if(valEl)valEl.textContent=['logoX','logoY','textX','textY','imgX','imgY','imgScale'].includes(k)?adj[k]+'%':adj[k];
+    });
+  }
+  // 用存的文案+當前adj即時渲染
+  if(r.copy&&r.imgUrl){
+    const tpl=TEMPLATES.find(t=>t.id===r.tplId);
+    const sz=SIZES.find(s=>s.id===r.sizeId);
+    const html=buildHtml(tpl,sz,r.imgUrl,r.copy,r.series||'ZERO-TEX');
+    r.html=html;
+    showPreview(html);
+  }else{
+    showPreview(r.html);
+  }
+  renderResults();
+}
 function copyHtml(id){const d=studioData[activeSku];const r=d?.results.find(x=>x.id===id);if(r){navigator.clipboard.writeText(r.html);toast('HTML 已複製')}}
 function dlHtml(id){const d=studioData[activeSku];const r=d?.results.find(x=>x.id===id);if(!r)return;const b=new Blob([r.html],{type:'text/html;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`${activeSku}_${r.angle}_${r.size}_${r.id}.html`;a.click();toast('✓ 已下載')}
 
@@ -318,8 +346,10 @@ ${BRAND_VOICE}
 
   const imgUrl=d.pickedImg.startsWith('data:')?d.pickedImg:`${d.pickedImg}&width=${Math.max(sz.w,sz.h)}`;
   const html=buildHtml(tpl,sz,imgUrl,copy,series);
-  const result={id:Date.now(),sizeId:activeSize,angleId:pickedAngle,tplId:pickedTpl,html,headline:copy.headline,angle:angle.label,tpl:tpl.label,size:sz.label};
+  const result={id:Date.now(),sizeId:activeSize,angleId:pickedAngle,tplId:pickedTpl,html,headline:copy.headline,angle:angle.label,tpl:tpl.label,size:sz.label,
+    copy:{...copy},imgUrl,series,adjSnap:{...adj}};
   d.results.push(result);
+  activeResultId=result.id;
   showPreview(html);
   renderResults();
   toast('✓ 素材已生成');
