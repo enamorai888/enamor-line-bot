@@ -475,11 +475,11 @@ const BRAND_VOICE=`語感參考：
 - 捲邊的內褲，你忍了多久？`;
 
 function openStudio(){
-  const sec=document.getElementById('studioSec');
-  sec.classList.remove('hidden');
-  sec.scrollIntoView({behavior:'smooth'});
-  document.getElementById('studioBadge').textContent=selected.size+' 品項';
-  initStudio();
+  // 把選品資料存到 sessionStorage，跳轉到 studio.html
+  const skus=getSkuData().filter(s=>selected.has(s.model));
+  if(!skus.length){toast('請先勾選品項');return}
+  sessionStorage.setItem('enamor_studio_skus',JSON.stringify(skus));
+  window.open('studio.html','_blank');
 }
 
 async function initStudio(){
