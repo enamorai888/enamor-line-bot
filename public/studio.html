@@ -171,7 +171,7 @@ let skus=[];
 let activeSku=null;
 let studioData={};// model→{images:[],uploads:[],pickedImg:null,results:[]}
 let pickedAngle=null, pickedTpl='dark', activeSize='feed';
-let adj={logoSize:22,logoX:5,logoY:3,headFS:36,subFS:14,textX:5,textY:65};
+let adj={logoSize:22,logoX:5,logoY:3,headFS:36,subFS:14,textX:5,textY:65,imgX:50,imgY:30,imgScale:100};
 let lastCopy=null;
 
 // ── INIT ──
@@ -254,7 +254,7 @@ function adjVal(key){
   const el=document.getElementById('adj'+key.charAt(0).toUpperCase()+key.slice(1));
   adj[key]=parseInt(el.value);
   const valEl=document.getElementById('val'+key.charAt(0).toUpperCase()+key.slice(1));
-  valEl.textContent=['logoX','logoY','textX','textY'].includes(key)?adj[key]+'%':adj[key];
+  valEl.textContent=['logoX','logoY','textX','textY','imgX','imgY','imgScale'].includes(key)?adj[key]+'%':adj[key];
 }
 
 async function fetchImages(){
@@ -363,7 +363,7 @@ function buildHtml(tpl,sz,img,c,series){
 
   return`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${ANIM_CSS}</style></head>
 <body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;position:relative;font-family:'Noto Sans TC',sans-serif;font-weight:300">
-<div style="position:absolute;inset:0;background:url('${img}') center/cover no-repeat"></div>
+<div style="position:absolute;inset:0;overflow:hidden"><div style="position:absolute;inset:0;background-image:url('${img}');background-position:${adj.imgX}% ${adj.imgY}%;background-size:cover;background-repeat:no-repeat;transform:scale(${adj.imgScale/100});transform-origin:${adj.imgX}% ${adj.imgY}%"></div></div>
 ${overlay}${GRAIN_DIV}
 <img src="${logoUrl}" style="position:absolute;top:${lY}%;left:${lX}%;height:${lS}px;z-index:60;${anF(0.2)}" onerror="this.outerHTML='<div style=\\'position:absolute;top:${lY}%;left:${lX}%;font-family:Georgia,serif;font-size:${Math.round(lS*.8)}px;color:${textColor};letter-spacing:2px;z-index:60\\'>EnamoR</div>'">
 <div style="position:absolute;top:${lY}%;right:${lX}%;font-size:${isL?7:9}px;letter-spacing:2px;color:${urlColor};z-index:60;${anF(2.0)}">enamorshop.com</div>
