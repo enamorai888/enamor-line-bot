@@ -446,6 +446,7 @@ function buildHtml(tpl,sz,img,c,series){
   const sFS=adj.subFS*(isL?.78:isS?1.1:1);
   const lS=adj.logoSize*(isL?.7:1);
   const lX=adj.logoX,lY=adj.logoY,tX=adj.textX,tY=adj.textY;
+  const ovlMode=adj.overlay||'dark';
   const isDark=ovlMode==='dark';
   const logoUrl=isDark?LOGO_W:LOGO_B;
   const textColor=isDark?'#FAFAF7':'#1C1C1A';
@@ -457,7 +458,6 @@ function buildHtml(tpl,sz,img,c,series){
   const urlColor=isDark?'rgba(250,250,247,.3)':'rgba(28,28,26,.3)';
 
   let overlay='';
-  const ovlMode=adj.overlay||'dark';
   if(ovlMode==='dark'){
     const dir=isL?'to left':'to top';
     overlay=`<div style="position:absolute;inset:0;background:linear-gradient(${dir},rgba(28,28,26,.85) 35%,rgba(28,28,26,.35) 55%,transparent);z-index:2"></div>`;
