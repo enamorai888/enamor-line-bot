@@ -4,702 +4,765 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EnamoR 靈感投遞站</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Mono:wght@300;400&display=swap');
+:root {
+  --bg: #FAFAF7;
+  --surface: #ffffff;
+  --border: #e0e0d8;
+  --border2: #eceae4;
+  --ink: #1C1C1A;
+  --ink-light: #5C5C58;
+  --muted: #9C9A92;
+  --muted2: #c4bfb8;
+  --accent: #8B6F47;
+  --accent-light: #C4A882;
+  --cream: #F5F0E8;
+  --green: #4a7c59;
+  --green-bg: #eef5f1;
+  --green-border: #c8ddd0;
+  --tag-管理: #c8b99a;
+  --tag-廣告: #9ab5c8;
+  --tag-系統: #9ac8a8;
+  --tag-品牌: #c8a09a;
+  --tag-命盤: #b89ac8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+}
 
-  :root {
-    --bg: #FAFAF7;
-    --ink: #1a1a18;
-    --ink-light: #6b6b65;
-    --accent: #2d2d2a;
-    --tag-管理: #c8b99a;
-    --tag-廣告: #9ab5c8;
-    --tag-系統: #9ac8a8;
-    --tag-品牌: #c8a09a;
-    --tag-命盤: #b89ac8;
-    --border: #e0e0d8;
-    --success: #4a7c59;
-  }
+/* ── HEADER ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 28px;
+  display: flex; align-items: center; gap: 14px;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 1px 3px rgba(0,0,0,.04);
+}
+.logo { height: 28px; }
+.header-title {
+  font-size: 13px; color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  letter-spacing: .5px;
+}
+.spacer { flex: 1; }
+.header-stats { display: flex; gap: 20px; }
+.hstat { text-align: center; }
+.hstat-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 500; color: var(--ink); }
+.hstat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── LAYOUT ── */
+.wrap { max-width: 1100px; margin: 0 auto; padding: 24px 28px; }
 
-  body {
-    background: var(--bg);
-    color: var(--ink);
-    font-family: 'DM Mono', monospace;
-    font-size: 16px;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+/* ── OVERVIEW CARDS ── */
+.overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px; margin-bottom: 20px;
+}
+.ov-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.ov-lbl {
+  font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .8px;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 6px;
+}
+.ov-val {
+  font-size: 22px; font-weight: 500;
+  font-family: 'DM Mono', monospace;
+}
+.ov-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ov-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.ov-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width .4s; }
 
-  header {
-    padding: 2rem 2.5rem 1.5rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: baseline;
-    gap: 1.5rem;
-  }
+/* ── NEW IDEA PANEL ── */
+.new-idea-toggle {
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  padding: 8px 20px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: .08em;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: opacity .15s;
+}
+.new-idea-toggle:hover { opacity: .8; }
 
-  .logo {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.6rem;
-    font-weight: 300;
-    letter-spacing: 0.15em;
-    color: var(--ink);
-  }
+.new-idea-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: max-height .35s ease, opacity .25s;
+}
+.new-idea-panel.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  border: none;
+}
+.new-idea-panel:not(.collapsed) {
+  max-height: 600px;
+  opacity: 1;
+}
 
-  .subtitle {
-    font-size: 0.72rem;
-    color: var(--ink-light);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
+.nip-inner { padding: 20px 24px; }
+.nip-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.nip-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.nip-close {
+  background: none; border: none;
+  font-size: 18px; color: var(--muted);
+  cursor: pointer; line-height: 1;
+}
+.nip-close:hover { color: var(--ink); }
 
-  nav {
-    margin-left: auto;
-    display: flex;
-    gap: 0;
-  }
+.nip-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 12px;
+  align-items: end;
+}
+.nip-field label {
+  display: block;
+  font-size: 10px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 5px;
+  font-family: 'DM Mono', monospace;
+}
+.nip-textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 13px; font-weight: 300;
+  color: var(--ink);
+  resize: vertical;
+  min-height: 56px;
+  line-height: 1.6;
+}
+.nip-textarea:focus { outline: none; border-color: var(--ink); }
 
-  .nav-btn {
-    background: none;
-    border: none;
-    padding: 0.4rem 1rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.77rem;
-    letter-spacing: 0.08em;
-    color: var(--ink-light);
-    cursor: pointer;
-    transition: color 0.2s;
-    border-bottom: 2px solid transparent;
-  }
+.nip-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.nip-tag {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all .15s;
+  color: var(--muted);
+}
+.nip-tag:hover { color: var(--ink); border-color: var(--ink); }
+.nip-tag.sel { color: var(--ink); font-weight: 400; }
+.nip-tag[data-v="管理"].sel { background: var(--tag-管理); border-color: var(--tag-管理); }
+.nip-tag[data-v="廣告"].sel { background: var(--tag-廣告); border-color: var(--tag-廣告); }
+.nip-tag[data-v="系統"].sel { background: var(--tag-系統); border-color: var(--tag-系統); }
+.nip-tag[data-v="品牌"].sel { background: var(--tag-品牌); border-color: var(--tag-品牌); }
+.nip-tag[data-v="命盤"].sel { background: var(--tag-命盤); border-color: var(--tag-命盤); }
 
-  .nav-btn.active, .nav-btn:hover {
-    color: var(--ink);
-    border-bottom-color: var(--ink);
-  }
+.nip-progs { display: flex; gap: 4px; }
+.nip-prog {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all .15s;
+}
+.nip-prog:hover, .nip-prog.sel {
+  background: var(--ink); color: var(--bg); border-color: var(--ink);
+}
 
-  main {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-  }
+.nip-session {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--ink);
+}
+.nip-session:focus { outline: none; border-color: var(--ink); }
 
-  .panel-input {
-    padding: 2.5rem;
-    border-right: 1px solid var(--border);
-  }
+.nip-submit {
+  padding: 8px 24px;
+  background: var(--ink); color: var(--bg);
+  border: none; border-radius: 4px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: opacity .15s;
+  white-space: nowrap;
+  align-self: end;
+}
+.nip-submit:hover { opacity: .8; }
+.nip-submit:disabled { opacity: .4; cursor: not-allowed; }
 
-  .panel-label {
-    font-size: 0.69rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--ink-light);
-    margin-bottom: 1.5rem;
-  }
+.nip-row2 {
+  display: flex; gap: 12px; margin-top: 12px;
+  align-items: end; flex-wrap: wrap;
+}
+.nip-row2 .nip-field { flex: 1; min-width: 120px; }
 
-  .field {
-    margin-bottom: 1.5rem;
-  }
+/* ── FILTER BAR ── */
+.filter-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.filter-lbl {
+  font-size: 10px; color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-right: 2px;
+}
+.chip {
+  padding: 4px 13px; border-radius: 16px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--muted); font-size: 11px; cursor: pointer;
+  transition: all .15s; font-family: 'DM Mono', monospace;
+  white-space: nowrap;
+}
+.chip:hover { border-color: var(--ink); color: var(--ink); }
+.chip.active { background: var(--ink); border-color: var(--ink); color: var(--bg); font-weight: 500; }
+.search-input {
+  margin-left: auto;
+  padding: 5px 12px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--bg);
+  font-size: 12px; font-family: 'DM Mono', monospace;
+  color: var(--ink); outline: none; width: 180px;
+}
+.search-input:focus { border-color: var(--ink); }
 
-  .field label {
-    display: block;
-    font-size: 0.72rem;
-    letter-spacing: 0.1em;
-    color: var(--ink-light);
-    margin-bottom: 0.5rem;
-    text-transform: uppercase;
-  }
+/* ── TABLE ── */
+.items-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.items-table th {
+  padding: 8px 12px; text-align: left;
+  font-size: 10px; font-weight: 500; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+  background: var(--bg);
+  font-family: 'DM Mono', monospace;
+  border-bottom: 1px solid var(--border);
+}
+.items-table td {
+  padding: 10px 12px; font-size: 13px;
+  border-bottom: 1px solid var(--border2);
+  vertical-align: middle;
+  font-weight: 300;
+}
+.items-table tr:last-child td { border-bottom: none; }
+.items-table tr { transition: background .1s; }
+.items-table tr:hover td { background: #faf9f7; }
+.items-table tr.done-row td { opacity: .45; }
+.items-table tr.done-row .item-content-cell { text-decoration: line-through; }
 
-  textarea {
-    width: 100%;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    padding: 0.8rem 1rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.87rem;
-    color: var(--ink);
-    resize: vertical;
-    min-height: 100px;
-    transition: border-color 0.2s;
-    line-height: 1.6;
-  }
+/* checkbox */
+.task-check {
+  width: 16px; height: 16px;
+  cursor: pointer; accent-color: var(--green);
+}
 
-  textarea:focus { outline: none; border-color: var(--ink); }
+/* tag badge */
+.tag-badge {
+  display: inline-block;
+  padding: 2px 10px; border-radius: 10px;
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  font-weight: 400; letter-spacing: .03em;
+  white-space: nowrap;
+}
+.tag-badge[data-t="管理"] { background: var(--tag-管理); color: var(--ink); }
+.tag-badge[data-t="廣告"] { background: var(--tag-廣告); color: var(--ink); }
+.tag-badge[data-t="系統"] { background: var(--tag-系統); color: var(--ink); }
+.tag-badge[data-t="品牌"] { background: var(--tag-品牌); color: var(--ink); }
+.tag-badge[data-t="命盤"] { background: var(--tag-命盤); color: var(--ink); }
 
-  .tag-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+/* progress badge */
+.prog-badge {
+  display: inline-block;
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  padding: 2px 9px; border-radius: 10px;
+  font-weight: 400; white-space: nowrap;
+}
+.prog-badge.p-想法 { background: #f3f2f0; color: var(--muted); border: 1px solid var(--border); }
+.prog-badge.p-蒐集中 { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+.prog-badge.p-待展開 { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+.prog-badge.p-執行中 { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
 
-  .tag-btn {
-    padding: 0.35rem 0.9rem;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    background: none;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.77rem;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: var(--ink-light);
-  }
+/* time */
+.time-cell { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); white-space: nowrap; }
 
-  .tag-btn:hover { color: var(--ink); border-color: var(--ink); }
-  .tag-btn.selected { color: var(--ink); font-weight: 400; }
-  .tag-btn[data-tag="管理"].selected { background: var(--tag-管理); border-color: var(--tag-管理); }
-  .tag-btn[data-tag="廣告"].selected { background: var(--tag-廣告); border-color: var(--tag-廣告); }
-  .tag-btn[data-tag="系統"].selected { background: var(--tag-系統); border-color: var(--tag-系統); }
-  .tag-btn[data-tag="品牌"].selected { background: var(--tag-品牌); border-color: var(--tag-品牌); }
-  .tag-btn[data-tag="命盤"].selected { background: var(--tag-命盤); border-color: var(--tag-命盤); }
+/* session */
+.session-cell { font-size: 11px; color: var(--muted); }
 
-  .progress-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+/* note cell inline edit */
+.note-input {
+  font-size: 12px; color: var(--muted); background: transparent;
+  border: none; outline: none; width: 100%;
+  font-family: 'Noto Sans TC', sans-serif; font-weight: 300;
+  cursor: text;
+}
+.note-input:focus { color: var(--ink); }
+.note-input::placeholder { color: var(--muted2); }
 
-  .prog-btn {
-    padding: 0.3rem 0.8rem;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    background: none;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.75rem;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: var(--ink-light);
-  }
+/* progress select */
+.prog-sel {
+  font-size: 11px;
+  border: 1px solid var(--border); border-radius: 5px;
+  padding: 3px 6px; background: var(--surface);
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+}
 
-  .prog-btn:hover, .prog-btn.selected {
-    background: var(--ink);
-    color: var(--bg);
-    border-color: var(--ink);
-  }
+/* expand content */
+.content-cell { max-width: 380px; }
+.item-content-cell {
+  line-height: 1.6;
+  cursor: pointer;
+}
+.item-content-cell.truncated {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.item-content-cell.expanded {
+  -webkit-line-clamp: unset;
+}
 
-  .session-input {
-    width: 100%;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    padding: 0.5rem 0.8rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.82rem;
-    color: var(--ink);
-  }
+/* ── EMPTY / LOADING ── */
+.empty-state {
+  text-align: center; padding: 4rem 2rem;
+  color: var(--muted); font-size: 13px; line-height: 2;
+}
+.loading {
+  text-align: center; padding: 3rem;
+  color: var(--muted); font-size: 12px;
+  font-family: 'DM Mono', monospace;
+}
 
-  .session-input:focus { outline: none; border-color: var(--ink); }
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--ink); color: var(--bg);
+  padding: 10px 18px; border-radius: 7px;
+  font-size: 12px; font-family: 'DM Mono', monospace;
+  opacity: 0; transform: translateY(8px);
+  transition: all .25s; z-index: 999;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
 
-  .submit-btn {
-    width: 100%;
-    padding: 0.9rem;
-    background: var(--ink);
-    color: var(--bg);
-    border: none;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.82rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: opacity 0.2s;
-    margin-top: 0.5rem;
-  }
-
-  .submit-btn:hover { opacity: 0.8; }
-  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .toast {
-    margin-top: 1rem;
-    padding: 0.7rem 1rem;
-    font-size: 0.79rem;
-    border-radius: 2px;
-    display: none;
-  }
-
-  .toast.success { background: #eef5f1; color: var(--success); border: 1px solid #c8ddd0; }
-  .toast.error { background: #fdf0f0; color: #7c4a4a; border: 1px solid #ddc8c8; }
-
-  /* 右側列表 */
-  .panel-list {
-    padding: 2.5rem;
-    overflow-y: auto;
-    max-height: calc(100vh - 80px);
-  }
-
-  .list-controls {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .filter-btn {
-    padding: 0.3rem 0.8rem;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    background: none;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    cursor: pointer;
-    color: var(--ink-light);
-    transition: all 0.15s;
-  }
-
-  .filter-btn.active, .filter-btn:hover { color: var(--ink); border-color: var(--ink); }
-
-  .refresh-btn {
-    margin-left: auto;
-    padding: 0.3rem 0.8rem;
-    border: 1px solid var(--border);
-    background: none;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    cursor: pointer;
-    color: var(--ink-light);
-    border-radius: 2px;
-    transition: all 0.15s;
-  }
-
-  .refresh-btn:hover { color: var(--ink); border-color: var(--ink); }
-
-  /* 列表項目 */
-  .item {
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    margin-bottom: 0.8rem;
-    transition: border-color 0.15s;
-    animation: fadeIn 0.3s ease;
-    overflow: hidden;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .item:hover { border-color: var(--ink-light); }
-
-  .item-header {
-    padding: 1rem 1.2rem;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-
-  .item-meta {
-    display: flex;
-    gap: 0.6rem;
-    align-items: center;
-  }
-
-  .item-tag {
-    padding: 0.15rem 0.6rem;
-    border-radius: 10px;
-    font-size: 0.67rem;
-    font-weight: 400;
-    letter-spacing: 0.05em;
-  }
-
-  .item-tag[data-tag="管理"] { background: var(--tag-管理); }
-  .item-tag[data-tag="廣告"] { background: var(--tag-廣告); }
-  .item-tag[data-tag="系統"] { background: var(--tag-系統); }
-  .item-tag[data-tag="品牌"] { background: var(--tag-品牌); }
-  .item-tag[data-tag="命盤"] { background: var(--tag-命盤); }
-
-  .item-time { font-size: 0.69rem; color: var(--ink-light); }
-
-  .item-progress {
-    margin-left: auto;
-    font-size: 0.67rem;
-    color: var(--ink-light);
-    border: 1px solid var(--border);
-    padding: 0.1rem 0.5rem;
-    border-radius: 2px;
-  }
-
-  .item-expand-icon {
-    font-size: 0.65rem;
-    color: var(--ink-light);
-    margin-left: 0.3rem;
-    transition: transform 0.2s;
-  }
-
-  .item.expanded .item-expand-icon { transform: rotate(180deg); }
-
-  .item-content {
-    font-size: 0.85rem;
-    line-height: 1.7;
-    color: var(--ink);
-  }
-
-  .item-session { font-size: 0.67rem; color: var(--ink-light); }
-
-  /* 展開編輯區 */
-  .item-edit {
-    display: none;
-    padding: 1rem 1.2rem 1.2rem;
-    border-top: 1px solid var(--border);
-    background: #f5f5f2;
-    gap: 0.8rem;
-    flex-direction: column;
-  }
-
-  .item.expanded .item-edit { display: flex; }
-
-  .edit-label {
-    font-size: 0.67rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--ink-light);
-    margin-bottom: 0.3rem;
-  }
-
-  .edit-textarea {
-    width: 100%;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    padding: 0.6rem 0.8rem;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.82rem;
-    color: var(--ink);
-    resize: vertical;
-    min-height: 60px;
-    line-height: 1.6;
-  }
-
-  .edit-textarea:focus { outline: none; border-color: var(--ink); }
-
-  .edit-prog-group { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-
-  .edit-prog-btn {
-    padding: 0.25rem 0.7rem;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    background: white;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    cursor: pointer;
-    transition: all 0.15s;
-    color: var(--ink-light);
-  }
-
-  .edit-prog-btn:hover, .edit-prog-btn.selected {
-    background: var(--ink);
-    color: var(--bg);
-    border-color: var(--ink);
-  }
-
-  .edit-save-btn {
-    align-self: flex-end;
-    padding: 0.5rem 1.5rem;
-    background: var(--ink);
-    color: var(--bg);
-    border: none;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: opacity 0.2s;
-  }
-
-  .edit-save-btn:hover { opacity: 0.8; }
-
-  .edit-toast {
-    font-size: 0.72rem;
-    color: var(--success);
-    display: none;
-    align-self: flex-end;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: var(--ink-light);
-    font-size: 0.82rem;
-    line-height: 2;
-  }
-
-  .loading {
-    text-align: center;
-    padding: 2rem;
-    color: var(--ink-light);
-    font-size: 0.77rem;
-  }
-
-  @media (max-width: 768px) {
-    main { grid-template-columns: 1fr; }
-    .panel-input { border-right: none; border-bottom: 1px solid var(--border); }
-    .panel-list { max-height: none; }
-  }
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .wrap { padding: 16px; }
+  header { padding: 12px 16px; }
+  .header-stats { gap: 12px; }
+  .hstat-val { font-size: 15px; }
+  .nip-row { grid-template-columns: 1fr; }
+  .nip-row2 { flex-direction: column; }
+  .search-input { width: 100%; margin-left: 0; margin-top: 4px; }
+  .overview { grid-template-columns: repeat(3, 1fr); }
+  .items-table { font-size: 12px; }
+  .content-cell { max-width: 200px; }
+  .items-table th:nth-child(6),
+  .items-table td:nth-child(6),
+  .items-table th:nth-child(7),
+  .items-table td:nth-child(7) { display: none; }
+}
+@media (max-width: 480px) {
+  .overview { grid-template-columns: repeat(2, 1fr); }
+  .items-table th:nth-child(5),
+  .items-table td:nth-child(5) { display: none; }
+}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">EnamoR</div>
-  <div class="subtitle">靈感投遞站</div>
-  <nav>
-    <button class="nav-btn active" onclick="showPanel('input')">投遞</button>
-    <button class="nav-btn" onclick="showPanel('list')">列表</button>
-  </nav>
+  <img class="logo" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
+  <span class="header-title">靈感投遞站</span>
+  <div class="spacer"></div>
+  <div class="header-stats" id="headerStats"></div>
+  <button class="new-idea-toggle" id="toggleNewBtn" onclick="toggleNewPanel()">+ 新靈感</button>
 </header>
 
-<main>
-  <div class="panel-input" id="panel-input">
-    <div class="panel-label">新靈感</div>
+<div class="wrap">
 
-    <div class="field">
-      <label>內容</label>
-      <textarea id="content" placeholder="輸入靈感…"></textarea>
-    </div>
-
-    <div class="field">
-      <label>Tag</label>
-      <div class="tag-group">
-        <button class="tag-btn" data-tag="管理" onclick="selectTag(this)">管理</button>
-        <button class="tag-btn" data-tag="廣告" onclick="selectTag(this)">廣告</button>
-        <button class="tag-btn" data-tag="系統" onclick="selectTag(this)">系統</button>
-        <button class="tag-btn" data-tag="品牌" onclick="selectTag(this)">品牌</button>
-        <button class="tag-btn" data-tag="命盤" onclick="selectTag(this)">命盤</button>
+  <!-- NEW IDEA PANEL -->
+  <div class="new-idea-panel collapsed" id="newPanel">
+    <div class="nip-inner">
+      <div class="nip-header">
+        <span class="nip-title">投遞新靈感</span>
+        <button class="nip-close" onclick="toggleNewPanel()">×</button>
+      </div>
+      <div class="nip-field" style="margin-bottom:12px">
+        <label>內容</label>
+        <textarea class="nip-textarea" id="newContent" placeholder="輸入靈感…" rows="2"></textarea>
+      </div>
+      <div class="nip-row2">
+        <div class="nip-field">
+          <label>Tag</label>
+          <div class="nip-tags" id="newTags">
+            <button class="nip-tag" data-v="管理">管理</button>
+            <button class="nip-tag" data-v="廣告">廣告</button>
+            <button class="nip-tag" data-v="系統">系統</button>
+            <button class="nip-tag" data-v="品牌">品牌</button>
+            <button class="nip-tag" data-v="命盤">命盤</button>
+          </div>
+        </div>
+        <div class="nip-field">
+          <label>進度</label>
+          <div class="nip-progs" id="newProgs">
+            <button class="nip-prog sel" data-v="想法">想法</button>
+            <button class="nip-prog" data-v="蒐集中">蒐集中</button>
+            <button class="nip-prog" data-v="待展開">待展開</button>
+            <button class="nip-prog" data-v="執行中">執行中</button>
+          </div>
+        </div>
+        <div class="nip-field" style="min-width:160px">
+          <label>Session 來源</label>
+          <input class="nip-session" id="newSession" placeholder="選填">
+        </div>
+        <button class="nip-submit" id="submitBtn" onclick="submitIdea()">投遞</button>
       </div>
     </div>
-
-    <div class="field">
-      <label>進度</label>
-      <div class="progress-group">
-        <button class="prog-btn selected" data-prog="想法" onclick="selectProg(this)">想法</button>
-        <button class="prog-btn" data-prog="蒐集中" onclick="selectProg(this)">蒐集中</button>
-        <button class="prog-btn" data-prog="待展開" onclick="selectProg(this)">待展開</button>
-        <button class="prog-btn" data-prog="執行中" onclick="selectProg(this)">執行中</button>
-      </div>
-    </div>
-
-    <div class="field">
-      <label>Session來源（選填）</label>
-      <input class="session-input" type="text" id="session" placeholder="例：品牌策略討論 / 命盤對話">
-    </div>
-
-    <button class="submit-btn" id="submit-btn" onclick="submitIdea()">投遞靈感</button>
-    <div class="toast" id="toast"></div>
   </div>
 
-  <div class="panel-list" id="panel-list">
-    <div class="list-controls">
-      <button class="filter-btn active" data-filter="全部" onclick="filterItems(this)">全部</button>
-      <button class="filter-btn" data-filter="管理" onclick="filterItems(this)">管理</button>
-      <button class="filter-btn" data-filter="廣告" onclick="filterItems(this)">廣告</button>
-      <button class="filter-btn" data-filter="系統" onclick="filterItems(this)">系統</button>
-      <button class="filter-btn" data-filter="品牌" onclick="filterItems(this)">品牌</button>
-      <button class="filter-btn" data-filter="命盤" onclick="filterItems(this)">命盤</button>
-      <button class="refresh-btn" onclick="loadItems()">↻ 刷新</button>
-    </div>
-    <div id="items-container">
-      <div class="loading">載入中…</div>
-    </div>
+  <!-- OVERVIEW -->
+  <div class="overview" id="overview"></div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar">
+    <span class="filter-lbl">Tag</span>
+    <div class="chip active" data-ft="tag" data-fv="all" onclick="setFilter('tag','all',this)">全部</div>
+    <div class="chip" data-ft="tag" data-fv="管理" onclick="setFilter('tag','管理',this)">管理</div>
+    <div class="chip" data-ft="tag" data-fv="廣告" onclick="setFilter('tag','廣告',this)">廣告</div>
+    <div class="chip" data-ft="tag" data-fv="系統" onclick="setFilter('tag','系統',this)">系統</div>
+    <div class="chip" data-ft="tag" data-fv="品牌" onclick="setFilter('tag','品牌',this)">品牌</div>
+    <div class="chip" data-ft="tag" data-fv="命盤" onclick="setFilter('tag','命盤',this)">命盤</div>
+    <span class="filter-lbl" style="margin-left:10px">狀態</span>
+    <div class="chip active" data-ft="prog" data-fv="all" onclick="setFilter('prog','all',this)">全部</div>
+    <div class="chip" data-ft="prog" data-fv="想法" onclick="setFilter('prog','想法',this)">想法</div>
+    <div class="chip" data-ft="prog" data-fv="蒐集中" onclick="setFilter('prog','蒐集中',this)">蒐集中</div>
+    <div class="chip" data-ft="prog" data-fv="待展開" onclick="setFilter('prog','待展開',this)">待展開</div>
+    <div class="chip" data-ft="prog" data-fv="執行中" onclick="setFilter('prog','執行中',this)">執行中</div>
+    <span class="filter-lbl" style="margin-left:10px">處理</span>
+    <div class="chip active" data-ft="done" data-fv="all" onclick="setFilter('done','all',this)">全部</div>
+    <div class="chip" data-ft="done" data-fv="pending" onclick="setFilter('done','pending',this)">未處理</div>
+    <div class="chip" data-ft="done" data-fv="done" onclick="setFilter('done','done',this)">已處理</div>
+    <input class="search-input" placeholder="搜尋…" oninput="searchQ=this.value;render()">
   </div>
-</main>
+
+  <!-- TABLE -->
+  <div id="tableWrap"></div>
+
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzn4tOU-u9ULsNeR4KSoewZMP4ZNsei7iuFLeN9J9h8BCyia9iKWv5u8y73tWHEI78X/exec';
-  const PROGS = ['想法','蒐集中','待展開','執行中'];
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzlTybCQBorZs69xviklAf6UfLbnOoEy_f3UHB_EjNq078wFDBNAVw32u9WGxHutY_4/exec';
+const PROGS = ['想法','蒐集中','待展開','執行中'];
+const TAGS = ['管理','廣告','系統','品牌','命盤'];
 
-  let selectedTag = '';
-  let selectedProg = '想法';
-  let currentFilter = '全部';
-  let allItems = [];
+let allItems = [];
+let filterTag = 'all';
+let filterProg = 'all';
+let filterDone = 'all';
+let searchQ = '';
+let newTag = '';
+let newProg = '想法';
 
-  function selectTag(btn) {
-    document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    selectedTag = btn.dataset.tag;
+// ── NEW PANEL ──
+function toggleNewPanel() {
+  const p = document.getElementById('newPanel');
+  p.classList.toggle('collapsed');
+}
+
+document.getElementById('newTags').addEventListener('click', e => {
+  const btn = e.target.closest('.nip-tag');
+  if (!btn) return;
+  document.querySelectorAll('#newTags .nip-tag').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  newTag = btn.dataset.v;
+});
+
+document.getElementById('newProgs').addEventListener('click', e => {
+  const btn = e.target.closest('.nip-prog');
+  if (!btn) return;
+  document.querySelectorAll('#newProgs .nip-prog').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  newProg = btn.dataset.v;
+});
+
+async function submitIdea() {
+  const content = document.getElementById('newContent').value.trim();
+  if (!content) { showToast('請輸入靈感內容'); return; }
+  if (!newTag) { showToast('請選擇 Tag'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = '投遞中…';
+
+  const now = new Date();
+  const ts = `${now.getFullYear().toString().slice(2)}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        時間: ts,
+        內容: content,
+        tag: newTag,
+        進度: newProg,
+        session: document.getElementById('newSession').value.trim() || '未標記'
+      })
+    });
+
+    showToast('✓ 已投遞');
+    document.getElementById('newContent').value = '';
+    document.getElementById('newSession').value = '';
+    document.querySelectorAll('#newTags .nip-tag').forEach(b => b.classList.remove('sel'));
+    newTag = '';
+
+    setTimeout(() => loadItems(), 1500);
+  } catch(e) {
+    showToast('投遞失敗，請重試');
   }
 
-  function selectProg(btn) {
-    document.querySelectorAll('.prog-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-    selectedProg = btn.dataset.prog;
+  btn.disabled = false; btn.textContent = '投遞';
+}
+
+// ── FILTERS ──
+function setFilter(type, val, el) {
+  document.querySelectorAll(`.chip[data-ft="${type}"]`).forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  if (type === 'tag') filterTag = val;
+  if (type === 'prog') filterProg = val;
+  if (type === 'done') filterDone = val;
+  render();
+}
+
+// ── STATS ──
+function computeStats() {
+  const total = allItems.length;
+  const done = allItems.filter(i => i['已處理'] === 'TRUE' || i['已處理'] === true).length;
+  const pending = total - done;
+  const byTag = {};
+  TAGS.forEach(t => byTag[t] = 0);
+  allItems.forEach(i => { if (byTag[i['Tag']] !== undefined) byTag[i['Tag']]++; });
+  const pct = total ? Math.round(done / total * 100) : 0;
+  return { total, done, pending, pct, byTag };
+}
+
+function renderOverview() {
+  const s = computeStats();
+  document.getElementById('overview').innerHTML = `
+    <div class="ov-card">
+      <div class="ov-lbl">全部靈感</div>
+      <div class="ov-val" style="color:var(--ink)">${s.total}</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">已處理</div>
+      <div class="ov-val" style="color:var(--green)">${s.done}</div>
+      <div class="ov-sub">${s.pct}%</div>
+      <div class="ov-bar"><div class="ov-fill" style="width:${s.pct}%"></div></div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-lbl">未處理</div>
+      <div class="ov-val" style="color:var(--accent)">${s.pending}</div>
+    </div>
+    ${TAGS.slice(0,3).map(t => `
+    <div class="ov-card">
+      <div class="ov-lbl">${t}</div>
+      <div class="ov-val" style="color:var(--ink)">${s.byTag[t]||0}</div>
+    </div>`).join('')}
+  `;
+
+  document.getElementById('headerStats').innerHTML = `
+    <div class="hstat"><div class="hstat-val">${s.total}</div><div class="hstat-lbl">總數</div></div>
+    <div class="hstat"><div class="hstat-val" style="color:var(--green)">${s.done}</div><div class="hstat-lbl">已處理</div></div>
+    <div class="hstat"><div class="hstat-val" style="color:var(--accent)">${s.pending}</div><div class="hstat-lbl">待處理</div></div>
+  `;
+}
+
+// ── RENDER TABLE ──
+function matchItem(item) {
+  if (filterTag !== 'all' && item['Tag'] !== filterTag) return false;
+  if (filterProg !== 'all' && item['進度'] !== filterProg) return false;
+  const isDone = item['已處理'] === 'TRUE' || item['已處理'] === true;
+  if (filterDone === 'done' && !isDone) return false;
+  if (filterDone === 'pending' && isDone) return false;
+  if (searchQ) {
+    const q = searchQ.toLowerCase();
+    const haystack = `${item['內容']}${item['Tag']}${item['進度']}${item['Session來源']||''}${item['備註']||''}`.toLowerCase();
+    if (!haystack.includes(q)) return false;
+  }
+  return true;
+}
+
+function render() {
+  renderOverview();
+  const wrap = document.getElementById('tableWrap');
+  const filtered = allItems.filter(matchItem);
+
+  if (filtered.length === 0) {
+    wrap.innerHTML = '<div class="empty-state">沒有符合條件的靈感</div>';
+    return;
   }
 
-  function showPanel(panel) {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-    if (window.innerWidth <= 768) {
-      document.getElementById('panel-input').style.display = panel === 'input' ? 'block' : 'none';
-      document.getElementById('panel-list').style.display = panel === 'list' ? 'block' : 'none';
+  // newest first
+  const sorted = [...filtered].reverse();
+
+  wrap.innerHTML = `
+    <table class="items-table">
+      <thead><tr>
+        <th style="width:36px"></th>
+        <th style="width:56px">Tag</th>
+        <th>內容</th>
+        <th style="width:76px">進度</th>
+        <th style="width:80px">時間</th>
+        <th style="width:100px">Session</th>
+        <th>備註</th>
+      </tr></thead>
+      <tbody>
+        ${sorted.map(item => {
+          const isDone = item['已處理'] === 'TRUE' || item['已處理'] === true;
+          const rowIdx = item._rowIndex;
+          return `
+          <tr class="${isDone ? 'done-row' : ''}" id="row-${rowIdx}">
+            <td><input type="checkbox" class="task-check" ${isDone ? 'checked' : ''} onchange="toggleDone(${rowIdx}, this.checked)"></td>
+            <td><span class="tag-badge" data-t="${item['Tag']}">${item['Tag']}</span></td>
+            <td class="content-cell">
+              <div class="item-content-cell truncated" onclick="this.classList.toggle('truncated');this.classList.toggle('expanded')">${escHtml(item['內容'])}</div>
+            </td>
+            <td>
+              <select class="prog-sel" onchange="changeProg(${rowIdx}, this.value)">
+                ${PROGS.map(p => `<option value="${p}" ${item['進度']===p?'selected':''}>${p}</option>`).join('')}
+              </select>
+            </td>
+            <td class="time-cell">${item['時間'] || ''}</td>
+            <td class="session-cell">${item['Session來源'] && item['Session來源'] !== '未標記' ? item['Session來源'] : ''}</td>
+            <td><input class="note-input" value="${escAttr(item['備註']||'')}" placeholder="備註…" onblur="saveNote(${rowIdx}, this.value)"></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+function escHtml(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : ''; }
+function escAttr(s) { return s ? s.replace(/"/g,'&quot;').replace(/&/g,'&amp;') : ''; }
+
+// ── ACTIONS ──
+async function toggleDone(rowIndex, checked) {
+  showToast(checked ? '✓ 標記已處理' : '取消已處理');
+  // update local
+  const item = allItems.find(i => i._rowIndex === rowIndex);
+  if (item) item['已處理'] = checked ? 'TRUE' : 'FALSE';
+  render();
+
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', rowIndex, 已處理: checked ? 'TRUE' : 'FALSE' })
+    });
+  } catch(e) { /* silent */ }
+}
+
+async function changeProg(rowIndex, val) {
+  const item = allItems.find(i => i._rowIndex === rowIndex);
+  if (item) item['進度'] = val;
+  render();
+
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', rowIndex, 進度: val })
+    });
+  } catch(e) { /* silent */ }
+}
+
+async function saveNote(rowIndex, val) {
+  const item = allItems.find(i => i._rowIndex === rowIndex);
+  if (item) item['備註'] = val;
+
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'update', rowIndex, 備註: val })
+    });
+  } catch(e) { /* silent */ }
+}
+
+// ── LOAD ──
+async function loadItems() {
+  const wrap = document.getElementById('tableWrap');
+  wrap.innerHTML = '<div class="loading">載入中…</div>';
+
+  try {
+    const res = await fetch(SHEET_URL + '?t=' + Date.now());
+    const data = await res.json();
+    if (data.success) {
+      allItems = data.data.filter(i => i['內容']).map((item, idx) => ({
+        ...item,
+        _rowIndex: idx + 2
+      }));
+      render();
+    } else {
+      wrap.innerHTML = '<div class="empty-state">讀取失敗，請刷新重試</div>';
     }
+  } catch(e) {
+    wrap.innerHTML = '<div class="empty-state">讀取失敗，請確認 Apps Script 部署正確</div>';
   }
+}
 
-  function showToast(msg, type) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.className = `toast ${type}`;
-    toast.style.display = 'block';
-    setTimeout(() => toast.style.display = 'none', 3000);
-  }
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2400);
+}
 
-  async function submitIdea() {
-    const content = document.getElementById('content').value.trim();
-    if (!content) { showToast('請輸入靈感內容', 'error'); return; }
-    if (!selectedTag) { showToast('請選擇Tag', 'error'); return; }
-
-    const btn = document.getElementById('submit-btn');
-    btn.disabled = true;
-    btn.textContent = '投遞中…';
-
-    const now = new Date();
-    const 時間 = `${now.getFullYear().toString().slice(2)}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
-
-    const payload = {
-      時間,
-      內容: content,
-      tag: selectedTag,
-      進度: selectedProg,
-      session: document.getElementById('session').value.trim() || '未標記'
-    };
-
-    try {
-      await fetch(SHEET_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      showToast('✓ 已投遞', 'success');
-      document.getElementById('content').value = '';
-      document.getElementById('session').value = '';
-      document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
-      selectedTag = '';
-      setTimeout(() => loadItems(), 1500);
-    } catch (err) {
-      showToast('投遞失敗，請重試', 'error');
-    }
-
-    btn.disabled = false;
-    btn.textContent = '投遞靈感';
-  }
-
-  function filterItems(btn) {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    renderItems();
-  }
-
-  function toggleItem(el) {
-    el.closest('.item').classList.toggle('expanded');
-  }
-
-  function selectEditProg(btn, rowIndex) {
-    btn.closest('.edit-prog-group').querySelectorAll('.edit-prog-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
-  }
-
-  async function saveEdit(rowIndex, itemEl) {
-    const notes = itemEl.querySelector('.edit-notes').value.trim();
-    const progBtn = itemEl.querySelector('.edit-prog-btn.selected');
-    const newProg = progBtn ? progBtn.dataset.prog : '';
-
-    const saveBtn = itemEl.querySelector('.edit-save-btn');
-    const editToast = itemEl.querySelector('.edit-toast');
-    saveBtn.disabled = true;
-    saveBtn.textContent = '儲存中…';
-
-    try {
-      await fetch(SHEET_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'update',
-          rowIndex: rowIndex,
-          備註: notes,
-          進度: newProg
-        })
-      });
-
-      editToast.style.display = 'block';
-      editToast.textContent = '✓ 已儲存';
-      setTimeout(() => {
-        editToast.style.display = 'none';
-        loadItems();
-      }, 1500);
-    } catch(err) {
-      editToast.style.display = 'block';
-      editToast.textContent = '儲存失敗';
-      editToast.style.color = '#7c4a4a';
-    }
-
-    saveBtn.disabled = false;
-    saveBtn.textContent = '儲存';
-  }
-
-  function renderItems() {
-    const container = document.getElementById('items-container');
-    const filtered = currentFilter === '全部' ? allItems : allItems.filter(i => i['Tag'] === currentFilter);
-
-    if (filtered.length === 0) {
-      container.innerHTML = '<div class="empty-state">還沒有靈感<br>從左側投遞第一筆</div>';
-      return;
-    }
-
-    const sorted = [...filtered].reverse();
-    container.innerHTML = sorted.map(item => {
-      const progBtns = PROGS.map(p =>
-        `<button class="edit-prog-btn${item['進度']===p?' selected':''}" data-prog="${p}" onclick="selectEditProg(this,${item._rowIndex})">${p}</button>`
-      ).join('');
-
-      return `
-      <div class="item" id="item-${item._rowIndex}">
-        <div class="item-header" onclick="toggleItem(this)">
-          <div class="item-meta">
-            <span class="item-tag" data-tag="${item['Tag']}">${item['Tag']}</span>
-            <span class="item-time">${item['時間']}</span>
-            <span class="item-progress">${item['進度']}</span>
-            <span class="item-expand-icon">▾</span>
-          </div>
-          <div class="item-content">${item['內容']}</div>
-          ${item['Session來源'] && item['Session來源'] !== '未標記' ? `<div class="item-session">↳ ${item['Session來源']}</div>` : ''}
-        </div>
-        <div class="item-edit">
-          <div>
-            <div class="edit-label">備註</div>
-            <textarea class="edit-textarea edit-notes" placeholder="補充說明、後續行動、相關連結…">${item['備註']||''}</textarea>
-          </div>
-          <div>
-            <div class="edit-label">更新進度</div>
-            <div class="edit-prog-group">${progBtns}</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:1rem;justify-content:flex-end;">
-            <span class="edit-toast"></span>
-            <button class="edit-save-btn" onclick="saveEdit(${item._rowIndex}, document.getElementById('item-${item._rowIndex}'))">儲存</button>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  async function loadItems() {
-    const container = document.getElementById('items-container');
-    container.innerHTML = '<div class="loading">載入中…</div>';
-
-    try {
-      const res = await fetch(SHEET_URL + '?t=' + Date.now());
-      const data = await res.json();
-      if (data.success) {
-        allItems = data.data.filter(i => i['內容']).map((item, idx) => ({
-          ...item,
-          _rowIndex: idx + 2
-        }));
-        renderItems();
-      } else {
-        container.innerHTML = '<div class="empty-state">讀取失敗，請刷新重試</div>';
-      }
-    } catch (err) {
-      container.innerHTML = '<div class="empty-state">讀取失敗<br>請確認 Apps Script 部署正確</div>';
-    }
-  }
-
-  loadItems();
+// ── INIT ──
+loadItems();
 </script>
 </body>
 </html>
