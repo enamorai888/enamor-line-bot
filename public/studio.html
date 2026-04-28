@@ -44,11 +44,14 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;d
 /* preview area */
 .preview-tabs{display:flex;gap:0;border-bottom:1px solid var(--border)}
 .preview-tab{flex:1;padding:8px;text-align:center;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}.preview-tab:hover{color:var(--text)}.preview-tab.active{color:var(--purple);border-bottom-color:var(--purple);font-weight:500}
-.preview-frame{background:#e8e8e5;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:400px;margin-top:8px;position:relative}
+.preview-frame{background:#e8e8e5;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:400px;margin-top:8px;position:relative;cursor:grab;user-select:none}
 .preview-frame iframe{border:none;background:#fff;transform-origin:top left}
 .preview-frame .pf-wrap{overflow:hidden;position:relative;margin:0 auto}
 /* adjustments */
 .adj-panel{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px}
+.ovl-btn{flex:1;padding:6px 0;font-size:11px;font-family:'DM Mono',monospace;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer;color:var(--muted);transition:all .15s}
+.ovl-btn:hover{border-color:var(--text);color:var(--text)}
+.ovl-btn.active{background:var(--charcoal,#1C1C1A);color:#fff;border-color:var(--charcoal,#1C1C1A)}
 .adj-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)}
 .adj-label{width:80px;flex-shrink:0}
 .adj-range{flex:1;accent-color:var(--purple)}
@@ -106,9 +109,15 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;d
       <div class="adj-panel">
         <div class="panel-t">微調</div>
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'DM Mono',monospace">照片</div>
-        <div class="adj-row"><span class="adj-label">照片 X</span><input type="range" class="adj-range" min="0" max="100" value="50" id="adjImgX" oninput="adjVal('imgX')"><span class="adj-val" id="valImgX">50%</span></div>
-        <div class="adj-row"><span class="adj-label">照片 Y</span><input type="range" class="adj-range" min="0" max="100" value="30" id="adjImgY" oninput="adjVal('imgY')"><span class="adj-val" id="valImgY">30%</span></div>
-        <div class="adj-row"><span class="adj-label">照片縮放</span><input type="range" class="adj-range" min="100" max="250" value="100" id="adjImgScale" oninput="adjVal('imgScale')"><span class="adj-val" id="valImgScale">100%</span></div>
+        <div style="font-size:11px;color:var(--text);margin-bottom:6px;padding:6px 8px;background:var(--bg);border-radius:4px">↕↔ 在預覽上直接拖拉移動照片</div>
+        <div class="adj-row"><span class="adj-label">照片縮放</span><input type="range" class="adj-range" min="100" max="300" value="100" id="adjImgScale" oninput="adjVal('imgScale')"><span class="adj-val" id="valImgScale">100%</span></div>
+        <input type="hidden" id="adjImgX" value="50"><input type="hidden" id="adjImgY" value="30">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px;font-family:'DM Mono',monospace">遮罩</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px" id="overlayBtns">
+          <button class="ovl-btn active" data-v="dark" onclick="setOverlay('dark')">深色</button>
+          <button class="ovl-btn" data-v="light" onclick="setOverlay('light')">淺色</button>
+          <button class="ovl-btn" data-v="none" onclick="setOverlay('none')">無遮罩</button>
+        </div>
         <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px;font-family:'DM Mono',monospace">Logo / 文案</div>
         <div class="adj-row"><span class="adj-label">Logo 大小</span><input type="range" class="adj-range" min="10" max="40" value="22" id="adjLogoSize" oninput="adjVal('logoSize')"><span class="adj-val" id="valLogoSize">22</span></div>
         <div class="adj-row"><span class="adj-label">Logo X</span><input type="range" class="adj-range" min="0" max="100" value="5" id="adjLogoX" oninput="adjVal('logoX')"><span class="adj-val" id="valLogoX">5%</span></div>
@@ -172,7 +181,7 @@ let skus=[];
 let activeSku=null;
 let studioData={};// model→{images:[],uploads:[],pickedImg:null,results:[]}
 let pickedAngle=null, pickedTpl='dark', activeSize='feed';
-let adj={logoSize:22,logoX:5,logoY:3,headFS:36,subFS:14,textX:5,textY:65,imgX:50,imgY:30,imgScale:100};
+let adj={logoSize:22,logoX:5,logoY:3,headFS:36,subFS:14,textX:5,textY:65,imgX:50,imgY:30,imgScale:100,overlay:'dark'};
 let lastCopy=null;
 let activeResultId=null;// 正在即時調整的 result id
 
@@ -195,6 +204,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
   renderSizeTabs();
   await fetchImages();
   renderPhotos();
+  initDrag();
 });
 
 // ── RENDER ──
@@ -258,20 +268,71 @@ function adjVal(key){
   const el=document.getElementById('adj'+key.charAt(0).toUpperCase()+key.slice(1));
   adj[key]=parseInt(el.value);
   const valEl=document.getElementById('val'+key.charAt(0).toUpperCase()+key.slice(1));
-  valEl.textContent=['logoX','logoY','textX','textY','imgX','imgY','imgScale'].includes(key)?adj[key]+'%':adj[key];
-  // 即時更新預覽
-  if(activeResultId){
-    const d=studioData[activeSku];
-    const r=d?.results.find(x=>x.id===activeResultId);
-    if(r&&r.copy&&r.imgUrl){
-      const tpl=TEMPLATES.find(t=>t.id===r.tplId);
-      const sz=SIZES.find(s=>s.id===r.sizeId);
-      const html=buildHtml(tpl,sz,r.imgUrl,r.copy,r.series||'ZERO-TEX');
-      r.html=html;
-      r.adjSnap={...adj};
-      showPreview(html);
-    }
+  if(valEl)valEl.textContent=['logoX','logoY','textX','textY','imgX','imgY','imgScale'].includes(key)?adj[key]+'%':adj[key];
+  liveUpdate();
+}
+function setOverlay(v){
+  adj.overlay=v;
+  document.querySelectorAll('.ovl-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  liveUpdate();
+}
+function liveUpdate(){
+  if(!activeResultId)return;
+  const d=studioData[activeSku];
+  const r=d?.results.find(x=>x.id===activeResultId);
+  if(r&&r.copy&&r.imgUrl){
+    const tpl=TEMPLATES.find(t=>t.id===r.tplId);
+    const sz=SIZES.find(s=>s.id===r.sizeId);
+    const html=buildHtml(tpl,sz,r.imgUrl,r.copy,r.series||'ZERO-TEX');
+    r.html=html;
+    r.adjSnap={...adj};
+    showPreview(html);
   }
+}
+
+// ── 預覽拖拉照片 ──
+let isDragging=false,dragStartX=0,dragStartY=0,dragStartImgX=0,dragStartImgY=0;
+function initDrag(){
+  const frame=document.getElementById('previewFrame');
+  frame.addEventListener('mousedown',onDragStart);
+  frame.addEventListener('mousemove',onDragMove);
+  frame.addEventListener('mouseup',onDragEnd);
+  frame.addEventListener('mouseleave',onDragEnd);
+  frame.addEventListener('touchstart',e=>{e.preventDefault();onDragStart(e.touches[0])},{passive:false});
+  frame.addEventListener('touchmove',e=>{e.preventDefault();onDragMove(e.touches[0])},{passive:false});
+  frame.addEventListener('touchend',onDragEnd);
+  // 滾輪縮放
+  frame.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const delta=e.deltaY>0?-5:5;
+    adj.imgScale=Math.max(100,Math.min(300,adj.imgScale+delta));
+    document.getElementById('adjImgScale').value=adj.imgScale;
+    document.getElementById('valImgScale').textContent=adj.imgScale+'%';
+    liveUpdate();
+  },{passive:false});
+}
+function onDragStart(e){
+  if(!activeResultId)return;
+  isDragging=true;
+  dragStartX=e.clientX;dragStartY=e.clientY;
+  dragStartImgX=adj.imgX;dragStartImgY=adj.imgY;
+  document.getElementById('previewFrame').style.cursor='grabbing';
+}
+function onDragMove(e){
+  if(!isDragging)return;
+  const dx=e.clientX-dragStartX;
+  const dy=e.clientY-dragStartY;
+  // 反向：滑鼠往右拖 → 照片往左（background-position 減少）
+  // 靈敏度：每移動 3px 改 1%
+  adj.imgX=Math.max(0,Math.min(100,Math.round(dragStartImgX-dx/3)));
+  adj.imgY=Math.max(0,Math.min(100,Math.round(dragStartImgY-dy/3)));
+  document.getElementById('adjImgX').value=adj.imgX;
+  document.getElementById('adjImgY').value=adj.imgY;
+  liveUpdate();
+}
+function onDragEnd(){
+  isDragging=false;
+  document.getElementById('previewFrame').style.cursor='grab';
 }
 
 async function fetchImages(){
@@ -309,6 +370,8 @@ function previewResult(id){
       const valEl=document.getElementById('val'+k.charAt(0).toUpperCase()+k.slice(1));
       if(valEl)valEl.textContent=['logoX','logoY','textX','textY','imgX','imgY','imgScale'].includes(k)?adj[k]+'%':adj[k];
     });
+    // 回寫遮罩按鈕
+    if(adj.overlay)document.querySelectorAll('.ovl-btn').forEach(b=>b.classList.toggle('active',b.dataset.v===adj.overlay));
   }
   // 用存的文案+當前adj即時渲染
   if(r.copy&&r.imgUrl){
@@ -383,7 +446,7 @@ function buildHtml(tpl,sz,img,c,series){
   const sFS=adj.subFS*(isL?.78:isS?1.1:1);
   const lS=adj.logoSize*(isL?.7:1);
   const lX=adj.logoX,lY=adj.logoY,tX=adj.textX,tY=adj.textY;
-  const isDark=tpl.id==='dark';
+  const isDark=ovlMode==='dark';
   const logoUrl=isDark?LOGO_W:LOGO_B;
   const textColor=isDark?'#FAFAF7':'#1C1C1A';
   const subColor=isDark?'rgba(250,250,247,.7)':'#5C5C58';
@@ -394,17 +457,15 @@ function buildHtml(tpl,sz,img,c,series){
   const urlColor=isDark?'rgba(250,250,247,.3)':'rgba(28,28,26,.3)';
 
   let overlay='';
-  if(tpl.id==='dark'){
+  const ovlMode=adj.overlay||'dark';
+  if(ovlMode==='dark'){
     const dir=isL?'to left':'to top';
-    overlay=`<div style="position:absolute;inset:0;background:linear-gradient(${dir},rgba(28,28,26,.85) 35%,rgba(28,28,26,.35) 55%,transparent)"></div>`;
-  }else if(tpl.id==='light'){
-    // 右半覆蓋
-    const ow=isL?'55%':'50%';
-    overlay=`<div style="position:absolute;right:0;top:0;bottom:0;width:${ow};background:rgba(245,240,232,.92);z-index:1"></div>`;
-  }else{
-    // warm: 底部漸層
-    overlay=`<div style="position:absolute;left:0;right:0;bottom:0;height:${isL?'100%':'40%'};background:linear-gradient(to top,rgba(250,250,247,.95) 50%,rgba(250,250,247,.5) 80%,transparent);z-index:1"></div>`;
+    overlay=`<div style="position:absolute;inset:0;background:linear-gradient(${dir},rgba(28,28,26,.85) 35%,rgba(28,28,26,.35) 55%,transparent);z-index:2"></div>`;
+  }else if(ovlMode==='light'){
+    const dir=isL?'to left':'to top';
+    overlay=`<div style="position:absolute;inset:0;background:linear-gradient(${dir},rgba(250,250,247,.85) 30%,rgba(250,250,247,.4) 55%,transparent);z-index:2"></div>`;
   }
+  // ovlMode==='none' → no overlay
 
   return`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${ANIM_CSS}</style></head>
 <body style="margin:0;width:${w}px;height:${h}px;overflow:hidden;position:relative;font-family:'Noto Sans TC',sans-serif;font-weight:300">
