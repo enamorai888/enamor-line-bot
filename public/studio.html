@@ -46,6 +46,7 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;d
 .preview-tab{flex:1;padding:8px;text-align:center;font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}.preview-tab:hover{color:var(--text)}.preview-tab.active{color:var(--purple);border-bottom-color:var(--purple);font-weight:500}
 .preview-frame{background:#e8e8e5;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:400px;margin-top:8px;position:relative}
 .preview-frame iframe{border:none;background:#fff;transform-origin:top left}
+.preview-frame .pf-wrap{overflow:hidden;position:relative;margin:0 auto}
 /* adjustments */
 .adj-panel{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px}
 .adj-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)}
@@ -287,12 +288,11 @@ function showPreview(html){
   const sz=SIZES.find(s=>s.id===activeSize);
   const frame=document.getElementById('previewFrame');
   const maxW=frame.clientWidth-16;
-  const maxH=window.innerHeight*0.6;
+  const maxH=window.innerHeight*0.65;
   const scale=Math.min(maxW/sz.w,maxH/sz.h);
   const sw=Math.round(sz.w*scale),sh=Math.round(sz.h*scale);
-  // iframe 保持原始尺寸，用 transform scale 縮小
-  frame.style.height=sh+'px';
-  frame.innerHTML=`<div style="width:${sw}px;height:${sh}px;overflow:hidden;position:relative"><iframe width="${sz.w}" height="${sz.h}" style="transform:scale(${scale});transform-origin:top left;position:absolute;top:0;left:0" srcdoc="${html.replace(/"/g,'&quot;')}"></iframe></div>`;
+  frame.style.height=(sh+16)+'px';
+  frame.innerHTML=`<div class="pf-wrap" style="width:${sw}px;height:${sh}px"><iframe width="${sz.w}" height="${sz.h}" style="transform:scale(${scale});transform-origin:top left;position:absolute;top:0;left:0" srcdoc="${html.replace(/"/g,'&quot;')}"></iframe></div>`;
 }
 function previewResult(id){
   const d=studioData[activeSku];const r=d?.results.find(x=>x.id===id);
