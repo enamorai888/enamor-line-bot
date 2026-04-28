@@ -116,7 +116,7 @@ header {
   border: none;
 }
 .new-idea-panel:not(.collapsed) {
-  max-height: 600px;
+  max-height: 1200px;
   opacity: 1;
 }
 
@@ -233,6 +233,60 @@ header {
   align-items: end; flex-wrap: wrap;
 }
 .nip-row2 .nip-field { flex: 1; min-width: 120px; }
+
+/* ── BATCH MODE ── */
+.batch-toggle {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+}
+.batch-toggle:hover { color: var(--ink); border-color: var(--ink); }
+.batch-toggle.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.batch-preview-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.batch-preview-item .bp-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.batch-preview-item .bp-content { flex: 1; font-weight: 300; }
+.batch-preview-item .bp-meta {
+  display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap;
+}
+.batch-submit-bar {
+  display: flex; gap: 12px; align-items: center;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.batch-progress-bar {
+  flex: 1; height: 3px;
+  background: var(--border); border-radius: 2px;
+  overflow: hidden;
+}
+.batch-progress-fill {
+  height: 100%; background: var(--green);
+  border-radius: 2px; transition: width .3s;
+  width: 0;
+}
 
 /* ── FILTER BAR ── */
 .filter-bar {
@@ -427,9 +481,14 @@ header {
     <div class="nip-inner">
       <div class="nip-header">
         <span class="nip-title">投遞新靈感</span>
-        <button class="nip-close" onclick="toggleNewPanel()">×</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="batch-toggle" id="batchToggle" onclick="toggleBatchMode()">批次貼入</button>
+          <button class="nip-close" onclick="toggleNewPanel()">×</button>
+        </div>
       </div>
-      <div class="nip-field" style="margin-bottom:12px">
+
+      <!-- SINGLE MODE -->
+      <div id="singleMode">
         <label>內容</label>
         <textarea class="nip-textarea" id="newContent" placeholder="輸入靈感…" rows="2"></textarea>
       </div>
@@ -459,7 +518,20 @@ header {
         </div>
         <button class="nip-submit" id="submitBtn" onclick="submitIdea()">投遞</button>
       </div>
-    </div>
+      </div><!-- end singleMode -->
+
+      <!-- BATCH MODE -->
+      <div id="batchMode" style="display:none">
+        <div class="nip-field" style="margin-bottom:12px">
+          <label>批次貼入（自動辨識【靈感 N】格式）</label>
+          <textarea class="nip-textarea" id="batchContent" placeholder="直接貼上整段靈感文字，例如：&#10;&#10;【靈感 1】&#10;內容：回購自動化概念…&#10;Tag：系統&#10;進度：待展開&#10;&#10;【靈感 2】&#10;內容：客單價往上推…&#10;Tag：廣告&#10;進度：想法" rows="8" style="min-height:160px"></textarea>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <button class="nip-submit" id="batchParseBtn" onclick="parseBatch()">解析預覽</button>
+          <span id="batchCount" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+        </div>
+        <div id="batchPreview" style="margin-top:12px"></div>
+      </div>
   </div>
 
   <!-- OVERVIEW -->
@@ -565,6 +637,142 @@ async function submitIdea() {
   }
 
   btn.disabled = false; btn.textContent = '投遞';
+}
+
+// ── BATCH MODE ──
+let batchItems = [];
+let isBatchMode = false;
+
+function toggleBatchMode() {
+  isBatchMode = !isBatchMode;
+  document.getElementById('singleMode').style.display = isBatchMode ? 'none' : '';
+  document.getElementById('batchMode').style.display = isBatchMode ? '' : 'none';
+  document.getElementById('batchToggle').classList.toggle('active', isBatchMode);
+}
+
+function parseBatch() {
+  const raw = document.getElementById('batchContent').value.trim();
+  if (!raw) { showToast('請貼上靈感文字'); return; }
+
+  // Split by【靈感 N】or【靈感N】or numbered patterns
+  const blocks = raw.split(/【靈感\s*\d+】/).filter(b => b.trim());
+
+  batchItems = blocks.map(block => {
+    const lines = block.trim().split('\n').map(l => l.trim()).filter(Boolean);
+    const item = { 內容: '', tag: '', 進度: '想法' };
+
+    for (const line of lines) {
+      if (/^內容[：:]/.test(line)) {
+        item.內容 = line.replace(/^內容[：:]\s*/, '');
+      } else if (/^Tag[：:]/.test(line)) {
+        item.tag = line.replace(/^Tag[：:]\s*/, '');
+      } else if (/^tag[：:]/.test(line)) {
+        item.tag = line.replace(/^tag[：:]\s*/, '');
+      } else if (/^進度[：:]/.test(line)) {
+        item.進度 = line.replace(/^進度[：:]\s*/, '');
+      } else if (!item.內容) {
+        // First non-labeled line = content
+        item.內容 = line;
+      } else {
+        // Append continuation lines to content
+        item.內容 += line;
+      }
+    }
+
+    // Validate tag
+    if (!TAGS.includes(item.tag)) item.tag = '';
+    // Validate progress
+    if (!PROGS.includes(item.進度)) item.進度 = '想法';
+
+    return item;
+  }).filter(i => i.內容);
+
+  document.getElementById('batchCount').textContent = `解析到 ${batchItems.length} 則靈感`;
+  renderBatchPreview();
+}
+
+function renderBatchPreview() {
+  const container = document.getElementById('batchPreview');
+  if (batchItems.length === 0) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">未偵測到靈感格式，請確認使用【靈感 N】分隔</div>';
+    return;
+  }
+
+  const missingTags = batchItems.filter(i => !i.tag).length;
+
+  container.innerHTML =
+    batchItems.map((item, idx) => `
+      <div class="batch-preview-item">
+        <span class="bp-num">#${idx+1}</span>
+        <div class="bp-content">
+          ${escHtml(item.內容)}
+          <div class="bp-meta">
+            ${item.tag ? `<span class="tag-badge" data-t="${item.tag}">${item.tag}</span>` : '<span style="color:#c87a7a;font-size:10px">⚠ 缺 Tag</span>'}
+            <span class="prog-badge p-${item.進度}">${item.進度}</span>
+          </div>
+        </div>
+      </div>
+    `).join('') +
+    `<div class="batch-submit-bar">
+      <button class="nip-submit" id="batchSubmitBtn" onclick="submitBatch()" ${missingTags > 0 ? '' : ''}>
+        投遞全部 ${batchItems.length} 則
+      </button>
+      ${missingTags > 0 ? `<span style="font-size:11px;color:#c87a7a">${missingTags} 則缺 Tag，將跳過</span>` : ''}
+      <div class="batch-progress-bar"><div class="batch-progress-fill" id="batchProgressFill"></div></div>
+      <span id="batchStatus" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+    </div>`;
+}
+
+async function submitBatch() {
+  const valid = batchItems.filter(i => i.tag);
+  if (valid.length === 0) { showToast('沒有可投遞的靈感（都缺 Tag）'); return; }
+
+  const btn = document.getElementById('batchSubmitBtn');
+  const fill = document.getElementById('batchProgressFill');
+  const status = document.getElementById('batchStatus');
+  btn.disabled = true; btn.textContent = '投遞中…';
+
+  const now = new Date();
+  const ts = `${now.getFullYear().toString().slice(2)}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
+  let ok = 0;
+
+  for (let i = 0; i < valid.length; i++) {
+    const item = valid[i];
+    status.textContent = `${i+1}/${valid.length}`;
+    fill.style.width = `${((i+1)/valid.length)*100}%`;
+
+    try {
+      await fetch(SHEET_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          時間: ts,
+          內容: item.內容,
+          tag: item.tag,
+          進度: item.進度,
+          session: '批次投遞'
+        })
+      });
+      ok++;
+    } catch(e) { /* continue */ }
+
+    // Small delay to avoid rate limiting
+    if (i < valid.length - 1) await new Promise(r => setTimeout(r, 300));
+  }
+
+  showToast(`✓ 已投遞 ${ok}/${valid.length} 則`);
+  status.textContent = `完成 ${ok}/${valid.length}`;
+  btn.textContent = '完成';
+
+  // Reset after a moment
+  setTimeout(() => {
+    document.getElementById('batchContent').value = '';
+    document.getElementById('batchPreview').innerHTML = '';
+    document.getElementById('batchCount').textContent = '';
+    batchItems = [];
+    btn.disabled = false; btn.textContent = '投遞全部';
+    loadItems();
+  }, 2000);
 }
 
 // ── FILTERS ──
