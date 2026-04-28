@@ -231,15 +231,17 @@ function renderResults(){
   document.getElementById('resultCount').textContent=`共 ${total} 個素材`;
   document.getElementById('resultsArea').innerHTML=
     `<div class="panel-t" style="margin-top:8px">已生成 (${d.results.length})</div>`+
-    d.results.map(r=>`<div class="result-card"><div class="result-header">
+    d.results.map(r=>{
+      const isActive=r.id===activeResultId;
+      return`<div class="result-card" style="${isActive?'border-color:var(--purple);background:var(--purple-light,#f3f0ff)':''}"><div class="result-header">
       <span>${r.angle}</span><span class="tag-chip">${r.tpl}</span><span class="tag-chip">${r.size}</span>
       ${r.headline?`<span style="color:var(--text);font-weight:500">${r.headline}</span>`:''}
       <div class="result-actions">
-        <button class="copy-btn" onclick="previewResult(${r.id})">預覽</button>
+        <button class="copy-btn" onclick="previewResult(${r.id})" style="${isActive?'background:var(--purple);color:#fff;border-color:var(--purple)':''}">${isActive?'編輯中':'預覽'}</button>
         <button class="copy-btn" onclick="copyHtml(${r.id})">複製</button>
         <button class="copy-btn" onclick="dlHtml(${r.id})" style="border-color:var(--green);color:var(--green)">下載</button>
       </div>
-    </div></div>`).join('');
+    </div></div>`}).join('');
 }
 
 // ── INTERACTIONS ──
@@ -256,6 +258,19 @@ function adjVal(key){
   adj[key]=parseInt(el.value);
   const valEl=document.getElementById('val'+key.charAt(0).toUpperCase()+key.slice(1));
   valEl.textContent=['logoX','logoY','textX','textY','imgX','imgY','imgScale'].includes(key)?adj[key]+'%':adj[key];
+  // 即時更新預覽
+  if(activeResultId){
+    const d=studioData[activeSku];
+    const r=d?.results.find(x=>x.id===activeResultId);
+    if(r&&r.copy&&r.imgUrl){
+      const tpl=TEMPLATES.find(t=>t.id===r.tplId);
+      const sz=SIZES.find(s=>s.id===r.sizeId);
+      const html=buildHtml(tpl,sz,r.imgUrl,r.copy,r.series||'ZERO-TEX');
+      r.html=html;
+      r.adjSnap={...adj};
+      showPreview(html);
+    }
+  }
 }
 
 async function fetchImages(){
