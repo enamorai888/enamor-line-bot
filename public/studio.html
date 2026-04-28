@@ -104,6 +104,11 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;d
       <!-- 微調 -->
       <div class="adj-panel">
         <div class="panel-t">微調</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-family:'DM Mono',monospace">照片</div>
+        <div class="adj-row"><span class="adj-label">照片 X</span><input type="range" class="adj-range" min="0" max="100" value="50" id="adjImgX" oninput="adjVal('imgX')"><span class="adj-val" id="valImgX">50%</span></div>
+        <div class="adj-row"><span class="adj-label">照片 Y</span><input type="range" class="adj-range" min="0" max="100" value="30" id="adjImgY" oninput="adjVal('imgY')"><span class="adj-val" id="valImgY">30%</span></div>
+        <div class="adj-row"><span class="adj-label">照片縮放</span><input type="range" class="adj-range" min="100" max="250" value="100" id="adjImgScale" oninput="adjVal('imgScale')"><span class="adj-val" id="valImgScale">100%</span></div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:12px 0 8px;font-family:'DM Mono',monospace">Logo / 文案</div>
         <div class="adj-row"><span class="adj-label">Logo 大小</span><input type="range" class="adj-range" min="10" max="40" value="22" id="adjLogoSize" oninput="adjVal('logoSize')"><span class="adj-val" id="valLogoSize">22</span></div>
         <div class="adj-row"><span class="adj-label">Logo X</span><input type="range" class="adj-range" min="0" max="100" value="5" id="adjLogoX" oninput="adjVal('logoX')"><span class="adj-val" id="valLogoX">5%</span></div>
         <div class="adj-row"><span class="adj-label">Logo Y</span><input type="range" class="adj-range" min="0" max="100" value="3" id="adjLogoY" oninput="adjVal('logoY')"><span class="adj-val" id="valLogoY">3%</span></div>
