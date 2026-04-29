@@ -6,362 +6,89 @@
 <title>EnamoR 回報系統</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #FAFAF7;
-  --surface: #ffffff;
-  --border: #e0e0d8;
-  --border2: #eceae4;
-  --ink: #1C1C1A;
-  --ink-light: #5C5C58;
-  --muted: #9C9A92;
-  --muted2: #c4bfb8;
-  --accent: #8B6F47;
-  --accent-light: #C4A882;
-  --cream: #F5F0E8;
-  --green: #4a7c59;
-  --green-bg: #eef5f1;
-  --green-border: #c8ddd0;
-  --red: #991b1b;
-  --red-bg: #fef2f2;
-  --yellow: #92400e;
-  --yellow-bg: #fffbeb;
-  --tag-客訴: #e8c4c4;
-  --tag-Bug: #c4c4e8;
-  --tag-建議: #c4dde8;
-  --tag-異常: #e8d4c4;
-  --tag-管理: #c8b99a;
-  --tag-廣告: #9ab5c8;
-  --tag-系統: #9ac8a8;
-  --tag-品牌: #c8a09a;
-  --tag-其他: #d8d8d0;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: 'Noto Sans TC', sans-serif;
-  font-weight: 300;
-  min-height: 100vh;
-}
+:root{--bg:#FAFAF7;--surface:#ffffff;--border:#e0e0d8;--border2:#eceae4;--ink:#1C1C1A;--ink-light:#5C5C58;--muted:#9C9A92;--accent:#8B6F47;--cream:#F5F0E8;--green:#4a7c59;--green-bg:#eef5f1;--green-border:#c8ddd0;--red:#991b1b;--red-bg:#fef2f2;--yellow:#92400e;--yellow-bg:#fffbeb}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',sans-serif;font-weight:300;min-height:100vh}
 
-/* ── LOGIN GATE ── */
-.login-gate {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 24px;
-}
-.login-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 40px;
-  max-width: 360px;
-  width: 100%;
-  text-align: center;
-}
-.login-logo { height: 24px; margin-bottom: 24px; }
-.login-title {
-  font-family: 'DM Mono', monospace;
-  font-size: 13px;
-  color: var(--muted);
-  letter-spacing: .5px;
-  margin-bottom: 24px;
-}
-.login-input {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-family: 'DM Mono', monospace;
-  font-size: 14px;
-  color: var(--ink);
-  text-align: center;
-  letter-spacing: 4px;
-  background: var(--bg);
-  margin-bottom: 12px;
-}
-.login-input:focus { outline: none; border-color: var(--ink); }
-.login-name {
-  width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-family: 'Noto Sans TC', sans-serif;
-  font-size: 13px; font-weight: 300;
-  color: var(--ink);
-  text-align: center;
-  background: var(--bg);
-  margin-bottom: 16px;
-}
-.login-name:focus { outline: none; border-color: var(--ink); }
-.login-btn {
-  width: 100%;
-  padding: 10px;
-  background: var(--ink); color: var(--bg);
-  border: none; border-radius: 4px;
-  font-family: 'DM Mono', monospace;
-  font-size: 12px; letter-spacing: .08em;
-  cursor: pointer;
-  transition: opacity .15s;
-}
-.login-btn:hover { opacity: .8; }
-.login-error {
-  font-size: 12px; color: var(--red);
-  margin-top: 10px; display: none;
-}
+.login-gate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:40px;max-width:360px;width:100%;text-align:center}
+.login-logo{height:24px;margin-bottom:24px}
+.login-title{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);letter-spacing:.5px;margin-bottom:24px}
+.login-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:14px;color:var(--ink);text-align:center;letter-spacing:4px;background:var(--bg);margin-bottom:12px}
+.login-input:focus{outline:none;border-color:var(--ink)}
+.login-name{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:4px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:300;color:var(--ink);text-align:center;background:var(--bg);margin-bottom:16px}
+.login-name:focus{outline:none;border-color:var(--ink)}
+.login-btn{width:100%;padding:10px;background:var(--ink);color:var(--bg);border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;cursor:pointer;transition:opacity .15s}
+.login-btn:hover{opacity:.8}
+.login-error{font-size:12px;color:var(--red);margin-top:10px;display:none}
 
-/* ── HEADER ── */
-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 28px;
-  display: flex; align-items: center; gap: 14px;
-  position: sticky; top: 0; z-index: 100;
-  box-shadow: 0 1px 3px rgba(0,0,0,.04);
-}
-.logo { height: 28px; }
-.header-title {
-  font-size: 13px; color: var(--muted);
-  font-family: 'DM Mono', monospace;
-  letter-spacing: .5px;
-}
-.spacer { flex: 1; }
-.user-badge {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  color: var(--ink-light);
-  background: var(--cream);
-  padding: 4px 12px;
-  border-radius: 12px;
-}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.logo{height:28px}
+.header-title{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px}
+.spacer{flex:1}
+.user-badge{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-light);background:var(--cream);padding:4px 12px;border-radius:12px}
 
-/* ── LAYOUT ── */
-.wrap { max-width: 800px; margin: 0 auto; padding: 24px 28px; }
-.app { display: none; }
+.wrap{max-width:800px;margin:0 auto;padding:24px 28px}
+.app{display:none}
 
-/* ── SUBMIT FORM ── */
-.form-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-.form-title {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .5px;
-  margin-bottom: 16px;
-}
-.field { margin-bottom: 14px; }
-.field label {
-  display: block;
-  font-size: 10px; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--muted);
-  margin-bottom: 5px;
-  font-family: 'DM Mono', monospace;
-}
-.field textarea {
-  width: 100%;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 10px 12px;
-  font-family: 'Noto Sans TC', sans-serif;
-  font-size: 13px; font-weight: 300;
-  color: var(--ink);
-  resize: vertical;
-  min-height: 80px;
-  line-height: 1.6;
-}
-.field textarea:focus { outline: none; border-color: var(--ink); }
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:24px}
+.form-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-family:'DM Mono',monospace}
+.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:300;color:var(--ink);resize:vertical;min-height:80px;line-height:1.6}
+.field textarea:focus{outline:none;border-color:var(--ink)}
 
-.tags-row { display: flex; gap: 5px; flex-wrap: wrap; }
-.tag-btn {
-  padding: 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: none;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  cursor: pointer;
-  transition: all .15s;
-  color: var(--muted);
-}
-.tag-btn:hover { color: var(--ink); border-color: var(--ink); }
-.tag-btn.sel { color: var(--ink); font-weight: 400; }
-.tag-btn[data-v="客訴"].sel { background: var(--tag-客訴); border-color: var(--tag-客訴); }
-.tag-btn[data-v="Bug"].sel { background: var(--tag-Bug); border-color: var(--tag-Bug); }
-.tag-btn[data-v="建議"].sel { background: var(--tag-建議); border-color: var(--tag-建議); }
-.tag-btn[data-v="異常"].sel { background: var(--tag-異常); border-color: var(--tag-異常); }
-.tag-btn[data-v="管理"].sel { background: var(--tag-管理); border-color: var(--tag-管理); }
-.tag-btn[data-v="廣告"].sel { background: var(--tag-廣告); border-color: var(--tag-廣告); }
-.tag-btn[data-v="系統"].sel { background: var(--tag-系統); border-color: var(--tag-系統); }
-.tag-btn[data-v="品牌"].sel { background: var(--tag-品牌); border-color: var(--tag-品牌); }
-.tag-btn[data-v="其他"].sel { background: var(--tag-其他); border-color: var(--tag-其他); }
+.tags-row{display:flex;gap:5px;flex-wrap:wrap}
+.tag-btn{padding:4px 12px;border:1px solid var(--border);border-radius:16px;background:none;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;color:var(--muted)}
+.tag-btn:hover{color:var(--ink);border-color:var(--ink)}
+.tag-btn.sel{color:var(--ink);font-weight:400;background:var(--cream);border-color:var(--accent)}
 
-.urgency-row { display: flex; gap: 5px; }
-.urg-btn {
-  padding: 4px 12px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: none;
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  cursor: pointer;
-  color: var(--muted);
-  transition: all .15s;
-}
-.urg-btn:hover { border-color: var(--ink); color: var(--ink); }
-.urg-btn.sel-一般 { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
-.urg-btn.sel-緊急 { background: var(--yellow-bg); color: var(--yellow); border-color: #fde68a; }
-.urg-btn.sel-嚴重 { background: var(--red-bg); color: var(--red); border-color: #fecaca; }
+.urgency-row{display:flex;gap:5px}
+.urg-btn{padding:4px 12px;border:1px solid var(--border);border-radius:4px;background:none;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;color:var(--muted);transition:all .15s}
+.urg-btn:hover{border-color:var(--ink);color:var(--ink)}
+.urg-btn.sel-一般{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
+.urg-btn.sel-緊急{background:var(--yellow-bg);color:var(--yellow);border-color:#fde68a}
+.urg-btn.sel-嚴重{background:var(--red-bg);color:var(--red);border-color:#fecaca}
 
-.submit-btn {
-  width: 100%;
-  padding: 11px;
-  background: var(--ink); color: var(--bg);
-  border: none; border-radius: 4px;
-  font-family: 'DM Mono', monospace;
-  font-size: 12px; letter-spacing: .08em;
-  cursor: pointer;
-  transition: opacity .15s;
-  margin-top: 4px;
-}
-.submit-btn:hover { opacity: .8; }
-.submit-btn:disabled { opacity: .4; cursor: not-allowed; }
+.submit-btn{width:100%;padding:11px;background:var(--ink);color:var(--bg);border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;cursor:pointer;transition:opacity .15s;margin-top:4px}
+.submit-btn:hover{opacity:.8}
+.submit-btn:disabled{opacity:.4;cursor:not-allowed}
 
-/* ── HISTORY ── */
-.history-title {
-  font-family: 'DM Mono', monospace;
-  font-size: 11px; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .5px;
-  margin-bottom: 12px;
-  display: flex; align-items: center; gap: 10px;
-}
-.refresh-btn {
-  padding: 3px 10px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: none;
-  font-family: 'DM Mono', monospace;
-  font-size: 10px;
-  cursor: pointer;
-  color: var(--muted);
-}
-.refresh-btn:hover { color: var(--ink); border-color: var(--ink); }
+.history-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.refresh-btn{padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:none;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;color:var(--muted)}
+.refresh-btn:hover{color:var(--ink);border-color:var(--ink)}
 
-.report-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 14px 18px;
-  margin-bottom: 8px;
-  transition: border-color .15s;
-}
-.report-card:hover { border-color: var(--muted); }
-.rc-top {
-  display: flex; gap: 8px; align-items: center;
-  margin-bottom: 8px; flex-wrap: wrap;
-}
-.rc-tag {
-  display: inline-block;
-  padding: 2px 10px; border-radius: 10px;
-  font-size: 10px; font-family: 'DM Mono', monospace;
-  font-weight: 400;
-}
-.rc-tag[data-t="客訴"] { background: var(--tag-客訴); }
-.rc-tag[data-t="Bug"] { background: var(--tag-Bug); }
-.rc-tag[data-t="建議"] { background: var(--tag-建議); }
-.rc-tag[data-t="異常"] { background: var(--tag-異常); }
-.rc-tag[data-t="管理"] { background: var(--tag-管理); }
-.rc-tag[data-t="廣告"] { background: var(--tag-廣告); }
-.rc-tag[data-t="系統"] { background: var(--tag-系統); }
-.rc-tag[data-t="品牌"] { background: var(--tag-品牌); }
-.rc-tag[data-t="其他"] { background: var(--tag-其他); }
+.report-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin-bottom:8px;transition:border-color .15s}
+.report-card:hover{border-color:var(--muted)}
+.report-card.rc-done{opacity:.45}
+.report-card.rc-done .rc-content{text-decoration:line-through}
+.rc-top{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.rc-tag{display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;font-weight:400;background:var(--cream)}
+.rc-urgency{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px;font-weight:400}
+.rc-urgency.u-一般{background:var(--green-bg);color:var(--green)}
+.rc-urgency.u-緊急{background:var(--yellow-bg);color:var(--yellow)}
+.rc-urgency.u-嚴重{background:var(--red-bg);color:var(--red)}
+.rc-progress{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:#f3f2f0;color:var(--muted);border:1px solid var(--border)}
+.rc-time{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto}
+.rc-content{font-size:13px;line-height:1.7;font-weight:300;color:var(--ink)}
+.rc-note{font-size:11px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--border2)}
+.rc-done-badge{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
 
-.rc-urgency {
-  font-size: 10px; font-family: 'DM Mono', monospace;
-  padding: 2px 8px; border-radius: 4px; font-weight: 400;
-}
-.rc-urgency.u-一般 { background: var(--green-bg); color: var(--green); }
-.rc-urgency.u-緊急 { background: var(--yellow-bg); color: var(--yellow); }
-.rc-urgency.u-嚴重 { background: var(--red-bg); color: var(--red); }
+.empty-state{text-align:center;padding:3rem;color:var(--muted);font-size:13px}
+.loading{text-align:center;padding:2rem;color:var(--muted);font-size:12px;font-family:'DM Mono',monospace}
 
-.rc-time {
-  font-family: 'DM Mono', monospace;
-  font-size: 10px; color: var(--muted);
-  margin-left: auto;
-}
-.rc-progress {
-  font-size: 10px; font-family: 'DM Mono', monospace;
-  padding: 2px 8px; border-radius: 10px;
-}
-.rc-progress.p-想法 { background: #f3f2f0; color: var(--muted); border: 1px solid var(--border); }
-.rc-progress.p-蒐集中 { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
-.rc-progress.p-待展開 { background: var(--yellow-bg); color: var(--yellow); border: 1px solid #fde68a; }
-.rc-progress.p-執行中 { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+.toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
 
-.rc-content {
-  font-size: 13px; line-height: 1.7; font-weight: 300;
-  color: var(--ink);
-}
-.rc-note {
-  font-size: 11px; color: var(--muted);
-  margin-top: 6px; padding-top: 6px;
-  border-top: 1px solid var(--border2);
-}
-.rc-done {
-  opacity: .45;
-}
-.rc-done .rc-content { text-decoration: line-through; }
-.rc-done-badge {
-  font-size: 10px; font-family: 'DM Mono', monospace;
-  padding: 2px 8px; border-radius: 10px;
-  background: var(--green-bg); color: var(--green);
-  border: 1px solid var(--green-border);
-}
-
-.empty-state {
-  text-align: center; padding: 3rem;
-  color: var(--muted); font-size: 13px;
-}
-.loading {
-  text-align: center; padding: 2rem;
-  color: var(--muted); font-size: 12px;
-  font-family: 'DM Mono', monospace;
-}
-
-/* ── TOAST ── */
-.toast {
-  position: fixed; bottom: 20px; right: 20px;
-  background: var(--ink); color: var(--bg);
-  padding: 10px 18px; border-radius: 7px;
-  font-size: 12px; font-family: 'DM Mono', monospace;
-  opacity: 0; transform: translateY(8px);
-  transition: all .25s; z-index: 999;
-  pointer-events: none;
-}
-.toast.show { opacity: 1; transform: translateY(0); }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 600px) {
-  .wrap { padding: 16px; }
-  header { padding: 12px 16px; }
-  .form-card { padding: 18px; }
-  .login-box { padding: 28px 24px; }
-}
+@media(max-width:600px){.wrap{padding:16px}header{padding:12px 16px}.form-card{padding:18px}.login-box{padding:28px 24px}}
 </style>
 </head>
 <body>
 
-<!-- LOGIN GATE -->
 <div class="login-gate" id="loginGate">
   <div class="login-box">
     <img class="login-logo" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
-    <div class="login-title">回報系統</div>
+    <div class="login-title">問題回報</div>
     <input class="login-name" id="loginName" type="text" placeholder="你的名字">
     <input class="login-input" id="loginPwd" type="password" placeholder="密碼">
     <button class="login-btn" onclick="tryLogin()">進入</button>
@@ -369,265 +96,136 @@ header {
   </div>
 </div>
 
-<!-- APP -->
 <div class="app" id="app">
-
 <header>
   <img class="logo" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
-  <span class="header-title">回報系統</span>
+  <span class="header-title">問題回報</span>
   <div class="spacer"></div>
   <span class="user-badge" id="userBadge"></span>
 </header>
-
 <div class="wrap">
-
-  <!-- SUBMIT FORM -->
   <div class="form-card">
     <div class="form-title">提交回報</div>
-
     <div class="field">
       <label>發生了什麼事</label>
       <textarea id="reportContent" placeholder="描述問題或建議，越具體越好（時間、客戶反應、截圖描述…）"></textarea>
     </div>
-
     <div class="field">
       <label>分類</label>
       <div class="tags-row" id="tagRow">
-        <button class="tag-btn" data-v="客訴">客訴</button>
-        <button class="tag-btn" data-v="Bug">Bug</button>
-        <button class="tag-btn" data-v="異常">異常</button>
-        <button class="tag-btn" data-v="建議">建議</button>
-        <button class="tag-btn" data-v="系統">系統</button>
-        <button class="tag-btn" data-v="管理">管理</button>
-        <button class="tag-btn" data-v="品牌">品牌</button>
-        <button class="tag-btn" data-v="其他">其他</button>
+        <button class="tag-btn" data-v="客訴" onclick="pickTag(this)">客訴</button>
+        <button class="tag-btn" data-v="Bug" onclick="pickTag(this)">Bug</button>
+        <button class="tag-btn" data-v="異常" onclick="pickTag(this)">異常</button>
+        <button class="tag-btn" data-v="建議" onclick="pickTag(this)">建議</button>
+        <button class="tag-btn" data-v="系統" onclick="pickTag(this)">系統</button>
+        <button class="tag-btn" data-v="管理" onclick="pickTag(this)">管理</button>
+        <button class="tag-btn" data-v="其他" onclick="pickTag(this)">其他</button>
       </div>
     </div>
-
     <div class="field">
       <label>緊急程度</label>
       <div class="urgency-row" id="urgRow">
-        <button class="urg-btn sel-一般" data-v="一般" onclick="selectUrg(this)" style="background:var(--green-bg);color:var(--green);border-color:var(--green-border)">一般</button>
-        <button class="urg-btn" data-v="緊急" onclick="selectUrg(this)">緊急</button>
-        <button class="urg-btn" data-v="嚴重" onclick="selectUrg(this)">嚴重</button>
+        <button class="urg-btn sel-一般" data-v="一般" onclick="pickUrg(this)">一般</button>
+        <button class="urg-btn" data-v="緊急" onclick="pickUrg(this)">緊急</button>
+        <button class="urg-btn" data-v="嚴重" onclick="pickUrg(this)">嚴重</button>
       </div>
     </div>
-
     <button class="submit-btn" id="submitBtn" onclick="submitReport()">提交回報</button>
   </div>
 
-  <!-- HISTORY -->
   <div class="history-title">
     <span>我的回報紀錄</span>
     <button class="refresh-btn" onclick="loadHistory()">↻ 刷新</button>
   </div>
-  <div id="historyList">
-    <div class="loading">載入中…</div>
-  </div>
-
+  <div id="historyList"><div class="loading">載入中…</div></div>
 </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzlTybCQBorZs69xviklAf6UfLbnOoEy_f3UHB_EjNq078wFDBNAVw32u9WGxHutY_4/exec';
-const PASSWORD = '28447208';
+var SHEET_URL='https://script.google.com/macros/s/AKfycbzlTybCQBorZs69xviklAf6UfLbnOoEy_f3UHB_EjNq078wFDBNAVw32u9WGxHutY_4/exec';
+var PASSWORD='28447208';
+var currentUser='';
+var selectedTag='';
+var selectedUrg='一般';
 
-let currentUser = '';
-let selectedTag = '';
-let selectedUrg = '一般';
-
-// ── LOGIN ──
-function tryLogin() {
-  const name = document.getElementById('loginName').value.trim();
-  const pwd = document.getElementById('loginPwd').value.trim();
-
-  if (!name) {
-    document.getElementById('loginError').textContent = '請輸入名字';
-    document.getElementById('loginError').style.display = 'block';
-    return;
-  }
-  if (pwd !== PASSWORD) {
-    document.getElementById('loginError').textContent = '密碼錯誤';
-    document.getElementById('loginError').style.display = 'block';
-    return;
-  }
-
-  currentUser = name;
-  sessionStorage.setItem('report_user', name);
-  enterApp();
+function tryLogin(){
+  var name=document.getElementById('loginName').value.trim();
+  var pwd=document.getElementById('loginPwd').value.trim();
+  if(!name){document.getElementById('loginError').textContent='請輸入名字';document.getElementById('loginError').style.display='block';return}
+  if(pwd!==PASSWORD){document.getElementById('loginError').textContent='密碼錯誤';document.getElementById('loginError').style.display='block';return}
+  currentUser=name;sessionStorage.setItem('report_user',name);enterApp();
 }
-
-function enterApp() {
-  document.getElementById('loginGate').style.display = 'none';
-  document.getElementById('app').style.display = '';
-  document.getElementById('userBadge').textContent = currentUser;
+function enterApp(){
+  document.getElementById('loginGate').style.display='none';
+  document.getElementById('app').style.display='';
+  document.getElementById('userBadge').textContent=currentUser;
   loadHistory();
 }
+(function(){var s=sessionStorage.getItem('report_user');if(s){currentUser=s;enterApp()}})();
+document.getElementById('loginPwd').addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin()});
+document.getElementById('loginName').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginPwd').focus()});
 
-// Check session
-(function() {
-  const saved = sessionStorage.getItem('report_user');
-  if (saved) {
-    currentUser = saved;
-    enterApp();
-  }
-})();
-
-// Enter key on password
-document.getElementById('loginPwd').addEventListener('keydown', e => {
-  if (e.key === 'Enter') tryLogin();
-});
-document.getElementById('loginName').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('loginPwd').focus();
-});
-
-// ── TAG SELECTION ──
-document.getElementById('tagRow').addEventListener('click', e => {
-  const btn = e.target.closest('.tag-btn');
-  if (!btn) return;
-  document.querySelectorAll('#tagRow .tag-btn').forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel');
-  selectedTag = btn.dataset.v;
-});
-
-// ── URGENCY ──
-function selectUrg(btn) {
-  document.querySelectorAll('#urgRow .urg-btn').forEach(b => {
-    b.classList.remove('sel-一般', 'sel-緊急', 'sel-嚴重');
-    b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
-  });
-  selectedUrg = btn.dataset.v;
-  btn.classList.add('sel-' + selectedUrg);
+function pickTag(btn){
+  document.querySelectorAll('#tagRow .tag-btn').forEach(function(b){b.classList.remove('sel')});
+  btn.classList.add('sel');selectedTag=btn.dataset.v;
+}
+function pickUrg(btn){
+  document.querySelectorAll('#urgRow .urg-btn').forEach(function(b){b.className='urg-btn'});
+  selectedUrg=btn.dataset.v;btn.classList.add('sel-'+selectedUrg);
 }
 
-// ── SUBMIT ──
-async function submitReport() {
-  const content = document.getElementById('reportContent').value.trim();
-  if (!content) { showToast('請描述問題'); return; }
-  if (!selectedTag) { showToast('請選擇分類'); return; }
+function submitReport(){
+  var content=document.getElementById('reportContent').value.trim();
+  if(!content){showToast('請描述問題');return}
+  if(!selectedTag){showToast('請選擇分類');return}
+  var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='提交中…';
+  var now=new Date();
+  var ts=now.getFullYear().toString().slice(2)+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0');
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true; btn.textContent = '提交中…';
-
-  const now = new Date();
-  const ts = `${now.getFullYear().toString().slice(2)}/${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')}`;
-
-  // Prepend urgency to content if not 一般
-  const fullContent = selectedUrg !== '一般'
-    ? `[${selectedUrg}] ${content}`
-    : content;
-
-  try {
-    await fetch(SHEET_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        時間: ts,
-        內容: fullContent,
-        tag: selectedTag,
-        進度: '想法',
-        session: `員工回報：${currentUser}`
-      })
-    });
-
+  fetch(SHEET_URL,{
+    method:'POST',mode:'no-cors',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      sheet:'task-reports',
+      時間:ts,
+      回報人:currentUser,
+      分類:selectedTag,
+      緊急程度:selectedUrg,
+      內容:content,
+      關聯任務:'',
+      進度:'待處理'
+    })
+  }).then(function(){
     showToast('✓ 已提交');
-    document.getElementById('reportContent').value = '';
-    document.querySelectorAll('#tagRow .tag-btn').forEach(b => b.classList.remove('sel'));
-    selectedTag = '';
+    document.getElementById('reportContent').value='';
+    document.querySelectorAll('#tagRow .tag-btn').forEach(function(b){b.classList.remove('sel')});
+    selectedTag='';selectedUrg='一般';
+    document.querySelectorAll('#urgRow .urg-btn').forEach(function(b){b.className='urg-btn'});
+    document.querySelector('#urgRow .urg-btn[data-v="一般"]').classList.add('sel-一般');
+    setTimeout(function(){loadHistory()},1500);
+  }).catch(function(){showToast('提交失敗，請重試')});
 
-    // Reset urgency to 一般
-    selectedUrg = '一般';
-    document.querySelectorAll('#urgRow .urg-btn').forEach(b => {
-      b.classList.remove('sel-一般', 'sel-緊急', 'sel-嚴重');
-      b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
-    });
-    const defaultUrg = document.querySelector('#urgRow .urg-btn[data-v="一般"]');
-    defaultUrg.classList.add('sel-一般');
-    defaultUrg.style.background = 'var(--green-bg)';
-    defaultUrg.style.color = 'var(--green)';
-    defaultUrg.style.borderColor = 'var(--green-border)';
-
-    setTimeout(() => loadHistory(), 1500);
-  } catch(e) {
-    showToast('提交失敗，請重試');
-  }
-
-  btn.disabled = false; btn.textContent = '提交回報';
+  btn.disabled=false;btn.textContent='提交回報';
 }
 
-// ── HISTORY ──
-async function loadHistory() {
-  const container = document.getElementById('historyList');
-  container.innerHTML = '<div class="loading">載入中…</div>';
-
-  try {
-    const res = await fetch(SHEET_URL + '?t=' + Date.now());
-    const data = await res.json();
-
-    if (!data.success) {
-      container.innerHTML = '<div class="empty-state">載入失敗</div>';
-      return;
-    }
-
-    // Filter: only show items from this user (Session來源 contains their name)
-    const myItems = data.data
-      .filter(i => i['內容'] && i['Session來源'] && i['Session來源'].includes(currentUser))
-      .map((item, idx) => {
-        // Find actual row index (all data, not just filtered)
-        const allIdx = data.data.indexOf(item);
-        return { ...item, _rowIndex: allIdx + 2 };
-      })
-      .reverse(); // newest first
-
-    if (myItems.length === 0) {
-      container.innerHTML = '<div class="empty-state">還沒有回報紀錄</div>';
-      return;
-    }
-
-    container.innerHTML = myItems.map(item => {
-      const isDone = item['已處理'] === 'TRUE' || item['已處理'] === true;
-      const hasNote = item['備註'] && item['備註'].toString().trim();
-
-      // Extract urgency from content prefix
-      let urgency = '一般';
-      let displayContent = item['內容'] || '';
-      const urgMatch = displayContent.match(/^\[(緊急|嚴重)\]\s*/);
-      if (urgMatch) {
-        urgency = urgMatch[1];
-        displayContent = displayContent.replace(urgMatch[0], '');
-      }
-
-      return `
-        <div class="report-card ${isDone ? 'rc-done' : ''}">
-          <div class="rc-top">
-            <span class="rc-tag" data-t="${item['Tag']}">${item['Tag']}</span>
-            <span class="rc-urgency u-${urgency}">${urgency}</span>
-            <span class="rc-progress p-${item['進度']}">${item['進度']}</span>
-            ${isDone ? '<span class="rc-done-badge">✓ 已處理</span>' : ''}
-            <span class="rc-time">${item['時間'] || ''}</span>
-          </div>
-          <div class="rc-content">${escHtml(displayContent)}</div>
-          ${hasNote ? `<div class="rc-note">回覆：${escHtml(item['備註'])}</div>` : ''}
-        </div>`;
+function loadHistory(){
+  var c=document.getElementById('historyList');c.innerHTML='<div class="loading">載入中…</div>';
+  fetch(SHEET_URL+'?sheet=task-reports&t='+Date.now()).then(function(r){return r.json()}).then(function(data){
+    if(!data.success){c.innerHTML='<div class="empty-state">載入失敗</div>';return}
+    var my=data.data.filter(function(i){return i['回報人']&&i['回報人']===currentUser}).reverse();
+    if(!my.length){c.innerHTML='<div class="empty-state">還沒有回報紀錄</div>';return}
+    c.innerHTML=my.map(function(item){
+      var isDone=item['已處理']==='TRUE'||item['已處理']===true;
+      var hasNote=item['備註']&&String(item['備註']).trim();
+      return'<div class="report-card'+(isDone?' rc-done':'')+'"><div class="rc-top"><span class="rc-tag">'+esc(item['分類']||'')+'</span><span class="rc-urgency u-'+(item['緊急程度']||'一般')+'">'+(item['緊急程度']||'一般')+'</span><span class="rc-progress">'+(item['進度']||'待處理')+'</span>'+(isDone?'<span class="rc-done-badge">✓ 已處理</span>':'')+'<span class="rc-time">'+esc(item['時間']||'')+'</span></div><div class="rc-content">'+esc(item['內容']||'')+'</div>'+(hasNote?'<div class="rc-note">回覆：'+esc(item['備註'])+'</div>':'')+'</div>';
     }).join('');
-
-  } catch(e) {
-    container.innerHTML = '<div class="empty-state">載入失敗，請重試</div>';
-  }
+  }).catch(function(){c.innerHTML='<div class="empty-state">載入失敗，請重試</div>'});
 }
 
-function escHtml(s) {
-  return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
-}
-
-// ── TOAST ──
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2400);
-}
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'):''}
+function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2400)}
 </script>
 </body>
 </html>
