@@ -81,6 +81,14 @@ body{background:var(--warm-white);color:var(--charcoal);font-family:'Noto Sans T
 .rp-note-input{width:100%;margin-top:6px;padding:6px 8px;border:1px solid var(--border);background:var(--cream);font-family:'Noto Sans TC',sans-serif;font-size:12px;font-weight:300;color:var(--charcoal);resize:none;display:none}
 .rp-note-input:focus{outline:none;border-color:var(--accent)}
 .reports-loading,.reports-empty{text-align:center;padding:32px;font-size:12px;color:var(--light);font-family:'DM Mono',monospace}
+
+/* Report status row */
+.rp-status-row{display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.rp-sf{display:flex;align-items:center;gap:6px}
+.rp-sl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--light);text-transform:uppercase}
+.rp-select{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--warm-white);color:var(--mid);cursor:pointer;outline:none}
+.rp-select:hover{border-color:var(--accent)}
+.rp-select:focus{border-color:var(--accent)}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--charcoal);color:var(--warm-white);padding:10px 18px;border-radius:6px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
 @media(max-width:640px){.page{padding:32px 16px 80px}.stats-bar{gap:16px;flex-wrap:wrap}.stat-num{font-size:22px}.task{grid-template-columns:28px 28px 1fr;gap:6px;padding:12px}.task-meta{grid-column:3;margin-top:4px}.filter-row{gap:6px}.filter-btn{padding:4px 10px;font-size:11px}}
@@ -106,7 +114,7 @@ body{background:var(--warm-white);color:var(--charcoal);font-family:'Noto Sans T
 <div class="toast" id="toast"></div>
 
 <script>
-var SHEET_URL='https://script.google.com/macros/s/AKfycbzlTybCQBorZs69xviklAf6UfLbnOoEy_f3UHB_EjNq078wFDBNAVw32u9WGxHutY_4/exec';
+var SHEET_URL='https://script.google.com/macros/s/AKfycbz6KCr64lsHly0HVSE70fZ8lKdU315dbspcQoYxyT9Ow0nq6hLhL82S5XFXpRsVX65c/exec';
 
 var TASKS=[
 {id:1,section:'urgent',title:'Meta 受眾 CSV',desc:'三個檔案丟 happycapy 跑，產 3 組 CSV 上傳 Meta 建 LAL',status:'doing',cat:'廣告'},
@@ -232,17 +240,59 @@ function renderReports(){
   if(!reportsData.length){c.innerHTML='<div class="reports-empty">目前沒有員工回報</div>';return}
   var items=reportsData.slice().reverse();
   c.innerHTML=items.map(function(item,di){
-    var ri=reportsData.length-di+1;// sheet row (header=1, data starts at 2)
+    var ri=reportsData.length-di+1;
     var isDone=item['已處理']==='TRUE'||item['已處理']===true;
     var urg=item['緊急程度']||'一般';
     var hasNote=item['備註']&&String(item['備註']).trim();
-    return'<div class="report-card'+(isDone?' rp-done':'')+'" data-row="'+ri+'"><div class="rp-top"><span class="rp-tag rp-tag-'+(item['分類']||'其他')+'">'+(item['分類']||'其他')+'</span><span class="rp-urgency rp-urg-'+urg+'">'+urg+'</span><span class="rp-who">'+esc(item['回報人']||'')+'</span><span class="rp-time">'+esc(item['時間']||'')+'</span></div><div class="rp-content">'+esc(item['內容']||'')+'</div>'+(item['關聯任務']?'<div class="rp-task-link">關聯：'+esc(item['關聯任務'])+'</div>':'')+(hasNote?'<div class="rp-note">回覆：'+esc(item['備註'])+'</div>':'')+'<div class="rp-actions"><button class="rp-btn'+(isDone?' is-done':'')+'" onclick="toggleRD('+ri+','+(isDone?'false':'true')+')">'+(isDone?'✓ 已處理':'標記完成')+'</button><button class="rp-btn" onclick="showNI(this)">回覆</button></div><textarea class="rp-note-input" placeholder="回覆員工…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();saveN(this,'+ri+')}"></textarea></div>';
+    var accepted=item['受理']||'';
+    var progress=item['處理進度']||'待處理';
+    var tm=item['時間']||'';
+    if(tm.indexOf('T')>-1)tm=tm.split('T')[0].replace(/-/g,'/');
+
+    return'<div class="report-card'+(isDone?' rp-done':'')+'" data-row="'+ri+'">' +
+      '<div class="rp-top">' +
+        '<span class="rp-tag rp-tag-'+(item['分類']||'其他')+'">'+(item['分類']||'其他')+'</span>' +
+        '<span class="rp-urgency rp-urg-'+urg+'">'+urg+'</span>' +
+        '<span class="rp-who">'+esc(item['回報人']||'')+'</span>' +
+        '<span class="rp-time">'+esc(tm)+'</span>' +
+      '</div>' +
+      '<div class="rp-content">'+esc(item['內容']||'')+'</div>' +
+      (item['關聯任務']?'<div class="rp-task-link">關聯：'+esc(item['關聯任務'])+'</div>':'') +
+      (hasNote?'<div class="rp-note">回覆：'+esc(item['備註'])+'</div>':'') +
+      '<div class="rp-status-row">' +
+        '<div class="rp-sf"><span class="rp-sl">受理</span>' +
+          '<select class="rp-select" onchange="updateField('+ri+',\'受理\',this.value)" data-field="受理">' +
+            '<option value=""'+(accepted===''?' selected':'')+'>未受理</option>' +
+            '<option value="已受理"'+(accepted==='已受理'?' selected':'')+'>已受理</option>' +
+          '</select>' +
+        '</div>' +
+        '<div class="rp-sf"><span class="rp-sl">進度</span>' +
+          '<select class="rp-select" onchange="updateField('+ri+',\'處理進度\',this.value)" data-field="處理進度">' +
+            '<option value="待處理"'+(progress==='待處理'?' selected':'')+'>待處理</option>' +
+            '<option value="處理中"'+(progress==='處理中'?' selected':'')+'>處理中</option>' +
+            '<option value="已完成"'+(progress==='已完成'?' selected':'')+'>已完成</option>' +
+          '</select>' +
+        '</div>' +
+      '</div>' +
+      '<div class="rp-actions">' +
+        '<button class="rp-btn'+(isDone?' is-done':'')+'" onclick="toggleRD('+ri+','+(isDone?'false':'true')+')">'+(isDone?'✓ 已處理':'標記完成')+'</button>' +
+        '<button class="rp-btn" onclick="showNI(this)">回覆</button>' +
+      '</div>' +
+      '<textarea class="rp-note-input" placeholder="回覆員工…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();saveN(this,'+ri+')}"></textarea>' +
+    '</div>';
   }).join('');
 }
 function toggleRD(row,val){
   fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet:'task-reports',action:'update',rowIndex:row,'已處理':val?'TRUE':'FALSE'})});
   showToast(val?'✓ 已標記完成':'已取消完成');
   var idx=row-2;if(reportsData[idx])reportsData[idx]['已處理']=val?'TRUE':'FALSE';renderReports();
+}
+function updateField(row,field,val){
+  var body={sheet:'task-reports',action:'update',rowIndex:row};
+  body[field]=val;
+  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  var idx=row-2;if(reportsData[idx])reportsData[idx][field]=val;
+  showToast('✓ '+field+'已更新');
 }
 function showNI(btn){var ta=btn.closest('.report-card').querySelector('.rp-note-input');ta.style.display=ta.style.display==='block'?'none':'block';if(ta.style.display==='block')ta.focus()}
 function saveN(ta,row){
