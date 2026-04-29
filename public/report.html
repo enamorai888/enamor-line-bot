@@ -3,229 +3,263 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EnamoR 回報系統</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<title>EnamoR 問題回報</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#FAFAF7;--surface:#ffffff;--border:#e0e0d8;--border2:#eceae4;--ink:#1C1C1A;--ink-light:#5C5C58;--muted:#9C9A92;--accent:#8B6F47;--cream:#F5F0E8;--green:#4a7c59;--green-bg:#eef5f1;--green-border:#c8ddd0;--red:#991b1b;--red-bg:#fef2f2;--yellow:#92400e;--yellow-bg:#fffbeb}
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--ink);font-family:'Noto Sans TC',sans-serif;font-weight:300;min-height:100vh}
+body{background:#F5F0E8;color:#1C1C1A;font-family:'Noto Sans TC',sans-serif;font-weight:300;min-height:100vh}
 
-.login-gate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
-.login-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:40px;max-width:360px;width:100%;text-align:center}
-.login-logo{height:24px;margin-bottom:24px}
-.login-title{font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);letter-spacing:.5px;margin-bottom:24px}
-.login-input{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:14px;color:var(--ink);text-align:center;letter-spacing:4px;background:var(--bg);margin-bottom:12px}
-.login-input:focus{outline:none;border-color:var(--ink)}
-.login-name{width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:4px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:300;color:var(--ink);text-align:center;background:var(--bg);margin-bottom:16px}
-.login-name:focus{outline:none;border-color:var(--ink)}
-.login-btn{width:100%;padding:10px;background:var(--ink);color:var(--bg);border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;cursor:pointer;transition:opacity .15s}
-.login-btn:hover{opacity:.8}
-.login-error{font-size:12px;color:var(--red);margin-top:10px;display:none}
+/* LOGIN */
+#loginGate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+#loginBox{background:#fff;border:1px solid #d8d4cc;border-radius:10px;padding:44px 36px;max-width:360px;width:100%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.08)}
+#loginBox img{height:24px;margin-bottom:20px}
+#loginBox .lt{font-family:'DM Mono',monospace;font-size:13px;color:#9C9A92;letter-spacing:.5px;margin-bottom:24px}
+#loginBox input{width:100%;padding:11px 14px;border:1px solid #d8d4cc;border-radius:5px;font-size:13px;color:#1C1C1A;background:#FAFAF7;margin-bottom:12px;text-align:center}
+#loginBox input:focus{outline:none;border-color:#8B6F47}
+#loginBox input[type=password]{font-family:'DM Mono',monospace;letter-spacing:4px;font-size:14px}
+#loginBox input[type=text]{font-family:'Noto Sans TC',sans-serif;font-weight:300}
+#loginBox button{width:100%;padding:11px;background:#1C1C1A;color:#FAFAF7;border:none;border-radius:5px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;cursor:pointer}
+#loginBox button:hover{opacity:.85}
+#loginErr{font-size:12px;color:#991b1b;margin-top:10px;display:none}
 
-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.logo{height:28px}
-.header-title{font-size:13px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px}
-.spacer{flex:1}
-.user-badge{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-light);background:var(--cream);padding:4px 12px;border-radius:12px}
+/* HEADER */
+header{background:#fff;border-bottom:1px solid #e0e0d8;padding:14px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+header img{height:28px}
+header .ht{font-size:13px;color:#9C9A92;font-family:'DM Mono',monospace;letter-spacing:.5px}
+header .sp{flex:1}
+header .ub{font-family:'DM Mono',monospace;font-size:11px;color:#5C5C58;background:#F5F0E8;padding:4px 12px;border-radius:12px}
 
+/* APP */
+#app{display:none}
 .wrap{max-width:800px;margin:0 auto;padding:24px 28px}
-.app{display:none}
 
-.form-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:24px}
-.form-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
-.field{margin-bottom:14px}
-.field label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-family:'DM Mono',monospace}
-.field textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:300;color:var(--ink);resize:vertical;min-height:80px;line-height:1.6}
-.field textarea:focus{outline:none;border-color:var(--ink)}
+/* FORM */
+.card{background:#fff;border:1px solid #e0e0d8;border-radius:8px;padding:24px;margin-bottom:24px}
+.card-t{font-family:'DM Mono',monospace;font-size:11px;color:#9C9A92;text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9C9A92;margin-bottom:5px;font-family:'DM Mono',monospace}
+.fld textarea{width:100%;background:#FAFAF7;border:1px solid #e0e0d8;border-radius:5px;padding:10px 12px;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:300;color:#1C1C1A;resize:vertical;min-height:80px;line-height:1.6}
+.fld textarea:focus{outline:none;border-color:#8B6F47}
 
-.tags-row{display:flex;gap:5px;flex-wrap:wrap}
-.tag-btn{padding:4px 12px;border:1px solid var(--border);border-radius:16px;background:none;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;transition:all .15s;color:var(--muted)}
-.tag-btn:hover{color:var(--ink);border-color:var(--ink)}
-.tag-btn.sel{color:var(--ink);font-weight:400;background:var(--cream);border-color:var(--accent)}
+.tr{display:flex;gap:5px;flex-wrap:wrap}
+.tb{padding:4px 12px;border:1px solid #e0e0d8;border-radius:16px;background:none;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;color:#9C9A92;transition:all .15s}
+.tb:hover{color:#1C1C1A;border-color:#1C1C1A}
+.tb.sel{color:#1C1C1A;font-weight:400;background:#F5F0E8;border-color:#8B6F47}
 
-.urgency-row{display:flex;gap:5px}
-.urg-btn{padding:4px 12px;border:1px solid var(--border);border-radius:4px;background:none;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;color:var(--muted);transition:all .15s}
-.urg-btn:hover{border-color:var(--ink);color:var(--ink)}
-.urg-btn.sel-一般{background:var(--green-bg);color:var(--green);border-color:var(--green-border)}
-.urg-btn.sel-緊急{background:var(--yellow-bg);color:var(--yellow);border-color:#fde68a}
-.urg-btn.sel-嚴重{background:var(--red-bg);color:var(--red);border-color:#fecaca}
+.ur{display:flex;gap:5px}
+.ub2{padding:4px 12px;border:1px solid #e0e0d8;border-radius:4px;background:none;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;color:#9C9A92;transition:all .15s}
+.ub2:hover{border-color:#1C1C1A;color:#1C1C1A}
+.ub2.s1{background:#eef5f1;color:#4a7c59;border-color:#c8ddd0}
+.ub2.s2{background:#fffbeb;color:#92400e;border-color:#fde68a}
+.ub2.s3{background:#fef2f2;color:#991b1b;border-color:#fecaca}
 
-.submit-btn{width:100%;padding:11px;background:var(--ink);color:var(--bg);border:none;border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;cursor:pointer;transition:opacity .15s;margin-top:4px}
-.submit-btn:hover{opacity:.8}
-.submit-btn:disabled{opacity:.4;cursor:not-allowed}
+.sbtn{width:100%;padding:11px;background:#1C1C1A;color:#FAFAF7;border:none;border-radius:5px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;cursor:pointer;margin-top:4px}
+.sbtn:hover{opacity:.85}
+.sbtn:disabled{opacity:.4;cursor:not-allowed}
 
-.history-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
-.refresh-btn{padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:none;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;color:var(--muted)}
-.refresh-btn:hover{color:var(--ink);border-color:var(--ink)}
+/* HISTORY */
+.hist-t{font-family:'DM Mono',monospace;font-size:11px;color:#9C9A92;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.rbtn{padding:3px 10px;border:1px solid #e0e0d8;border-radius:4px;background:none;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;color:#9C9A92}
+.rbtn:hover{color:#1C1C1A;border-color:#1C1C1A}
 
-.report-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin-bottom:8px;transition:border-color .15s}
-.report-card:hover{border-color:var(--muted)}
-.report-card.rc-done{opacity:.45}
-.report-card.rc-done .rc-content{text-decoration:line-through}
+.rc{background:#fff;border:1px solid #e0e0d8;border-radius:6px;padding:14px 18px;margin-bottom:8px}
+.rc:hover{border-color:#9C9A92}
+.rc.done{opacity:.45}
+.rc.done .rc-c{text-decoration:line-through}
 .rc-top{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
-.rc-tag{display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;font-weight:400;background:var(--cream)}
-.rc-urgency{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px;font-weight:400}
-.rc-urgency.u-一般{background:var(--green-bg);color:var(--green)}
-.rc-urgency.u-緊急{background:var(--yellow-bg);color:var(--yellow)}
-.rc-urgency.u-嚴重{background:var(--red-bg);color:var(--red)}
-.rc-progress{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:#f3f2f0;color:var(--muted);border:1px solid var(--border)}
-.rc-time{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-left:auto}
-.rc-content{font-size:13px;line-height:1.7;font-weight:300;color:var(--ink)}
-.rc-note{font-size:11px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--border2)}
-.rc-done-badge{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.rc-tg{display:inline-block;padding:2px 10px;border-radius:10px;font-size:10px;font-family:'DM Mono',monospace;background:#F5F0E8}
+.rc-urg{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px}
+.rc-urg.u1{background:#eef5f1;color:#4a7c59}
+.rc-urg.u2{background:#fffbeb;color:#92400e}
+.rc-urg.u3{background:#fef2f2;color:#991b1b}
+.rc-pg{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:#f3f2f0;color:#9C9A92;border:1px solid #e0e0d8}
+.rc-tm{font-family:'DM Mono',monospace;font-size:10px;color:#9C9A92;margin-left:auto}
+.rc-c{font-size:13px;line-height:1.7;color:#1C1C1A}
+.rc-n{font-size:11px;color:#5C5C58;margin-top:6px;padding-top:6px;border-top:1px solid #eceae4}
+.rc-db{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:#eef5f1;color:#4a7c59;border:1px solid #c8ddd0}
+.empty{text-align:center;padding:3rem;color:#9C9A92;font-size:13px}
+.loading{text-align:center;padding:2rem;color:#9C9A92;font-size:12px;font-family:'DM Mono',monospace}
 
-.empty-state{text-align:center;padding:3rem;color:var(--muted);font-size:13px}
-.loading{text-align:center;padding:2rem;color:var(--muted);font-size:12px;font-family:'DM Mono',monospace}
-
-.toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
+.toast{position:fixed;bottom:20px;right:20px;background:#1C1C1A;color:#FAFAF7;padding:10px 18px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
 
-@media(max-width:600px){.wrap{padding:16px}header{padding:12px 16px}.form-card{padding:18px}.login-box{padding:28px 24px}}
+@media(max-width:600px){.wrap{padding:16px}header{padding:12px 16px}.card{padding:18px}#loginBox{padding:28px 24px}}
 </style>
 </head>
 <body>
 
-<div class="login-gate" id="loginGate">
-  <div class="login-box">
-    <img class="login-logo" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
-    <div class="login-title">問題回報</div>
-    <input class="login-name" id="loginName" type="text" placeholder="你的名字">
-    <input class="login-input" id="loginPwd" type="password" placeholder="密碼">
-    <button class="login-btn" onclick="tryLogin()">進入</button>
-    <div class="login-error" id="loginError">密碼錯誤</div>
+<!-- LOGIN -->
+<div id="loginGate">
+  <div id="loginBox">
+    <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
+    <div class="lt">問題回報</div>
+    <input type="text" id="inName" placeholder="你的名字">
+    <input type="password" id="inPwd" placeholder="密碼">
+    <button onclick="tryLogin()">進入</button>
+    <div id="loginErr"></div>
   </div>
 </div>
 
-<div class="app" id="app">
+<!-- APP -->
+<div id="app">
 <header>
-  <img class="logo" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
-  <span class="header-title">問題回報</span>
-  <div class="spacer"></div>
-  <span class="user-badge" id="userBadge"></span>
+  <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
+  <span class="ht">問題回報</span>
+  <div class="sp"></div>
+  <span class="ub" id="dispUser"></span>
 </header>
 <div class="wrap">
-  <div class="form-card">
-    <div class="form-title">提交回報</div>
-    <div class="field">
+
+  <div class="card">
+    <div class="card-t">提交回報</div>
+    <div class="fld">
       <label>發生了什麼事</label>
-      <textarea id="reportContent" placeholder="描述問題或建議，越具體越好（時間、客戶反應、截圖描述…）"></textarea>
+      <textarea id="txContent" placeholder="描述問題或建議，越具體越好（時間、客戶反應、截圖描述…）"></textarea>
     </div>
-    <div class="field">
+    <div class="fld">
       <label>分類</label>
-      <div class="tags-row" id="tagRow">
-        <button class="tag-btn" data-v="客訴" onclick="pickTag(this)">客訴</button>
-        <button class="tag-btn" data-v="Bug" onclick="pickTag(this)">Bug</button>
-        <button class="tag-btn" data-v="異常" onclick="pickTag(this)">異常</button>
-        <button class="tag-btn" data-v="建議" onclick="pickTag(this)">建議</button>
-        <button class="tag-btn" data-v="系統" onclick="pickTag(this)">系統</button>
-        <button class="tag-btn" data-v="管理" onclick="pickTag(this)">管理</button>
-        <button class="tag-btn" data-v="其他" onclick="pickTag(this)">其他</button>
+      <div class="tr" id="tagRow">
+        <button class="tb" onclick="pickTag(this)" data-v="客訴">客訴</button>
+        <button class="tb" onclick="pickTag(this)" data-v="Bug">Bug</button>
+        <button class="tb" onclick="pickTag(this)" data-v="異常">異常</button>
+        <button class="tb" onclick="pickTag(this)" data-v="建議">建議</button>
+        <button class="tb" onclick="pickTag(this)" data-v="系統">系統</button>
+        <button class="tb" onclick="pickTag(this)" data-v="管理">管理</button>
+        <button class="tb" onclick="pickTag(this)" data-v="其他">其他</button>
       </div>
     </div>
-    <div class="field">
+    <div class="fld">
       <label>緊急程度</label>
-      <div class="urgency-row" id="urgRow">
-        <button class="urg-btn sel-一般" data-v="一般" onclick="pickUrg(this)">一般</button>
-        <button class="urg-btn" data-v="緊急" onclick="pickUrg(this)">緊急</button>
-        <button class="urg-btn" data-v="嚴重" onclick="pickUrg(this)">嚴重</button>
+      <div class="ur" id="urgRow">
+        <button class="ub2 s1" onclick="pickUrg(this)" data-v="一般">一般</button>
+        <button class="ub2" onclick="pickUrg(this)" data-v="緊急">緊急</button>
+        <button class="ub2" onclick="pickUrg(this)" data-v="嚴重">嚴重</button>
       </div>
     </div>
-    <button class="submit-btn" id="submitBtn" onclick="submitReport()">提交回報</button>
+    <button class="sbtn" id="btnSubmit" onclick="doSubmit()">提交回報</button>
   </div>
 
-  <div class="history-title">
+  <div class="hist-t">
     <span>我的回報紀錄</span>
-    <button class="refresh-btn" onclick="loadHistory()">↻ 刷新</button>
+    <button class="rbtn" onclick="loadHist()">↻ 刷新</button>
   </div>
-  <div id="historyList"><div class="loading">載入中…</div></div>
+  <div id="histList"><div class="loading">載入中…</div></div>
+
 </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-var SHEET_URL='https://script.google.com/macros/s/AKfycbzlTybCQBorZs69xviklAf6UfLbnOoEy_f3UHB_EjNq078wFDBNAVw32u9WGxHutY_4/exec';
-var PASSWORD='28447208';
-var currentUser='';
-var selectedTag='';
-var selectedUrg='一般';
+var SU='https://script.google.com/macros/s/AKfycbzlTybCQBorZs69xviklAf6UfLbnOoEy_f3UHB_EjNq078wFDBNAVw32u9WGxHutY_4/exec';
+var PW='28447208';
+var user='';
+var selTag='';
+var selUrg='一般';
 
+/* LOGIN */
 function tryLogin(){
-  var name=document.getElementById('loginName').value.trim();
-  var pwd=document.getElementById('loginPwd').value.trim();
-  if(!name){document.getElementById('loginError').textContent='請輸入名字';document.getElementById('loginError').style.display='block';return}
-  if(pwd!==PASSWORD){document.getElementById('loginError').textContent='密碼錯誤';document.getElementById('loginError').style.display='block';return}
-  currentUser=name;sessionStorage.setItem('report_user',name);enterApp();
+  var n=document.getElementById('inName').value.trim();
+  var p=document.getElementById('inPwd').value.trim();
+  var err=document.getElementById('loginErr');
+  if(!n){err.textContent='請輸入名字';err.style.display='block';return}
+  if(p!==PW){err.textContent='密碼錯誤';err.style.display='block';return}
+  user=n;
+  try{sessionStorage.setItem('rpt_user',n)}catch(e){}
+  go();
 }
-function enterApp(){
+function go(){
   document.getElementById('loginGate').style.display='none';
-  document.getElementById('app').style.display='';
-  document.getElementById('userBadge').textContent=currentUser;
-  loadHistory();
+  document.getElementById('app').style.display='block';
+  document.getElementById('dispUser').textContent=user;
+  loadHist();
 }
-(function(){var s=sessionStorage.getItem('report_user');if(s){currentUser=s;enterApp()}})();
-document.getElementById('loginPwd').addEventListener('keydown',function(e){if(e.key==='Enter')tryLogin()});
-document.getElementById('loginName').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginPwd').focus()});
+/* auto-login */
+try{var sv=sessionStorage.getItem('rpt_user');if(sv){user=sv;go()}}catch(e){}
+/* enter keys */
+document.getElementById('inPwd').onkeydown=function(e){if(e.key==='Enter')tryLogin()};
+document.getElementById('inName').onkeydown=function(e){if(e.key==='Enter')document.getElementById('inPwd').focus()};
 
-function pickTag(btn){
-  document.querySelectorAll('#tagRow .tag-btn').forEach(function(b){b.classList.remove('sel')});
-  btn.classList.add('sel');selectedTag=btn.dataset.v;
+/* TAG */
+function pickTag(b){
+  document.querySelectorAll('#tagRow .tb').forEach(function(x){x.classList.remove('sel')});
+  b.classList.add('sel');selTag=b.dataset.v;
 }
-function pickUrg(btn){
-  document.querySelectorAll('#urgRow .urg-btn').forEach(function(b){b.className='urg-btn'});
-  selectedUrg=btn.dataset.v;btn.classList.add('sel-'+selectedUrg);
+
+/* URGENCY */
+function pickUrg(b){
+  document.querySelectorAll('#urgRow .ub2').forEach(function(x){x.className='ub2'});
+  selUrg=b.dataset.v;
+  b.classList.add(selUrg==='一般'?'s1':selUrg==='緊急'?'s2':'s3');
 }
 
-function submitReport(){
-  var content=document.getElementById('reportContent').value.trim();
-  if(!content){showToast('請描述問題');return}
-  if(!selectedTag){showToast('請選擇分類');return}
-  var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='提交中…';
-  var now=new Date();
-  var ts=now.getFullYear().toString().slice(2)+'/'+String(now.getMonth()+1).padStart(2,'0')+'/'+String(now.getDate()).padStart(2,'0');
+/* SUBMIT */
+function doSubmit(){
+  var c=document.getElementById('txContent').value.trim();
+  if(!c){showT('請描述問題');return}
+  if(!selTag){showT('請選擇分類');return}
+  var btn=document.getElementById('btnSubmit');
+  btn.disabled=true;btn.textContent='提交中…';
+  var d=new Date();
+  var ts=String(d.getFullYear()).slice(2)+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0');
 
-  fetch(SHEET_URL,{
+  fetch(SU,{
     method:'POST',mode:'no-cors',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
       sheet:'task-reports',
-      時間:ts,
-      回報人:currentUser,
-      分類:selectedTag,
-      緊急程度:selectedUrg,
-      內容:content,
-      關聯任務:'',
-      進度:'待處理'
+      '時間':ts,
+      '回報人':user,
+      '分類':selTag,
+      '緊急程度':selUrg,
+      '內容':c,
+      '關聯任務':'',
+      '進度':'待處理'
     })
   }).then(function(){
-    showToast('✓ 已提交');
-    document.getElementById('reportContent').value='';
-    document.querySelectorAll('#tagRow .tag-btn').forEach(function(b){b.classList.remove('sel')});
-    selectedTag='';selectedUrg='一般';
-    document.querySelectorAll('#urgRow .urg-btn').forEach(function(b){b.className='urg-btn'});
-    document.querySelector('#urgRow .urg-btn[data-v="一般"]').classList.add('sel-一般');
-    setTimeout(function(){loadHistory()},1500);
-  }).catch(function(){showToast('提交失敗，請重試')});
+    showT('✓ 已提交');
+    document.getElementById('txContent').value='';
+    document.querySelectorAll('#tagRow .tb').forEach(function(x){x.classList.remove('sel')});
+    selTag='';selUrg='一般';
+    document.querySelectorAll('#urgRow .ub2').forEach(function(x){x.className='ub2'});
+    document.querySelector('#urgRow .ub2[data-v="一般"]').classList.add('s1');
+    setTimeout(loadHist,1500);
+  }).catch(function(){showT('提交失敗')});
 
   btn.disabled=false;btn.textContent='提交回報';
 }
 
-function loadHistory(){
-  var c=document.getElementById('historyList');c.innerHTML='<div class="loading">載入中…</div>';
-  fetch(SHEET_URL+'?sheet=task-reports&t='+Date.now()).then(function(r){return r.json()}).then(function(data){
-    if(!data.success){c.innerHTML='<div class="empty-state">載入失敗</div>';return}
-    var my=data.data.filter(function(i){return i['回報人']&&i['回報人']===currentUser}).reverse();
-    if(!my.length){c.innerHTML='<div class="empty-state">還沒有回報紀錄</div>';return}
-    c.innerHTML=my.map(function(item){
-      var isDone=item['已處理']==='TRUE'||item['已處理']===true;
-      var hasNote=item['備註']&&String(item['備註']).trim();
-      return'<div class="report-card'+(isDone?' rc-done':'')+'"><div class="rc-top"><span class="rc-tag">'+esc(item['分類']||'')+'</span><span class="rc-urgency u-'+(item['緊急程度']||'一般')+'">'+(item['緊急程度']||'一般')+'</span><span class="rc-progress">'+(item['進度']||'待處理')+'</span>'+(isDone?'<span class="rc-done-badge">✓ 已處理</span>':'')+'<span class="rc-time">'+esc(item['時間']||'')+'</span></div><div class="rc-content">'+esc(item['內容']||'')+'</div>'+(hasNote?'<div class="rc-note">回覆：'+esc(item['備註'])+'</div>':'')+'</div>';
-    }).join('');
-  }).catch(function(){c.innerHTML='<div class="empty-state">載入失敗，請重試</div>'});
+/* HISTORY */
+function loadHist(){
+  var el=document.getElementById('histList');
+  el.innerHTML='<div class="loading">載入中…</div>';
+  fetch(SU+'?sheet=task-reports&t='+Date.now())
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(!d.success||!d.data){el.innerHTML='<div class="empty">載入失敗</div>';return}
+      var my=d.data.filter(function(i){return i['回報人']===user}).reverse();
+      if(!my.length){el.innerHTML='<div class="empty">還沒有回報紀錄</div>';return}
+      el.innerHTML=my.map(function(it){
+        var done=it['已處理']==='TRUE'||it['已處理']===true;
+        var hn=it['備註']&&String(it['備註']).trim();
+        var urg=it['緊急程度']||'一般';
+        var uc=urg==='嚴重'?'u3':urg==='緊急'?'u2':'u1';
+        return'<div class="rc'+(done?' done':'')+'"><div class="rc-top">'+
+          '<span class="rc-tg">'+esc(it['分類']||'')+'</span>'+
+          '<span class="rc-urg '+uc+'">'+urg+'</span>'+
+          '<span class="rc-pg">'+(it['進度']||'待處理')+'</span>'+
+          (done?'<span class="rc-db">✓ 已處理</span>':'')+
+          '<span class="rc-tm">'+esc(it['時間']||'')+'</span>'+
+          '</div><div class="rc-c">'+esc(it['內容']||'')+'</div>'+
+          (hn?'<div class="rc-n">回覆：'+esc(it['備註'])+'</div>':'')+
+          '</div>';
+      }).join('');
+    })
+    .catch(function(){el.innerHTML='<div class="empty">載入失敗，請重試</div>'});
 }
 
 function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'):''}
-function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2400)}
+function showT(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2400)}
 </script>
 </body>
 </html>
