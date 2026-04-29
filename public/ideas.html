@@ -604,6 +604,17 @@ document.getElementById('newProgs').addEventListener('click', e => {
 async function submitIdea() {
   const content = document.getElementById('newContent').value.trim();
   if (!content) { showToast('請輸入靈感內容'); return; }
+
+  // Auto-detect batch format → redirect to batch mode
+  if (/【靈感\s*\d+】/.test(content)) {
+    if (!isBatchMode) toggleBatchMode();
+    document.getElementById('batchContent').value = content;
+    document.getElementById('newContent').value = '';
+    parseBatch();
+    showToast('偵測到批次格式，已自動解析');
+    return;
+  }
+
   if (!newTag) { showToast('請選擇 Tag'); return; }
 
   const btn = document.getElementById('submitBtn');
@@ -654,30 +665,34 @@ function parseBatch() {
   const raw = document.getElementById('batchContent').value.trim();
   if (!raw) { showToast('請貼上靈感文字'); return; }
 
-  // Split by【靈感 N】or【靈感N】or numbered patterns
-  const blocks = raw.split(/【靈感\s*\d+】/).filter(b => b.trim());
+  // Split by【靈感 N】or【靈感N】— keep the delimiter out
+  const parts = raw.split(/【靈感\s*\d+】/).filter(b => b.trim());
 
-  batchItems = blocks.map(block => {
+  batchItems = parts.map(block => {
     const lines = block.trim().split('\n').map(l => l.trim()).filter(Boolean);
     const item = { 內容: '', tag: '', 進度: '想法' };
+    const contentLines = [];
 
     for (const line of lines) {
-      if (/^內容[：:]/.test(line)) {
-        item.內容 = line.replace(/^內容[：:]\s*/, '');
-      } else if (/^Tag[：:]/.test(line)) {
-        item.tag = line.replace(/^Tag[：:]\s*/, '');
-      } else if (/^tag[：:]/.test(line)) {
-        item.tag = line.replace(/^tag[：:]\s*/, '');
-      } else if (/^進度[：:]/.test(line)) {
-        item.進度 = line.replace(/^進度[：:]\s*/, '');
-      } else if (!item.內容) {
-        // First non-labeled line = content
-        item.內容 = line;
-      } else {
-        // Append continuation lines to content
-        item.內容 += line;
+      // Match Tag：xxx or tag：xxx
+      if (/^[Tt]ag[：:]\s*/.test(line)) {
+        item.tag = line.replace(/^[Tt]ag[：:]\s*/, '').trim();
+      }
+      // Match 進度：xxx
+      else if (/^進度[：:]\s*/.test(line)) {
+        item.進度 = line.replace(/^進度[：:]\s*/, '').trim();
+      }
+      // Match 內容：xxx — strip the prefix and treat as content
+      else if (/^內容[：:]\s*/.test(line)) {
+        contentLines.push(line.replace(/^內容[：:]\s*/, '').trim());
+      }
+      // Everything else is continuation of content
+      else {
+        contentLines.push(line);
       }
     }
+
+    item.內容 = contentLines.join('');
 
     // Validate tag
     if (!TAGS.includes(item.tag)) item.tag = '';
