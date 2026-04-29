@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnamoR 全任務追蹤</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{--charcoal:#1C1C1A;--warm-white:#FAFAF7;--cream:#F5F0E8;--accent:#8B6F47;--accent-light:#C4A882;--mid:#5C5C58;--light:#9C9A92;--border:rgba(28,28,26,.08);--red:#C2553A;--yellow:#B8963E;--orange:#B57340;--blue:#4A7B8C;--green:#5A8A5E;--grey-tag:#8A8A86}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--warm-white);color:var(--charcoal);font-family:'Noto Sans TC',sans-serif;font-weight:300;line-height:1.7;-webkit-font-smoothing:antialiased}
+.page{max-width:960px;margin:0 auto;padding:48px 24px 120px}
+.header{text-align:center;margin-bottom:48px}
+.logo{height:28px;opacity:.85;margin-bottom:20px}
+.header h1{font-family:'Playfair Display',serif;font-weight:400;font-size:15px;letter-spacing:.25em;color:var(--mid);text-transform:uppercase}
+.header .date{font-size:11px;color:var(--light);letter-spacing:.1em;margin-top:6px}
+.stats-bar{display:flex;justify-content:center;gap:32px;margin-bottom:40px;padding:20px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.stat{text-align:center}
+.stat-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;color:var(--charcoal);line-height:1.2}
+.stat-label{font-size:10px;letter-spacing:.15em;color:var(--light);text-transform:uppercase;margin-top:2px}
+.filter-row{display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+.filter-label{font-size:10px;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;min-width:36px;padding-top:2px}
+.filter-btn{font-family:'Noto Sans TC',sans-serif;font-size:12px;font-weight:400;letter-spacing:.05em;color:var(--mid);background:transparent;border:1px solid var(--border);padding:5px 14px;cursor:pointer;transition:all .2s}
+.filter-btn:hover{border-color:var(--accent-light);color:var(--charcoal)}
+.filter-btn.active{background:var(--charcoal);color:var(--warm-white);border-color:var(--charcoal)}
+.filters{margin-bottom:36px}
+.section{margin-bottom:40px}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.section-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.section-title{font-size:11px;letter-spacing:.25em;text-transform:uppercase;color:var(--mid);font-weight:500}
+.section-count{font-size:11px;color:var(--light);margin-left:auto}
+.task-list{display:flex;flex-direction:column;gap:1px;background:var(--border);border:1px solid var(--border)}
+.task{display:grid;grid-template-columns:32px 36px 1fr auto;gap:8px;align-items:start;padding:14px 16px;background:var(--warm-white);transition:background .15s}
+.task:hover{background:#F7F5F0}
+.task.is-done{opacity:.4}
+.task.is-done .task-title{text-decoration:line-through}
+.task-check{width:18px;height:18px;margin-top:2px;border:1.5px solid var(--light);border-radius:3px;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;padding:0;font-size:0}
+.task-check:hover{border-color:var(--green)}
+.task-check.checked{background:var(--green);border-color:var(--green)}
+.task-check.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:500}
+.task-num{font-family:'Playfair Display',serif;font-size:14px;color:var(--accent-light);padding-top:1px}
+.task-body{min-width:0}
+.task-title{font-size:13px;font-weight:400;color:var(--charcoal);line-height:1.5}
+.task-desc{font-size:12px;color:var(--light);line-height:1.6;margin-top:2px}
+.task-meta{display:flex;gap:6px;align-items:center;flex-shrink:0;padding-top:2px}
+.tag{font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border:1px solid;white-space:nowrap}
+.tag-waiting{color:var(--yellow);border-color:rgba(184,150,62,.3);background:rgba(184,150,62,.05)}
+.tag-doing{color:var(--blue);border-color:rgba(74,123,140,.3);background:rgba(74,123,140,.05)}
+.tag-blocked{color:var(--orange);border-color:rgba(181,115,64,.3);background:rgba(181,115,64,.05)}
+.tag-done{color:var(--green);border-color:rgba(90,138,94,.3);background:rgba(90,138,94,.05)}
+.tag-idea{color:var(--grey-tag);border-color:rgba(138,138,134,.3);background:rgba(138,138,134,.05)}
+.cat-tag{font-size:9px;letter-spacing:.1em;color:var(--accent);background:rgba(139,111,71,.06);border:1px solid rgba(139,111,71,.15);padding:2px 7px;white-space:nowrap}
+
+/* Reports */
+.reports-divider{display:flex;align-items:center;gap:16px;margin:56px 0 24px}
+.reports-divider::before,.reports-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.reports-divider-text{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.3em;color:var(--accent);text-transform:uppercase;white-space:nowrap}
+.reports-toolbar{display:flex;justify-content:flex-end;margin-bottom:12px}
+.reports-refresh{font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--light)}
+.reports-refresh:hover{color:var(--charcoal);border-color:var(--charcoal)}
+.report-card{background:var(--warm-white);border:1px solid var(--border);padding:14px 16px;margin-bottom:6px;transition:all .15s}
+.report-card:hover{border-color:rgba(28,28,26,.15)}
+.report-card.rp-done{opacity:.35}
+.report-card.rp-done .rp-content{text-decoration:line-through}
+.rp-top{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.rp-tag{font-size:9px;letter-spacing:.1em;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace}
+.rp-tag-客訴{background:#f0dede}.rp-tag-Bug{background:#dedef0}.rp-tag-異常{background:#f0e8de}.rp-tag-建議{background:#def0f0}.rp-tag-系統{background:#def0e4}.rp-tag-管理{background:#e8dfd0}.rp-tag-品牌{background:#f0dede}.rp-tag-其他{background:#e8e8e0}
+.rp-urgency{font-size:9px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:3px}
+.rp-urg-一般{background:rgba(90,138,94,.1);color:var(--green)}
+.rp-urg-緊急{background:rgba(184,150,62,.1);color:var(--yellow)}
+.rp-urg-嚴重{background:rgba(194,85,58,.1);color:var(--red)}
+.rp-who{font-size:10px;color:var(--mid);font-family:'DM Mono',monospace}
+.rp-time{font-size:10px;color:var(--light);font-family:'DM Mono',monospace;margin-left:auto}
+.rp-content{font-size:13px;line-height:1.7;color:var(--charcoal)}
+.rp-task-link{font-size:11px;color:var(--accent);margin-top:4px}
+.rp-note{font-size:11px;color:var(--mid);margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.rp-actions{display:flex;gap:6px;margin-top:8px}
+.rp-btn{font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--mid);transition:all .15s}
+.rp-btn:hover{border-color:var(--charcoal);color:var(--charcoal)}
+.rp-btn.is-done{background:var(--green);color:#fff;border-color:var(--green)}
+.rp-note-input{width:100%;margin-top:6px;padding:6px 8px;border:1px solid var(--border);background:var(--cream);font-family:'Noto Sans TC',sans-serif;font-size:12px;font-weight:300;color:var(--charcoal);resize:none;display:none}
+.rp-note-input:focus{outline:none;border-color:var(--accent)}
+.reports-loading,.reports-empty{text-align:center;padding:32px;font-size:12px;color:var(--light);font-family:'DM Mono',monospace}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--charcoal);color:var(--warm-white);padding:10px 18px;border-radius:6px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:640px){.page{padding:32px 16px 80px}.stats-bar{gap:16px;flex-wrap:wrap}.stat-num{font-size:22px}.task{grid-template-columns:28px 28px 1fr;gap:6px;padding:12px}.task-meta{grid-column:3;margin-top:4px}.filter-row{gap:6px}.filter-btn{padding:4px 10px;font-size:11px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <img class="logo" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR">
+    <h1>全任務追蹤</h1>
+    <div class="date">updated 2026 / 04 / 29</div>
+  </div>
+  <div class="stats-bar" id="statsBar"></div>
+  <div class="filters">
+    <div class="filter-row"><span class="filter-label">分類</span><div id="catFilters"></div></div>
+    <div class="filter-row" style="margin-top:8px"><span class="filter-label">狀態</span><div id="statusFilters"></div></div>
+  </div>
+  <div id="taskContainer"></div>
+  <div class="reports-divider"><span class="reports-divider-text">員工回報</span></div>
+  <div class="reports-toolbar"><button class="reports-refresh" onclick="loadReports()">↻ 刷新</button></div>
+  <div id="reportsContainer"><div class="reports-loading">載入中…</div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var SHEET_URL='https://script.google.com/macros/s/AKfycbzlTybCQBorZs69xviklAf6UfLbnOoEy_f3UHB_EjNq078wFDBNAVw32u9WGxHutY_4/exec';
+
+var TASKS=[
+{id:1,section:'urgent',title:'Meta 受眾 CSV',desc:'三個檔案丟 happycapy 跑，產 3 組 CSV 上傳 Meta 建 LAL',status:'doing',cat:'廣告'},
+{id:2,section:'urgent',title:'第二梯廣告素材視覺配置',desc:'讚嘆文 6 支（H1×3 + H4×3），評論庫 18 則已產，待填視覺',status:'waiting',cat:'廣告'},
+{id:3,section:'urgent',title:'Klaviyo webhook 端對端測試',desc:'代操商完成 Flow webhook 設定後，測 LINE notify 全流程',status:'blocked',cat:'自動化'},
+{id:4,section:'urgent',title:'Footer About 連結',desc:'被 auth error 中斷',status:'waiting',cat:'前端'},
+{id:5,section:'short',title:'AI 客服 sessionStorage',desc:'離開 widget 再回來對話不歸零',status:'waiting',cat:'客服'},
+{id:6,section:'short',title:'AI 客服品牌 Logo',desc:'聊天頭像換 EnamoR Logo',status:'waiting',cat:'客服'},
+{id:7,section:'short',title:'AI 客服命名',desc:'幫客服 AI 取品牌名字（目前叫茉兒）',status:'waiting',cat:'客服'},
+{id:8,section:'short',title:'LINE OA 連結設定',desc:'正確的 oaMessage Basic ID',status:'blocked',cat:'LINE'},
+{id:9,section:'short',title:'LINE channel Admin 權限',desc:'聯絡漸強取回',status:'blocked',cat:'LINE'},
+{id:10,section:'short',title:'花色 swatch 圖片補齊',desc:'11 個花色需手動上傳，7 完成，剩 4 個',status:'waiting',cat:'前端'},
+{id:11,section:'short',title:'日投 6 萬目標',desc:'時程 5/5，LAL 基礎已就位',status:'doing',cat:'廣告'},
+{id:12,section:'mid',title:'AI 客服訂單查詢',desc:'串接 Shopify API 查真實訂單',status:'waiting',cat:'客服'},
+{id:13,section:'mid',title:'Google Sheet FAQ',desc:'FAQ 搬到 Sheet，動態載入',status:'waiting',cat:'客服'},
+{id:14,section:'mid',title:'行銷活動注入',desc:'促銷檔期自動更新 AI 知識',status:'waiting',cat:'客服'},
+{id:15,section:'mid',title:'LINE Bot 完整版部署',desc:'漸強權限解決後部署',status:'blocked',cat:'LINE'},
+{id:16,section:'mid',title:'LIFF 綁定',desc:'LINE ID ↔ email 對照表',status:'waiting',cat:'LINE'},
+{id:17,section:'mid',title:'Ad creative 自動化 Phase 2',desc:'Shopify Flow → Vercel → Sheet → LINE push',status:'idea',cat:'自動化'},
+{id:18,section:'mid',title:'Segmented LINE push',desc:'click-tracking → Shopify tags → targeted broadcasts',status:'idea',cat:'LINE'},
+{id:19,section:'mid',title:'AI Sizer 恢復',desc:'JS API version mismatch，需 Admin API PUT 注入',status:'waiting',cat:'前端'},
+{id:20,section:'mid',title:'UpCart 替換自製 cart drawer',desc:'UpCart bug + 歐規小數 + 閾值不穩，估 6-8h',status:'waiting',cat:'前端'},
+{id:21,section:'may',title:'母親節檔 5/1-5/11',desc:'滿 999 送 EnTry99 三件組（尺寸自選）',status:'waiting',cat:'行銷'},
+{id:22,section:'may',title:'漲價倒數 5/12-5/31',desc:'「6/1 調漲前最後現價」收尾',status:'waiting',cat:'行銷'},
+{id:23,section:'may',title:'LINE PUSH 3 波',desc:'母親節 + 漲價倒數 + 最後 48 小時',status:'waiting',cat:'LINE'},
+{id:24,section:'may',title:'5 月文案',desc:'「這次換你被照顧」角度，待素材',status:'waiting',cat:'行銷'},
+{id:25,section:'infra',title:'Smart Shopping Mode',desc:'體型資料存 Customer tags，AISizer + Claude API 備援',status:'waiting',cat:'前端'},
+{id:26,section:'infra',title:'OMS Proxy API',desc:'BI 系統基礎，所有模組依賴',status:'waiting',cat:'BI'},
+{id:27,section:'infra',title:'採購系統',desc:'庫存查詢→週銷量→動態再訂購點→採購建議',status:'waiting',cat:'BI'},
+{id:28,section:'infra',title:'Looker Studio dashboard',desc:'整合五個日看指標',status:'waiting',cat:'BI'},
+{id:29,section:'infra',title:'ROAS 日報 Skill',desc:'Hermes → Gmail + Telegram',status:'waiting',cat:'BI'},
+{id:30,section:'infra',title:'WMS 串接',desc:'預購訂單路由到 pending queue',status:'waiting',cat:'自動化'},
+{id:31,section:'infra',title:'Shopify Plus 升級評估',desc:'Price Lists、checkout 客製、會員系統依此',status:'idea',cat:'BI'},
+{id:32,section:'infra',title:'員工 Admin UI Extension',desc:'預購層級下拉 + 色票介面',status:'waiting',cat:'前端'},
+{id:33,section:'seo',title:'產品頁 Title / Description',desc:'',status:'doing',cat:'SEO'},
+{id:34,section:'seo',title:'圖片 Alt Text',desc:'',status:'doing',cat:'SEO'},
+{id:35,section:'seo',title:'Schema Markup（Product）',desc:'',status:'doing',cat:'SEO'},
+{id:36,section:'seo',title:'ZERO-TEX FAQ schema（JSON-LD）',desc:'GEO 用',status:'waiting',cat:'SEO'},
+{id:37,section:'seo',title:'Google Merchant Center',desc:'',status:'waiting',cat:'SEO'},
+{id:38,section:'seo',title:'Blog 第一篇 + 第二篇',desc:'',status:'waiting',cat:'SEO'},
+{id:39,section:'seo',title:'FAQ 頁面 + FAQ Schema',desc:'',status:'waiting',cat:'SEO'},
+{id:40,section:'seo',title:'Collection 頁說明文字',desc:'',status:'waiting',cat:'SEO'},
+{id:41,section:'seo',title:'Pinterest 品牌帳號',desc:'',status:'waiting',cat:'SEO'},
+{id:42,section:'seo',title:'AI Search 自我測試',desc:'',status:'waiting',cat:'SEO'}
+];
+
+var SECTIONS=[
+{key:'urgent',label:'本週 / 急迫',color:'var(--red)'},
+{key:'short',label:'短期 1-2 週',color:'var(--yellow)'},
+{key:'mid',label:'中期 2-4 週',color:'var(--orange)'},
+{key:'may',label:'5 月行銷',color:'var(--blue)'},
+{key:'infra',label:'基礎建設',color:'var(--mid)'},
+{key:'seo',label:'SEO / GEO',color:'var(--green)'}
+];
+
+var STATUS_MAP={
+doing:{label:'進行中',cls:'tag-doing'},
+waiting:{label:'待開始',cls:'tag-waiting'},
+blocked:{label:'等待中',cls:'tag-blocked'},
+done:{label:'完成',cls:'tag-done'},
+idea:{label:'規劃中',cls:'tag-idea'}
+};
+
+var filterCat='全部',filterStatus='全部';
+var SK='enamor_task_checked';
+function getC(){try{return JSON.parse(localStorage.getItem(SK)||'{}')}catch(e){return{}}}
+function setC(id,v){var c=getC();if(v)c[id]=true;else delete c[id];localStorage.setItem(SK,JSON.stringify(c))}
+function isC(id){return!!getC()[id]}
+function toggleCheck(id){setC(id,!isC(id));render()}
+
+function render(){
+  var container=document.getElementById('taskContainer');container.innerHTML='';
+  var checked=getC();
+  var filtered=TASKS.filter(function(t){
+    if(filterCat!=='全部'&&t.cat!==filterCat)return false;
+    if(filterStatus==='全部')return true;
+    if(filterStatus==='done')return!!checked[t.id];
+    return t.status===filterStatus&&!checked[t.id];
+  });
+  var total=TASKS.length;
+  var doneN=TASKS.filter(function(t){return checked[t.id]}).length;
+  var doingN=TASKS.filter(function(t){return!checked[t.id]&&t.status==='doing'}).length;
+  var blockN=TASKS.filter(function(t){return!checked[t.id]&&t.status==='blocked'}).length;
+  var waitN=total-doneN-doingN-blockN;
+  document.getElementById('statsBar').innerHTML=
+    '<div class="stat"><div class="stat-num">'+total+'</div><div class="stat-label">Total</div></div>'+
+    '<div class="stat"><div class="stat-num">'+doneN+'</div><div class="stat-label">完成</div></div>'+
+    '<div class="stat"><div class="stat-num">'+doingN+'</div><div class="stat-label">進行中</div></div>'+
+    '<div class="stat"><div class="stat-num">'+blockN+'</div><div class="stat-label">等待中</div></div>'+
+    '<div class="stat"><div class="stat-num">'+waitN+'</div><div class="stat-label">待開始</div></div>';
+  SECTIONS.forEach(function(sec){
+    var tasks=filtered.filter(function(t){return t.section===sec.key});
+    if(!tasks.length)return;
+    var div=document.createElement('div');div.className='section';
+    div.innerHTML='<div class="section-header"><div class="section-dot" style="background:'+sec.color+'"></div><div class="section-title">'+sec.label+'</div><div class="section-count">'+tasks.length+'</div></div><div class="task-list">'+tasks.map(function(t){
+      var isDone=!!checked[t.id];var s=STATUS_MAP[isDone?'done':t.status];
+      return'<div class="task '+(isDone?'is-done':'')+'"><button class="task-check '+(isDone?'checked':'')+'" onclick="toggleCheck('+t.id+')"></button><div class="task-num">'+String(t.id).padStart(2,'0')+'</div><div class="task-body"><div class="task-title">'+t.title+'</div>'+(t.desc?'<div class="task-desc">'+t.desc+'</div>':'')+'</div><div class="task-meta"><span class="cat-tag">'+t.cat+'</span><span class="tag '+s.cls+'">'+s.label+'</span></div></div>';
+    }).join('')+'</div>';
+    container.appendChild(div);
+  });
+  if(!filtered.length)container.innerHTML='<div style="text-align:center;color:var(--light);padding:60px 0;font-size:13px">沒有符合條件的任務</div>';
+}
+
+function buildFilters(){
+  var cats=['全部'],seen={};TASKS.forEach(function(t){if(!seen[t.cat]){seen[t.cat]=true;cats.push(t.cat)}});
+  var sts=[{key:'全部',label:'全部'},{key:'doing',label:'進行中'},{key:'waiting',label:'待開始'},{key:'blocked',label:'等待中'},{key:'idea',label:'規劃中'},{key:'done',label:'完成'}];
+  var cd=document.getElementById('catFilters'),sd=document.getElementById('statusFilters');cd.innerHTML='';sd.innerHTML='';
+  cats.forEach(function(c){var b=document.createElement('button');b.className='filter-btn'+(c===filterCat?' active':'');b.textContent=c;b.onclick=function(){filterCat=c;buildFilters();render()};cd.appendChild(b)});
+  sts.forEach(function(s){var b=document.createElement('button');b.className='filter-btn'+(s.key===filterStatus?' active':'');b.textContent=s.label;b.onclick=function(){filterStatus=s.key;buildFilters();render()};sd.appendChild(b)});
+}
+
+// ===== EMPLOYEE REPORTS =====
+var reportsData=[];
+function loadReports(){
+  var c=document.getElementById('reportsContainer');c.innerHTML='<div class="reports-loading">載入中…</div>';
+  fetch(SHEET_URL+'?sheet=task-reports&t='+Date.now()).then(function(r){return r.json()}).then(function(d){
+    if(!d.success){c.innerHTML='<div class="reports-empty">載入失敗</div>';return}
+    reportsData=d.data||[];renderReports();
+  }).catch(function(){c.innerHTML='<div class="reports-empty">載入失敗，請重試</div>'});
+}
+function renderReports(){
+  var c=document.getElementById('reportsContainer');
+  if(!reportsData.length){c.innerHTML='<div class="reports-empty">目前沒有員工回報</div>';return}
+  var items=reportsData.slice().reverse();
+  c.innerHTML=items.map(function(item,di){
+    var ri=reportsData.length-di+1;// sheet row (header=1, data starts at 2)
+    var isDone=item['已處理']==='TRUE'||item['已處理']===true;
+    var urg=item['緊急程度']||'一般';
+    var hasNote=item['備註']&&String(item['備註']).trim();
+    return'<div class="report-card'+(isDone?' rp-done':'')+'" data-row="'+ri+'"><div class="rp-top"><span class="rp-tag rp-tag-'+(item['分類']||'其他')+'">'+(item['分類']||'其他')+'</span><span class="rp-urgency rp-urg-'+urg+'">'+urg+'</span><span class="rp-who">'+esc(item['回報人']||'')+'</span><span class="rp-time">'+esc(item['時間']||'')+'</span></div><div class="rp-content">'+esc(item['內容']||'')+'</div>'+(item['關聯任務']?'<div class="rp-task-link">關聯：'+esc(item['關聯任務'])+'</div>':'')+(hasNote?'<div class="rp-note">回覆：'+esc(item['備註'])+'</div>':'')+'<div class="rp-actions"><button class="rp-btn'+(isDone?' is-done':'')+'" onclick="toggleRD('+ri+','+(isDone?'false':'true')+')">'+(isDone?'✓ 已處理':'標記完成')+'</button><button class="rp-btn" onclick="showNI(this)">回覆</button></div><textarea class="rp-note-input" placeholder="回覆員工…" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();saveN(this,'+ri+')}"></textarea></div>';
+  }).join('');
+}
+function toggleRD(row,val){
+  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet:'task-reports',action:'update',rowIndex:row,'已處理':val?'TRUE':'FALSE'})});
+  showToast(val?'✓ 已標記完成':'已取消完成');
+  var idx=row-2;if(reportsData[idx])reportsData[idx]['已處理']=val?'TRUE':'FALSE';renderReports();
+}
+function showNI(btn){var ta=btn.closest('.report-card').querySelector('.rp-note-input');ta.style.display=ta.style.display==='block'?'none':'block';if(ta.style.display==='block')ta.focus()}
+function saveN(ta,row){
+  var note=ta.value.trim();if(!note)return;
+  fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({sheet:'task-reports',action:'update',rowIndex:row,'備註':note})});
+  var idx=row-2;if(reportsData[idx])reportsData[idx]['備註']=note;
+  ta.style.display='none';ta.value='';showToast('✓ 已回覆');renderReports();
+}
+function esc(s){return s?String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'):''}
+function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2400)}
+
+buildFilters();render();loadReports();
+</script>
+</body>
+</html>
