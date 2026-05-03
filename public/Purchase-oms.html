@@ -282,16 +282,20 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
 
 // ── 上傳採購確認單 ──
 let poItems=[];// 解析後的待送項目
+let poSheetName='';// 解析到的 sheet 名稱（廠商編號）
+let poFileName='';// 上傳的檔名
 
 function parsePoFile(){
   const fileEl=document.getElementById('poFile');
   if(!fileEl.files.length){toast('請選擇檔案');return}
   if(Object.keys(revMap).length===0){toast('請先拉取數據（需要對照表）');return}
+  poFileName=fileEl.files[0].name;
   const reader=new FileReader();
   reader.onload=function(e){
     try{
       const wb=XLSX.read(e.target.result,{type:'array'});
       poItems=[];
+      poSheetName=wb.SheetNames[0]||'';
       let unmatchCount=0;
       wb.SheetNames.forEach(sn=>{
         const ws=wb.Sheets[sn];
@@ -372,7 +376,10 @@ async function submitToOms(){
   btn.disabled=true;
   st.textContent='送出中...';
 
-  const poNo=`PO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}`;
+  // 採購單號：PO-日期-廠商編號（從 sheet 名稱取）
+  // 同一天同一廠商只會有一個單號 → 重複送會被 OMS 擋住，防止重複下單
+  const vendorCode=poSheetName||poFileName.replace(/.*_/,'').replace(/\.xlsx?$/i,'')||'XX';
+  const poNo=`PO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${vendorCode}`;
 
   const items=matched.map(i=>({
     purchase_no: poNo,
@@ -390,13 +397,17 @@ async function submitToOms(){
     console.log('createPurchase items count:',items.length);
     const res=await oP('/api/v2/default/action/createPurchase',items);
     console.log('createPurchase response:',res);
-    const ok=res.result===true||res.done===true||(typeof res.msg==='string'&&res.msg.includes('成功'));
+    const failMatch=res.msg&&res.msg.match(/失敗筆數\s*(\d+)/);
+    const failCount=failMatch?parseInt(failMatch[1]):null;
+    const ok=(res.done===true&&failCount===0)||(res.result===true);
     if(ok){
-      const m=res.msg||`成功送出 ${matched.length} 筆`;
-      st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ ${m}，採購單號 ${poNo}</span>`;
+      st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ ${res.msg}，採購單號 ${poNo}</span>`;
       toast('✓ 採購單已送出到 OMS');
     }else{
-      st.innerHTML=`<span style="color:var(--red);font-weight:600">✗ OMS 回傳錯誤：${res.msg||JSON.stringify(res)}</span>`;
+      // 嘗試從 retval 取得失敗明細
+      let detail='';
+      if(res.retval){try{detail='<br>'+JSON.stringify(res.retval).substring(0,300)}catch(e){}}
+      st.innerHTML=`<span style="color:var(--red);font-weight:600">✗ ${res.msg||'未知錯誤'}${detail}</span>`;
       toast('送出失敗');
     }
   }catch(err){
