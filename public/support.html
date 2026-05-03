@@ -5,399 +5,399 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EnamoR — 客服中心</title>
 <style>
- @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Noto+Sans+TC:wght@300;400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Noto+Sans+TC:wght@300;400&display=swap');
 
- :root {
- --bg: #FAFAF7;
- --surface: #ffffff;
- --border: #e8e4dc;
- --border2: #d4cfc6;
- --text: #1a1814;
- --text-dim: #5c4a2a;
- --accent: #b08d5b;
- --accent-light: rgba(176,141,91,0.08);
- --err: #c0392b;
- --ok: #2e7d52;
- --display: 'Cormorant Garamond', serif;
- --sans: 'Noto Sans TC', sans-serif;
- }
+  :root {
+    --bg: #FAFAF7;
+    --surface: #ffffff;
+    --border: #e8e4dc;
+    --border2: #d4cfc6;
+    --text: #1a1814;
+    --text-dim: #5c4a2a;
+    --accent: #b08d5b;
+    --accent-light: rgba(176,141,91,0.08);
+    --err: #c0392b;
+    --ok: #2e7d52;
+    --display: 'Cormorant Garamond', serif;
+    --sans: 'Noto Sans TC', sans-serif;
+  }
 
- * { box-sizing: border-box; margin: 0; padding: 0; }
- body { background: var(--bg); color: var(--text); font-family: var(--sans); font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; font-size: 125%; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; font-size: 125%; }
 
- /* ── header ── */
- header { border-bottom: 1px solid var(--border); padding: 20px 24px 16px; text-align: center; flex-shrink: 0; }
- .logo img { height: 28px; }
- .header-sub { font-size: 10px; letter-spacing: 0.25em; color: var(--text-dim); text-transform: uppercase; margin-top: 5px; }
+  /* ── header ── */
+  header { border-bottom: 1px solid var(--border); padding: 20px 24px 16px; text-align: center; flex-shrink: 0; }
+  .logo img { height: 28px; }
+  .header-sub { font-size: 10px; letter-spacing: 0.25em; color: var(--text-dim); text-transform: uppercase; margin-top: 5px; }
 
- /* ── AI 對話區（上半） ── */
- #chat-section {
- flex-shrink: 0;
- border-bottom: 1px solid var(--border);
- display: flex;
- flex-direction: column;
- height: 42vh;
- min-height: 280px;
- max-height: 420px;
- }
+  /* ── AI 對話區（上半） ── */
+  #chat-section {
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    height: 42vh;
+    min-height: 280px;
+    max-height: 420px;
+  }
 
- #chat-messages {
- flex: 1;
- overflow-y: auto;
- padding: 16px 20px;
- display: flex;
- flex-direction: column;
- gap: 10px;
- }
+  #chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
- .msg { max-width: 82%; font-size: 13px; line-height: 1.65; padding: 10px 14px; }
- .msg.ai { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
- .msg.user { align-self: flex-end; background: var(--text); color: var(--bg); }
- .msg.system { align-self: center; background: transparent; font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; }
+  .msg { max-width: 82%; font-size: 13px; line-height: 1.65; padding: 10px 14px; }
+  .msg.ai { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+  .msg.user { align-self: flex-end; background: var(--text); color: var(--bg); }
+  .msg.system { align-self: center; background: transparent; font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; }
 
- .msg.ai .typing { display: inline-block; }
- .msg.ai .typing::after { content: '▋'; animation: blink 0.8s infinite; }
- @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .msg.ai .typing { display: inline-block; }
+  .msg.ai .typing::after { content: '▋'; animation: blink 0.8s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
- #chat-input-row {
- display: flex;
- gap: 0;
- border-top: 1px solid var(--border);
- flex-shrink: 0;
- }
+  #chat-input-row {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
 
- #chat-input {
- flex: 1;
- border: none;
- outline: none;
- padding: 14px 16px;
- font-family: var(--sans);
- font-size: 13px;
- font-weight: 300;
- background: var(--bg);
- color: var(--text);
- resize: none;
- height: 48px;
- line-height: 1.4;
- }
+  #chat-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 14px 16px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 300;
+    background: var(--bg);
+    color: var(--text);
+    resize: none;
+    height: 48px;
+    line-height: 1.4;
+  }
 
- #chat-send {
- width: 56px;
- background: #2196F3;
- color: white;
- border: none;
- font-size: 20px;
- cursor: pointer;
- transition: opacity 0.2s;
- flex-shrink: 0;
- display: flex;
- align-items: center;
- justify-content: center;
- }
- #chat-send::after { content: '➤'; display: block; transform: rotate(-35deg); }
- #chat-send:hover { opacity: 0.7; }
- #chat-send:disabled { opacity: 0.3; cursor: not-allowed; }
+  #chat-send {
+    width: 56px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #chat-send::after { content: '➤'; display: block; transform: rotate(-35deg); }
+  #chat-send:hover { opacity: 0.7; }
+  #chat-send:disabled { opacity: 0.3; cursor: not-allowed; }
 
- /* ── 功能入口（下半） ── */
- #feature-section { flex: 1; overflow-y: auto; }
+  /* ── 功能入口（下半） ── */
+  #feature-section { flex: 1; overflow-y: auto; }
 
- /* ── Tab Bar ── */
- .tab-bar {
- display: flex;
- border-bottom: 1px solid var(--border);
- background: var(--surface);
- position: sticky;
- top: 0;
- z-index: 10;
- }
+  /* ── Tab Bar ── */
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
 
- .tab {
- flex: 1; padding: 14px 6px; text-align: center;
- font-size: 13px; letter-spacing: 0.05em; color: var(--text-dim);
- cursor: pointer; border-bottom: 2px solid transparent;
- transition: all 0.2s; user-select: none;
- }
- .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
- .tab-icon { display: none; }
+  .tab {
+    flex: 1; padding: 14px 6px; text-align: center;
+    font-size: 13px; letter-spacing: 0.05em; color: var(--text-dim);
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.2s; user-select: none;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-icon { display: none; }
 
- main { max-width: 600px; margin: 0 auto; padding: 24px 20px 48px; width: 100%; }
+  main { max-width: 600px; margin: 0 auto; padding: 24px 20px 48px; width: 100%; }
 
- .tab-content { display: none; }
- .tab-content.active { display: block; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
 
- /* ── 共用元素 ── */
- .section-title { font-family: var(--display); font-size: 20px; font-weight: 400; margin-bottom: 6px; }
- .section-desc { font-size: 12px; color: var(--text-dim); line-height: 1.7; margin-bottom: 20px; }
+  /* ── 共用元素 ── */
+  .section-title { font-family: var(--display); font-size: 20px; font-weight: 400; margin-bottom: 6px; }
+  .section-desc { font-size: 12px; color: var(--text-dim); line-height: 1.7; margin-bottom: 20px; }
 
- .field { margin-bottom: 14px; }
- .field label { display: block; font-size: 10px; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 10px; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 5px; text-transform: uppercase; }
 
- input[type=text], input[type=email], input[type=tel], textarea, select {
- width: 100%; background: var(--surface); border: 1px solid var(--border2);
- color: var(--text); font-family: var(--sans); font-size: 14px; font-weight: 300;
- padding: 11px 14px; outline: none; transition: border-color 0.2s;
- -webkit-appearance: none; border-radius: 0;
- }
- input:focus, textarea:focus, select:focus { border-color: var(--accent); }
- textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+  input[type=text], input[type=email], input[type=tel], textarea, select {
+    width: 100%; background: var(--surface); border: 1px solid var(--border2);
+    color: var(--text); font-family: var(--sans); font-size: 14px; font-weight: 300;
+    padding: 11px 14px; outline: none; transition: border-color 0.2s;
+    -webkit-appearance: none; border-radius: 0;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
 
- .btn-primary {
- width: 100%; background: var(--text); color: var(--bg); border: none;
- font-family: var(--sans); font-size: 12px; font-weight: 400;
- letter-spacing: 0.2em; text-transform: uppercase; padding: 14px;
- cursor: pointer; transition: opacity 0.2s; margin-top: 4px;
- }
- .btn-primary:hover { opacity: 0.75; }
- .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-primary {
+    width: 100%; background: var(--text); color: var(--bg); border: none;
+    font-family: var(--sans); font-size: 12px; font-weight: 400;
+    letter-spacing: 0.2em; text-transform: uppercase; padding: 14px;
+    cursor: pointer; transition: opacity 0.2s; margin-top: 4px;
+  }
+  .btn-primary:hover { opacity: 0.75; }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
 
- .btn-outline {
- width: 100%; background: transparent; color: var(--text);
- border: 1px solid var(--border2); font-family: var(--sans);
- font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
- padding: 12px; cursor: pointer; transition: all 0.2s; margin-top: 8px;
- }
- .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-outline {
+    width: 100%; background: transparent; color: var(--text);
+    border: 1px solid var(--border2); font-family: var(--sans);
+    font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+    padding: 12px; cursor: pointer; transition: all 0.2s; margin-top: 8px;
+  }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
 
- .steps { display: flex; margin-bottom: 24px; }
- .step { flex: 1; text-align: center; position: relative; }
- .step::after { content: ''; position: absolute; top: 12px; left: 50%; width: 100%; height: 1px; background: var(--border); }
- .step:last-child::after { display: none; }
- .step-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--border); color: var(--text-dim); font-size: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 5px; position: relative; z-index: 1; transition: all 0.3s; }
- .step.active .step-dot { background: var(--accent); color: white; }
- .step.done .step-dot { background: var(--ok); color: white; }
- .step-label { font-size: 10px; color: var(--text-dim); }
- .step.active .step-label { color: var(--accent); }
+  .steps { display: flex; margin-bottom: 24px; }
+  .step { flex: 1; text-align: center; position: relative; }
+  .step::after { content: ''; position: absolute; top: 12px; left: 50%; width: 100%; height: 1px; background: var(--border); }
+  .step:last-child::after { display: none; }
+  .step-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--border); color: var(--text-dim); font-size: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 5px; position: relative; z-index: 1; transition: all 0.3s; }
+  .step.active .step-dot { background: var(--accent); color: white; }
+  .step.done .step-dot { background: var(--ok); color: white; }
+  .step-label { font-size: 10px; color: var(--text-dim); }
+  .step.active .step-label { color: var(--accent); }
 
- .otp-timer { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 8px; }
+  .otp-timer { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 8px; }
 
- /* ── 訂單卡片 ── */
- .order-card {
- border: 1px solid var(--border); padding: 14px 16px;
- margin-bottom: 10px; background: var(--surface);
- }
- .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
- .order-num { font-size: 13px; font-weight: 400; }
- .order-badges { display: flex; gap: 6px; flex-wrap: wrap; }
- .badge { font-size: 10px; letter-spacing: 0.08em; padding: 2px 7px; border: 1px solid; }
- .badge-fulfill { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
- .badge-financial { color: var(--text-dim); border-color: var(--border2); }
- .badge-cancelled { color: var(--err); border-color: var(--err); }
- .order-meta { font-size: 12px; color: var(--text-dim); line-height: 1.7; margin-top: 4px; }
- .order-amount { font-size: 15px; color: var(--text); margin-top: 6px; }
- .order-tracking { margin-top: 8px; font-size: 12px; }
- .order-tracking a { color: var(--accent); text-decoration: none; }
- .order-cancel-btn {
- margin-top: 10px; display: inline-block;
- font-size: 11px; letter-spacing: 0.1em; color: var(--err);
- border: 1px solid var(--err); padding: 4px 10px; cursor: pointer;
- background: transparent; text-decoration: none;
- }
+  /* ── 訂單卡片 ── */
+  .order-card {
+    border: 1px solid var(--border); padding: 14px 16px;
+    margin-bottom: 10px; background: var(--surface);
+  }
+  .order-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .order-num { font-size: 13px; font-weight: 400; }
+  .order-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .badge { font-size: 10px; letter-spacing: 0.08em; padding: 2px 7px; border: 1px solid; }
+  .badge-fulfill { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
+  .badge-financial { color: var(--text-dim); border-color: var(--border2); }
+  .badge-cancelled { color: var(--err); border-color: var(--err); }
+  .order-meta { font-size: 12px; color: var(--text-dim); line-height: 1.7; margin-top: 4px; }
+  .order-amount { font-size: 15px; color: var(--text); margin-top: 6px; }
+  .order-tracking { margin-top: 8px; font-size: 12px; }
+  .order-tracking a { color: var(--accent); text-decoration: none; }
+  .order-cancel-btn {
+    margin-top: 10px; display: inline-block;
+    font-size: 11px; letter-spacing: 0.1em; color: var(--err);
+    border: 1px solid var(--err); padding: 4px 10px; cursor: pointer;
+    background: transparent; text-decoration: none;
+  }
 
- /* ── 結果框 ── */
- .result-box { padding: 20px; border: 1px solid var(--border); background: var(--surface); text-align: center; }
- .result-icon { font-size: 30px; margin-bottom: 10px; }
- .result-title { font-family: var(--display); font-size: 20px; margin-bottom: 6px; }
- .result-desc { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
+  /* ── 結果框 ── */
+  .result-box { padding: 20px; border: 1px solid var(--border); background: var(--surface); text-align: center; }
+  .result-icon { font-size: 30px; margin-bottom: 10px; }
+  .result-title { font-family: var(--display); font-size: 20px; margin-bottom: 6px; }
+  .result-desc { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
 
- /* ── FAQ ── */
- .faq-item { border-bottom: 1px solid var(--border); }
- .faq-q { padding: 14px 0; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
- .faq-q-text { flex: 1; line-height: 1.5; }
- .faq-arrow { color: var(--text-dim); font-size: 11px; transition: transform 0.2s; flex-shrink: 0; }
- .faq-arrow.open { transform: rotate(180deg); }
- .faq-a { display: none; padding: 0 0 14px; font-size: 12px; color: var(--text-dim); line-height: 1.8; }
- .faq-a.open { display: block; }
- .faq-category { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); padding: 18px 0 6px; }
+  /* ── FAQ ── */
+  .faq-item { border-bottom: 1px solid var(--border); }
+  .faq-q { padding: 14px 0; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .faq-q-text { flex: 1; line-height: 1.5; }
+  .faq-arrow { color: var(--text-dim); font-size: 11px; transition: transform 0.2s; flex-shrink: 0; }
+  .faq-arrow.open { transform: rotate(180deg); }
+  .faq-a { display: none; padding: 0 0 14px; font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+  .faq-a.open { display: block; }
+  .faq-category { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); padding: 18px 0 6px; }
 
- /* ── 聯絡 ── */
- .contact-option {
- border: 1px solid var(--border); padding: 14px 18px; margin-bottom: 10px;
- display: flex; align-items: center; gap: 14px; cursor: pointer;
- transition: border-color 0.2s; background: var(--surface);
- text-decoration: none; color: var(--text);
- }
- .contact-option:hover { border-color: var(--accent); }
- .contact-icon { font-size: 20px; flex-shrink: 0; }
- .contact-info { flex: 1; }
- .contact-name { font-size: 13px; margin-bottom: 2px; }
- .contact-note { font-size: 11px; color: var(--text-dim); }
- .contact-arrow { color: var(--text-dim); font-size: 12px; }
+  /* ── 聯絡 ── */
+  .contact-option {
+    border: 1px solid var(--border); padding: 14px 18px; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 14px; cursor: pointer;
+    transition: border-color 0.2s; background: var(--surface);
+    text-decoration: none; color: var(--text);
+  }
+  .contact-option:hover { border-color: var(--accent); }
+  .contact-icon { font-size: 20px; flex-shrink: 0; }
+  .contact-info { flex: 1; }
+  .contact-name { font-size: 13px; margin-bottom: 2px; }
+  .contact-note { font-size: 11px; color: var(--text-dim); }
+  .contact-arrow { color: var(--text-dim); font-size: 12px; }
 
- /* ── LINE 加好友橫幅 ── */
- .line-banner {
- background: #06C755; color: white; padding: 12px 20px;
- display: flex; align-items: center; gap: 12px;
- text-decoration: none; margin-bottom: 16px;
- }
- .line-banner-text { flex: 1; font-size: 13px; }
- .line-banner-sub { font-size: 11px; opacity: 0.85; }
- .line-banner-arrow { font-size: 16px; }
+  /* ── LINE 加好友橫幅 ── */
+  .line-banner {
+    background: #06C755; color: white; padding: 12px 20px;
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; margin-bottom: 16px;
+  }
+  .line-banner-text { flex: 1; font-size: 13px; }
+  .line-banner-sub { font-size: 11px; opacity: 0.85; }
+  .line-banner-arrow { font-size: 16px; }
 
- .notice { background: var(--accent-light); border: 1px solid rgba(176,141,91,0.2); padding: 11px 14px; font-size: 12px; color: var(--text-dim); line-height: 1.7; margin-bottom: 18px; }
- .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
- .err-msg { font-size: 12px; color: var(--err); margin-top: 5px; }
+  .notice { background: var(--accent-light); border: 1px solid rgba(176,141,91,0.2); padding: 11px 14px; font-size: 12px; color: var(--text-dim); line-height: 1.7; margin-bottom: 18px; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .err-msg { font-size: 12px; color: var(--err); margin-top: 5px; }
 
- .spinner { display: inline-block; width: 12px; height: 12px; border: 1px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 5px; }
- @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 1px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 5px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
 <!-- Header -->
 <header>
- <div class="logo"><img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR"></div>
- <div class="header-sub">客服中心</div>
+  <div class="logo"><img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR"></div>
+  <div class="header-sub">客服中心</div>
 </header>
 
 <!-- AI 對話區 -->
 <div id="chat-section">
- <div id="chat-messages">
- <div class="msg ai">您好 我是 EnamoR 的 AI 客服，請問有什麼可以幫您？<br>您可以直接輸入問題，或使用下方功能查詢訂單、退換貨等。</div>
- </div>
- <div id="chat-input-row">
- <textarea id="chat-input" placeholder="輸入您的問題…" rows="1" onkeydown="handleChatKey(event)"></textarea>
- <button id="chat-send" onclick="sendChat()"></button>
- </div>
+  <div id="chat-messages">
+    <div class="msg ai">您好 我是 EnamoR 的 AI 客服，請問有什麼可以幫您？<br>您可以直接輸入問題，或使用下方功能查詢訂單、退換貨等。</div>
+  </div>
+  <div id="chat-input-row">
+    <textarea id="chat-input" placeholder="輸入您的問題…" rows="1" onkeydown="handleChatKey(event)"></textarea>
+    <button id="chat-send" onclick="sendChat()"></button>
+  </div>
 </div>
 
 <!-- 功能入口區 -->
 <div id="feature-section">
- <div class="tab-bar">
- <div class="tab active" onclick="switchTab('order')"><span class="tab-icon"></span>查訂單</div>
- <div class="tab" onclick="switchTab('cancel')"><span class="tab-icon">↩️</span>取消</div>
- <div class="tab" onclick="switchTab('faq')"><span class="tab-icon"></span>常見問題</div>
- <div class="tab" onclick="switchTab('contact')"><span class="tab-icon">️</span>聯絡</div>
- </div>
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('order')"><span class="tab-icon"></span>查訂單</div>
+    <div class="tab" onclick="switchTab('cancel')"><span class="tab-icon">↩️</span>取消</div>
+    <div class="tab" onclick="switchTab('faq')"><span class="tab-icon"></span>常見問題</div>
+    <div class="tab" onclick="switchTab('contact')"><span class="tab-icon">️</span>聯絡</div>
+  </div>
 
- <main>
+  <main>
 
- <!-- 查訂單 -->
- <div class="tab-content active" id="tab-order">
- <div id="order-step1">
- <div class="section-title">查詢訂單</div>
- <div class="section-desc">輸入您的 Email，發送驗證碼後即可查看訂單狀態。</div>
- <div class="steps">
- <div class="step active"><div class="step-dot">1</div><div class="step-label">Email</div></div>
- <div class="step"><div class="step-dot">2</div><div class="step-label">驗證</div></div>
- <div class="step"><div class="step-dot">3</div><div class="step-label">訂單</div></div>
- </div>
- <div class="field">
- <label>電子郵件</label>
- <input type="email" id="order-email" placeholder="your@email.com">
- <div class="err-msg" id="order-email-err"></div>
- </div>
- <button class="btn-primary" id="order-send-btn" onclick="orderSendOTP()">發送驗證碼</button>
- </div>
+    <!-- 查訂單 -->
+    <div class="tab-content active" id="tab-order">
+      <div id="order-step1">
+        <div class="section-title">查詢訂單</div>
+        <div class="section-desc">輸入您的 Email，發送驗證碼後即可查看訂單狀態。</div>
+        <div class="steps">
+          <div class="step active"><div class="step-dot">1</div><div class="step-label">Email</div></div>
+          <div class="step"><div class="step-dot">2</div><div class="step-label">驗證</div></div>
+          <div class="step"><div class="step-dot">3</div><div class="step-label">訂單</div></div>
+        </div>
+        <div class="field">
+          <label>電子郵件</label>
+          <input type="email" id="order-email" placeholder="your@email.com">
+          <div class="err-msg" id="order-email-err"></div>
+        </div>
+        <button class="btn-primary" id="order-send-btn" onclick="orderSendOTP()">發送驗證碼</button>
+      </div>
 
- <div id="order-step2" style="display:none;">
- <div class="section-title">輸入驗證碼</div>
- <div class="section-desc" id="order-otp-desc"></div>
- <div class="steps">
- <div class="step done"><div class="step-dot"></div><div class="step-label">Email</div></div>
- <div class="step active"><div class="step-dot">2</div><div class="step-label">驗證</div></div>
- <div class="step"><div class="step-dot">3</div><div class="step-label">訂單</div></div>
- </div>
- <div class="field">
- <label>6 位數驗證碼</label>
- <input type="tel" id="order-otp" placeholder="000000" maxlength="6" inputmode="numeric">
- <div class="otp-timer" id="order-timer"></div>
- <div class="err-msg" id="order-otp-err"></div>
- </div>
- <button class="btn-primary" onclick="orderVerifyOTP()">確認</button>
- <button class="btn-outline" onclick="orderSendOTP(true)">重新發送</button>
- </div>
+      <div id="order-step2" style="display:none;">
+        <div class="section-title">輸入驗證碼</div>
+        <div class="section-desc" id="order-otp-desc"></div>
+        <div class="steps">
+          <div class="step done"><div class="step-dot"></div><div class="step-label">Email</div></div>
+          <div class="step active"><div class="step-dot">2</div><div class="step-label">驗證</div></div>
+          <div class="step"><div class="step-dot">3</div><div class="step-label">訂單</div></div>
+        </div>
+        <div class="field">
+          <label>6 位數驗證碼</label>
+          <input type="tel" id="order-otp" placeholder="000000" maxlength="6" inputmode="numeric">
+          <div class="otp-timer" id="order-timer"></div>
+          <div class="err-msg" id="order-otp-err"></div>
+        </div>
+        <button class="btn-primary" onclick="orderVerifyOTP()">確認</button>
+        <button class="btn-outline" onclick="orderSendOTP(true)">重新發送</button>
+      </div>
 
- <div id="order-step3" style="display:none;">
- <div class="section-title">您的訂單</div>
- <div id="order-list"></div>
- <button class="btn-outline" style="margin-top:14px;" onclick="resetOrderFlow()">查詢其他 Email</button>
- </div>
- </div>
+      <div id="order-step3" style="display:none;">
+        <div class="section-title">您的訂單</div>
+        <div id="order-list"></div>
+        <button class="btn-outline" style="margin-top:14px;" onclick="resetOrderFlow()">查詢其他 Email</button>
+      </div>
+    </div>
 
- <!-- 取消訂單 -->
- <div class="tab-content" id="tab-cancel">
- <div class="section-title">取消訂單</div>
- <div class="section-desc">下單後 12 小時內可自助取消。</div>
- <div class="notice"> 已出貨或超過 12 小時的訂單無法自助取消，請透過「聯絡」提交申請。</div>
- <a href="https://enamor-line-bot.vercel.app/cancel.html" class="contact-option">
- <div class="contact-icon">↩️</div>
- <div class="contact-info">
- <div class="contact-name">前往自助取消頁面</div>
- <div class="contact-note">Email 驗證後操作，約 2 分鐘完成</div>
- </div>
- <div class="contact-arrow">→</div>
- </a>
- <hr class="divider">
- <div style="font-size:13px;color:var(--text-dim);line-height:1.9;">
- <div style="margin-bottom:10px;font-size:13px;color:var(--text);">退款說明</div>
- <div>・貨到付款：取消後直接結案，無退款</div>
- <div>・信用卡 / LINE Pay：7–14 個工作天退回原帳戶</div>
- <div style="margin-top:8px;">・預購商品：請聯繫客服確認</div>
- </div>
- </div>
+    <!-- 取消訂單 -->
+    <div class="tab-content" id="tab-cancel">
+      <div class="section-title">取消訂單</div>
+      <div class="section-desc">下單後 12 小時內可自助取消。</div>
+      <div class="notice"> 已出貨或超過 12 小時的訂單無法自助取消，請透過「聯絡」提交申請。</div>
+      <a href="https://enamor-line-bot.vercel.app/cancel.html" class="contact-option">
+        <div class="contact-icon">↩️</div>
+        <div class="contact-info">
+          <div class="contact-name">前往自助取消頁面</div>
+          <div class="contact-note">Email 驗證後操作，約 2 分鐘完成</div>
+        </div>
+        <div class="contact-arrow">→</div>
+      </a>
+      <hr class="divider">
+      <div style="font-size:13px;color:var(--text-dim);line-height:1.9;">
+        <div style="margin-bottom:10px;font-size:13px;color:var(--text);">退款說明</div>
+        <div>・貨到付款：取消後直接結案，無退款</div>
+        <div>・信用卡 / LINE Pay：7–14 個工作天退回原帳戶</div>
+        <div style="margin-top:8px;">・預購商品：請聯繫客服確認</div>
+      </div>
+    </div>
 
- <!-- 常見問題 -->
- <div class="tab-content" id="tab-faq">
- <div class="field" style="margin-bottom:16px;">
- <input type="text" id="faq-search" placeholder="搜尋問題…" oninput="filterFAQ(this.value)">
- </div>
- <div id="faq-list"><div style="font-size:12px;color:var(--text-dim);"><span class="spinner"></span>載入中…</div></div>
- </div>
+    <!-- 常見問題 -->
+    <div class="tab-content" id="tab-faq">
+      <div class="field" style="margin-bottom:16px;">
+        <input type="text" id="faq-search" placeholder="搜尋問題…" oninput="filterFAQ(this.value)">
+      </div>
+      <div id="faq-list"><div style="font-size:12px;color:var(--text-dim);"><span class="spinner"></span>載入中…</div></div>
+    </div>
 
- <!-- 聯絡我們 -->
- <div class="tab-content" id="tab-contact">
- <div class="section-title">聯絡我們</div>
- <div class="section-desc">客服時間：週一至週五 09:00–17:00</div>
+    <!-- 聯絡我們 -->
+    <div class="tab-content" id="tab-contact">
+      <div class="section-title">聯絡我們</div>
+      <div class="section-desc">客服時間：週一至週五 09:00–17:00</div>
 
- <!-- 真人客服入口 -->
- <div id="human-status-box" style="border:1px solid var(--border);padding:16px 18px;margin-bottom:16px;background:var(--surface);">
- <div style="font-size:13px;margin-bottom:8px;" id="human-status-text">正在確認客服狀態…</div>
- <div style="font-size:11px;color:var(--text-dim);" id="human-status-sub"></div>
- <button class="btn-primary" id="human-btn" onclick="openCrisp()" style="margin-top:12px;display:none;">與真人客服對話</button>
- </div>
+      <!-- 真人客服入口 -->
+      <div id="human-status-box" style="border:1px solid var(--border);padding:16px 18px;margin-bottom:16px;background:var(--surface);">
+        <div style="font-size:13px;margin-bottom:8px;" id="human-status-text">正在確認客服狀態…</div>
+        <div style="font-size:11px;color:var(--text-dim);" id="human-status-sub"></div>
+        <button class="btn-primary" id="human-btn" onclick="openCrisp()" style="margin-top:12px;display:none;">與真人客服對話</button>
+      </div>
 
- <!-- LINE 加好友 -->
- <a href="https://line.me/R/ti/p/@enamorshop" class="line-banner" target="_blank">
- <div class="contact-icon" style="font-size:24px;"></div>
- <div class="line-banner-text">
- <div>加入 LINE 官方帳號</div>
- <div class="line-banner-sub">@enamorshop · 搶先知道新品與優惠</div>
- </div>
- <div class="line-banner-arrow">→</div>
- </a>
+      <!-- LINE 加好友 -->
+      <a href="https://line.me/R/ti/p/@enamorshop" class="line-banner" target="_blank">
+        <div class="contact-icon" style="font-size:24px;"></div>
+        <div class="line-banner-text">
+          <div>加入 LINE 官方帳號</div>
+          <div class="line-banner-sub">@enamorshop · 搶先知道新品與優惠</div>
+        </div>
+        <div class="line-banner-arrow">→</div>
+      </a>
 
- <hr class="divider">
- <div style="font-size:13px;margin-bottom:14px;">填寫問題表單</div>
+      <hr class="divider">
+      <div style="font-size:13px;margin-bottom:14px;">填寫問題表單</div>
 
- <div class="field">
- <label>問題類型</label>
- <select id="c-type">
- <option value="">請選擇</option>
- <option value="order">訂單問題</option>
- <option value="return">退換貨申請</option>
- <option value="product">商品諮詢</option>
- <option value="shipping">配送問題</option>
- <option value="preorder">預購相關</option>
- <option value="other">其他</option>
- </select>
- </div>
- <div class="field">
- <label>訂單編號（選填）</label>
- <input type="text" id="c-order" placeholder="EnamoR-1001">
- </div>
- <div class="field">
- <label>電子郵件</label>
- <input type="email" id="c-email" placeholder="your@email.com">
- </div>
- <div class="field">
- <label>問題描述</label>
- <textarea id="c-msg" placeholder="請詳細說明問題，方便我們快速處理。"></textarea>
- </div>
- <button class="btn-primary" id="c-btn" onclick="submitContact()">送出</button>
- <div id="c-result" style="margin-top:14px;"></div>
- </div>
+      <div class="field">
+        <label>問題類型</label>
+        <select id="c-type">
+          <option value="">請選擇</option>
+          <option value="order">訂單問題</option>
+          <option value="return">退換貨申請</option>
+          <option value="product">商品諮詢</option>
+          <option value="shipping">配送問題</option>
+          <option value="preorder">預購相關</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>訂單編號（選填）</label>
+        <input type="text" id="c-order" placeholder="EnamoR-1001">
+      </div>
+      <div class="field">
+        <label>電子郵件</label>
+        <input type="email" id="c-email" placeholder="your@email.com">
+      </div>
+      <div class="field">
+        <label>問題描述</label>
+        <textarea id="c-msg" placeholder="請詳細說明問題，方便我們快速處理。"></textarea>
+      </div>
+      <button class="btn-primary" id="c-btn" onclick="submitContact()">送出</button>
+      <div id="c-result" style="margin-top:14px;"></div>
+    </div>
 
- </main>
+  </main>
 </div>
 
 <script>
@@ -409,59 +409,59 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzyw6mrRUK6HcoJeObWHg
 window.$crisp = [];
 window.CRISP_WEBSITE_ID = '9b63a035-81b9-45ff-8f68-884d9b40868e';
 (function() {
- const s = document.createElement('script');
- s.src = 'https://client.crisp.chat/l.js';
- s.async = true;
- document.head.appendChild(s);
+  const s = document.createElement('script');
+  s.src = 'https://client.crisp.chat/l.js';
+  s.async = true;
+  document.head.appendChild(s);
 })();
 
 // 客服時間判斷（週一至週五 09:00–17:00，台灣時間）
 function isServiceHour() {
- const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
- const day = now.getDay(); // 0=日, 6=六
- const hour = now.getHours();
- return day >= 1 && day <= 5 && hour >= 9 && hour < 17;
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+  const day = now.getDay(); // 0=日, 6=六
+  const hour = now.getHours();
+  return day >= 1 && day <= 5 && hour >= 9 && hour < 17;
 }
 
 function initHumanStatus() {
- const statusText = document.getElementById('human-status-text');
- const statusSub = document.getElementById('human-status-sub');
- const btn = document.getElementById('human-btn');
- if (!statusText) return;
+  const statusText = document.getElementById('human-status-text');
+  const statusSub = document.getElementById('human-status-sub');
+  const btn = document.getElementById('human-btn');
+  if (!statusText) return;
 
- if (isServiceHour()) {
- statusText.textContent = ' 客服人員現在在線';
- statusSub.textContent = '點擊下方按鈕開始與真人客服對話';
- btn.style.display = 'block';
- btn.textContent = '與真人客服對話';
- } else {
- const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
- const day = now.getDay();
- statusText.textContent = ' 目前非服務時間';
- statusSub.textContent = '客服時間：週一至週五 09:00–17:00，您可以留言，我們將於下個工作日回覆。';
- btn.style.display = 'block';
- btn.textContent = '留言給客服';
- }
+  if (isServiceHour()) {
+    statusText.textContent = ' 客服人員現在在線';
+    statusSub.textContent = '點擊下方按鈕開始與真人客服對話';
+    btn.style.display = 'block';
+    btn.textContent = '與真人客服對話';
+  } else {
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
+    const day = now.getDay();
+    statusText.textContent = ' 目前非服務時間';
+    statusSub.textContent = '客服時間：週一至週五 09:00–17:00，您可以留言，我們將於下個工作日回覆。';
+    btn.style.display = 'block';
+    btn.textContent = '留言給客服';
+  }
 }
 
 function openCrisp() {
- const btn = document.getElementById('human-btn');
- const statusText = document.getElementById('human-status-text');
+  const btn = document.getElementById('human-btn');
+  const statusText = document.getElementById('human-status-text');
 
- if (isServiceHour()) {
- statusText.textContent = '⏳ 正在為您連線，請稍候…';
- btn.disabled = true;
- setTimeout(() => {
- if (window.$crisp) {
- window.$crisp.push(['do', 'chat:open']);
- }
- btn.disabled = false;
- }, 1200);
- } else {
- if (window.$crisp) {
- window.$crisp.push(['do', 'chat:open']);
- }
- }
+  if (isServiceHour()) {
+    statusText.textContent = '⏳ 正在為您連線，請稍候…';
+    btn.disabled = true;
+    setTimeout(() => {
+      if (window.$crisp) {
+        window.$crisp.push(['do', 'chat:open']);
+      }
+      btn.disabled = false;
+    }, 1200);
+  } else {
+    if (window.$crisp) {
+      window.$crisp.push(['do', 'chat:open']);
+    }
+  }
 }
 
 // ── AI System Prompt ─────────────────────────────────────
@@ -488,65 +488,66 @@ const AI_SYSTEM = `你是 EnamoR 恩娜茉兒的 AI 客服，專業、親切、�
 const chatHistory = [];
 
 function handleChatKey(e) {
- if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
 }
 
 async function sendChat() {
- const input = document.getElementById('chat-input');
- const text = input.value.trim();
- if (!text) return;
- input.value = '';
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
 
- addMsg('user', text);
- chatHistory.push({ role: 'user', content: text });
+  addMsg('user', text);
+  chatHistory.push({ role: 'user', content: text });
 
- const aiEl = addMsg('ai', '');
- aiEl.innerHTML = '<span class="typing"></span>';
+  const aiEl = addMsg('ai', '');
+  aiEl.innerHTML = '<span class="typing"></span>';
 
- document.getElementById('chat-send').disabled = true;
+  document.getElementById('chat-send').disabled = true;
 
- try {
- const r = await fetch(`${BASE}/api/claude-proxy`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
- body: JSON.stringify({
- system: AI_SYSTEM,
- messages: chatHistory.slice(-10),
- max_tokens: 500
- })
- });
- const d = await r.json();
- const reply = d.content?.[0]?.text || '抱歉，暫時無法回覆，請稍後再試。';
- aiEl.innerHTML = reply.replace(/\n/g, '<br>');
- chatHistory.push({ role: 'assistant', content: reply });
- } catch(e) {
- aiEl.innerHTML = '連線異常，請稍後再試。';
- aiEl.style.color = 'var(--err)';
- }
+  try {
+    const r = await fetch(`${BASE}/api/claude-proxy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        system: AI_SYSTEM,
+        messages: chatHistory.slice(-10),
+        max_tokens: 500
+      })
+    });
+    const d = await r.json();
+    const reply = d.content?.[0]?.text || '抱歉，暫時無法回覆，請稍後再試。';
+    aiEl.innerHTML = reply.replace(/\n/g, '<br>');
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch(e) {
+    aiEl.innerHTML = '連線異常，請稍後再試。';
+    aiEl.style.color = 'var(--err)';
+  }
 
- document.getElementById('chat-send').disabled = false;
- const box = document.getElementById('chat-messages');
- box.scrollTop = box.scrollHeight;
+  document.getElementById('chat-send').disabled = false;
+  const box = document.getElementById('chat-messages');
+  box.scrollTop = box.scrollHeight;
 }
 
 function addMsg(role, text) {
- const box = document.getElementById('chat-messages');
- const el = document.createElement('div');
- el.className = 'msg ' + role;
- el.innerHTML = text.replace(/\n/g, '<br>');
- box.appendChild(el);
- box.scrollTop = box.scrollHeight;
- return el;
+  const box = document.getElementById('chat-messages');
+  const el = document.createElement('div');
+  el.className = 'msg ' + role;
+  el.innerHTML = text.replace(/\n/g, '<br>');
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+  return el;
 }
 
 // ── Tab 切換 ────────────────────────────────────────────
 function switchTab(id) {
- const ids = ['order','cancel','faq','contact'];
- document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ids[i] === id));
- document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
- document.getElementById('tab-' + id).classList.add('active');
- if (id === 'faq' && !faqLoaded) loadFAQ();
- if (id === 'contact') initHumanStatus();
+  const ids = ['order','cancel','faq','contact'];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ids[i] === id));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (id === 'faq' && !faqLoaded) loadFAQ();
+  if (id === 'contact') initHumanStatus();
 }
 
 // ── 查訂單 ───────────────────────────────────────────────
@@ -554,227 +555,227 @@ let orderEmail = '';
 let orderTimerInterval = null;
 
 async function orderSendOTP(resend = false) {
- const email = resend ? orderEmail : document.getElementById('order-email').value.trim();
- if (!email || !email.includes('@')) {
- document.getElementById('order-email-err').textContent = '請輸入有效的 Email';
- return;
- }
- orderEmail = email;
- const btn = document.getElementById('order-send-btn');
- if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>發送中…'; }
+  const email = resend ? orderEmail : document.getElementById('order-email').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('order-email-err').textContent = '請輸入有效的 Email';
+    return;
+  }
+  orderEmail = email;
+  const btn = document.getElementById('order-send-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>發送中…'; }
 
- try {
- const r = await fetch(`${BASE}/api/send-otp`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ email })
- });
- const d = await r.json();
- if (d.success || r.ok) {
- document.getElementById('order-step1').style.display = 'none';
- document.getElementById('order-step2').style.display = 'block';
- document.getElementById('order-otp-desc').textContent = `驗證碼已發送至 ${email}，請在 10 分鐘內輸入。`;
- startTimer('order-timer', 600);
- } else {
- if (btn) { btn.disabled = false; btn.textContent = '發送驗證碼'; }
- document.getElementById('order-email-err').textContent = d.message || '發送失敗，請稍後再試';
- }
- } catch(e) {
- if (btn) { btn.disabled = false; btn.textContent = '發送驗證碼'; }
- document.getElementById('order-email-err').textContent = '連線異常，請稍後再試';
- }
+  try {
+    const r = await fetch(`${BASE}/api/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const d = await r.json();
+    if (d.success || r.ok) {
+      document.getElementById('order-step1').style.display = 'none';
+      document.getElementById('order-step2').style.display = 'block';
+      document.getElementById('order-otp-desc').textContent = `驗證碼已發送至 ${email}，請在 10 分鐘內輸入。`;
+      startTimer('order-timer', 600);
+    } else {
+      if (btn) { btn.disabled = false; btn.textContent = '發送驗證碼'; }
+      document.getElementById('order-email-err').textContent = d.message || '發送失敗，請稍後再試';
+    }
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '發送驗證碼'; }
+    document.getElementById('order-email-err').textContent = '連線異常，請稍後再試';
+  }
 }
 
 async function orderVerifyOTP() {
- const otp = document.getElementById('order-otp').value.trim();
- if (otp.length !== 6) {
- document.getElementById('order-otp-err').textContent = '請輸入 6 位數驗證碼';
- return;
- }
- const btn = document.querySelector('#order-step2 .btn-primary');
- btn.disabled = true;
- btn.innerHTML = '<span class="spinner"></span>驗證中…';
+  const otp = document.getElementById('order-otp').value.trim();
+  if (otp.length !== 6) {
+    document.getElementById('order-otp-err').textContent = '請輸入 6 位數驗證碼';
+    return;
+  }
+  const btn = document.querySelector('#order-step2 .btn-primary');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>驗證中…';
 
- try {
- const r = await fetch(`${BASE}/api/order-status`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ email: orderEmail, otp })
- });
- const d = await r.json();
- if (d.success) {
- clearInterval(orderTimerInterval);
- document.getElementById('order-step2').style.display = 'none';
- document.getElementById('order-step3').style.display = 'block';
- renderOrders(d.orders || []);
- } else {
- btn.disabled = false;
- btn.textContent = '確認';
- document.getElementById('order-otp-err').textContent = d.message || '驗證碼錯誤';
- }
- } catch(e) {
- btn.disabled = false;
- btn.textContent = '確認';
- document.getElementById('order-otp-err').textContent = '連線異常，請稍後再試';
- }
+  try {
+    const r = await fetch(`${BASE}/api/order-status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: orderEmail, otp })
+    });
+    const d = await r.json();
+    if (d.success) {
+      clearInterval(orderTimerInterval);
+      document.getElementById('order-step2').style.display = 'none';
+      document.getElementById('order-step3').style.display = 'block';
+      renderOrders(d.orders || []);
+    } else {
+      btn.disabled = false;
+      btn.textContent = '確認';
+      document.getElementById('order-otp-err').textContent = d.message || '驗證碼錯誤';
+    }
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '確認';
+    document.getElementById('order-otp-err').textContent = '連線異常，請稍後再試';
+  }
 }
 
 function renderOrders(orders) {
- const list = document.getElementById('order-list');
- if (!orders.length) {
- list.innerHTML = `<div class="result-box"><div class="result-icon"></div><div class="result-title">查無訂單</div><div class="result-desc">此 Email 尚無訂單記錄</div></div>`;
- return;
- }
- list.innerHTML = '';
- orders.forEach(o => {
- const card = document.createElement('div');
- card.className = 'order-card';
- const date = o.created_at ? new Date(o.created_at).toLocaleDateString('zh-TW') : '';
- const amount = o.total_price ? `NT$ ${parseFloat(o.total_price).toLocaleString()}` : '';
- const items = (o.items || []).slice(0,2).map(i => `${i.title}${i.variant_title ? ` / ${i.variant_title}` : ''} ×${i.quantity}`).join('、');
- const moreItems = o.items?.length > 2 ? `…等 ${o.items.length} 項` : '';
+  const list = document.getElementById('order-list');
+  if (!orders.length) {
+    list.innerHTML = `<div class="result-box"><div class="result-icon"></div><div class="result-title">查無訂單</div><div class="result-desc">此 Email 尚無訂單記錄</div></div>`;
+    return;
+  }
+  list.innerHTML = '';
+  orders.forEach(o => {
+    const card = document.createElement('div');
+    card.className = 'order-card';
+    const date = o.created_at ? new Date(o.created_at).toLocaleDateString('zh-TW') : '';
+    const amount = o.total_price ? `NT$ ${parseFloat(o.total_price).toLocaleString()}` : '';
+    const items = (o.items || []).slice(0,2).map(i => `${i.title}${i.variant_title ? ` / ${i.variant_title}` : ''} ×${i.quantity}`).join('、');
+    const moreItems = o.items?.length > 2 ? `…等 ${o.items.length} 項` : '';
 
- const cancelledBadge = o.cancelled_at ? `<span class="badge badge-cancelled">已取消</span>` : `<span class="badge badge-fulfill">${o.fulfillment_label}</span>`;
- const financialBadge = `<span class="badge badge-financial">${o.financial_label}</span>`;
+    const cancelledBadge = o.cancelled_at ? `<span class="badge badge-cancelled">已取消</span>` : `<span class="badge badge-fulfill">${o.fulfillment_label}</span>`;
+    const financialBadge = `<span class="badge badge-financial">${o.financial_label}</span>`;
 
- const trackingHtml = o.tracking?.url
- ? `<div class="order-tracking">物流：${o.tracking.company || ''} ${o.tracking.number || ''} <a href="${o.tracking.url}" target="_blank">查看追蹤 →</a></div>`
- : o.tracking?.number ? `<div class="order-tracking" style="color:var(--text-dim)">追蹤號：${o.tracking.number}</div>` : '';
+    const trackingHtml = o.tracking?.url
+      ? `<div class="order-tracking">物流：${o.tracking.company || ''} ${o.tracking.number || ''} <a href="${o.tracking.url}" target="_blank">查看追蹤 →</a></div>`
+      : o.tracking?.number ? `<div class="order-tracking" style="color:var(--text-dim)">追蹤號：${o.tracking.number}</div>` : '';
 
- const cancelBtn = o.cancellable
- ? `<a href="https://enamor-line-bot.vercel.app/cancel.html" class="order-cancel-btn">申請取消</a>`
- : '';
+    const cancelBtn = o.cancellable
+      ? `<a href="https://enamor-line-bot.vercel.app/cancel.html" class="order-cancel-btn">申請取消</a>`
+      : '';
 
- card.innerHTML = `
- <div class="order-header">
- <div class="order-num">${o.name}</div>
- <div class="order-badges">${cancelledBadge}${financialBadge}</div>
- </div>
- <div class="order-meta">
- ${date ? `下單：${date}` : ''}
- ${items ? `<br>${items}${moreItems}` : ''}
- </div>
- ${amount ? `<div class="order-amount">${amount}</div>` : ''}
- ${trackingHtml}
- ${cancelBtn}
- `;
- list.appendChild(card);
- });
+    card.innerHTML = `
+      <div class="order-header">
+        <div class="order-num">${o.name}</div>
+        <div class="order-badges">${cancelledBadge}${financialBadge}</div>
+      </div>
+      <div class="order-meta">
+        ${date ? `下單：${date}` : ''}
+        ${items ? `<br>${items}${moreItems}` : ''}
+      </div>
+      ${amount ? `<div class="order-amount">${amount}</div>` : ''}
+      ${trackingHtml}
+      ${cancelBtn}
+    `;
+    list.appendChild(card);
+  });
 }
 
 function resetOrderFlow() {
- document.getElementById('order-step1').style.display = 'block';
- document.getElementById('order-step2').style.display = 'none';
- document.getElementById('order-step3').style.display = 'none';
- document.getElementById('order-email').value = '';
- document.getElementById('order-otp').value = '';
- document.getElementById('order-email-err').textContent = '';
- document.getElementById('order-otp-err').textContent = '';
- const btn = document.getElementById('order-send-btn');
- if (btn) { btn.disabled = false; btn.textContent = '發送驗證碼'; }
- clearInterval(orderTimerInterval);
+  document.getElementById('order-step1').style.display = 'block';
+  document.getElementById('order-step2').style.display = 'none';
+  document.getElementById('order-step3').style.display = 'none';
+  document.getElementById('order-email').value = '';
+  document.getElementById('order-otp').value = '';
+  document.getElementById('order-email-err').textContent = '';
+  document.getElementById('order-otp-err').textContent = '';
+  const btn = document.getElementById('order-send-btn');
+  if (btn) { btn.disabled = false; btn.textContent = '發送驗證碼'; }
+  clearInterval(orderTimerInterval);
 }
 
 function startTimer(elId, seconds) {
- clearInterval(orderTimerInterval);
- const el = document.getElementById(elId);
- let remaining = seconds;
- const tick = () => {
- const m = Math.floor(remaining / 60);
- const s = remaining % 60;
- el.textContent = `驗證碼將在 ${m}:${String(s).padStart(2,'0')} 後失效`;
- if (remaining <= 0) { clearInterval(orderTimerInterval); el.textContent = '驗證碼已過期，請重新發送'; }
- remaining--;
- };
- tick();
- orderTimerInterval = setInterval(tick, 1000);
+  clearInterval(orderTimerInterval);
+  const el = document.getElementById(elId);
+  let remaining = seconds;
+  const tick = () => {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    el.textContent = `驗證碼將在 ${m}:${String(s).padStart(2,'0')} 後失效`;
+    if (remaining <= 0) { clearInterval(orderTimerInterval); el.textContent = '驗證碼已過期，請重新發送'; }
+    remaining--;
+  };
+  tick();
+  orderTimerInterval = setInterval(tick, 1000);
 }
 
 // ── FAQ ─────────────────────────────────────────────────
 let faqLoaded = false;
 const FAQ_STATIC = [
- { cat: '尺寸與選購', q: '尺寸怎麼選？', a: '因商品眾多且版型設計各異，商品尺碼挑選建議參考各款式商品網頁裡的尺寸建議資訊。' },
- { cat: '尺寸與選購', q: '第一次買，哪個系列適合？', a: '推薦從 ZERO-TEX 萊卡抗菌系列開始，無縫設計、抗菌材質、彈性佳，適合日常穿著。追求天然觸感可考慮 SKIN 蠶絲系列。' },
- { cat: '材質與保養', q: '萊卡抗菌內褲怎麼洗？', a: '建議手洗或放入洗衣袋輕柔機洗。避免漂白劑，不可烘乾。冷水或溫水清洗，陰乾即可。' },
- { cat: '材質與保養', q: '蠶絲內褲怎麼保養？', a: '中性洗劑手洗，水溫不超過 30°C。輕揉、不可搓揉，毛巾包覆輕壓去水，平放陰乾。避免日曬直射。' },
- { cat: '配送', q: '幾天可以收到商品？', a: '現貨通常 1-3 個工作天出貨，宅配 1-2 天到達。預購依商品頁標示出貨日為準。' },
- { cat: '配送', q: '多少錢免運？', a: '折扣後實際購買金額滿 NT$999 免運（外島除外）。' },
- { cat: '退換貨', q: '可以退貨嗎？', a: '收到後 7 天內，未拆封、未洗滌可申請退貨。內衣褲拆封後基於衛生考量恕不退貨。退貨運費由顧客負擔。' },
- { cat: '退換貨', q: '收到商品有瑕疵怎麼辦？', a: '收到後 3 天內聯繫客服並附上照片。確認為品質問題後安排免費換貨或退款。' },
- { cat: '預購', q: '預購是什麼意思？', a: 'A1：生產製程中；A2：長銷熱賣補貨中；B：流行性商品預訂。各商品頁會標示預計出貨日，依訂單順序出貨。' },
- { cat: '預購', q: '預購可以取消嗎？', a: '尚未出貨前可申請取消，請聯繫客服。已排入生產或即將出貨的訂單可能無法取消，以客服回覆為準。' },
+  { cat: '尺寸與選購', q: '尺寸怎麼選？', a: '因商品眾多且版型設計各異，商品尺碼挑選建議參考各款式商品網頁裡的尺寸建議資訊。' },
+  { cat: '尺寸與選購', q: '第一次買，哪個系列適合？', a: '推薦從 ZERO-TEX 萊卡抗菌系列開始，無縫設計、抗菌材質、彈性佳，適合日常穿著。追求天然觸感可考慮 SKIN 蠶絲系列。' },
+  { cat: '材質與保養', q: '萊卡抗菌內褲怎麼洗？', a: '建議手洗或放入洗衣袋輕柔機洗。避免漂白劑，不可烘乾。冷水或溫水清洗，陰乾即可。' },
+  { cat: '材質與保養', q: '蠶絲內褲怎麼保養？', a: '中性洗劑手洗，水溫不超過 30°C。輕揉、不可搓揉，毛巾包覆輕壓去水，平放陰乾。避免日曬直射。' },
+  { cat: '配送', q: '幾天可以收到商品？', a: '現貨通常 1-3 個工作天出貨，宅配 1-2 天到達。預購依商品頁標示出貨日為準。' },
+  { cat: '配送', q: '多少錢免運？', a: '折扣後實際購買金額滿 NT$999 免運（外島除外）。' },
+  { cat: '退換貨', q: '可以退貨嗎？', a: '收到後 7 天內，未拆封、未洗滌可申請退貨。內衣褲拆封後基於衛生考量恕不退貨。退貨運費由顧客負擔。' },
+  { cat: '退換貨', q: '收到商品有瑕疵怎麼辦？', a: '收到後 3 天內聯繫客服並附上照片。確認為品質問題後安排免費換貨或退款。' },
+  { cat: '預購', q: '預購是什麼意思？', a: 'A1：生產製程中；A2：長銷熱賣補貨中；B：流行性商品預訂。各商品頁會標示預計出貨日，依訂單順序出貨。' },
+  { cat: '預購', q: '預購可以取消嗎？', a: '尚未出貨前可申請取消，請聯繫客服。已排入生產或即將出貨的訂單可能無法取消，以客服回覆為準。' },
 ];
 
 function loadFAQ() {
- faqLoaded = true;
- const list = document.getElementById('faq-list');
- list.innerHTML = '';
- let lastCat = '';
- FAQ_STATIC.forEach(item => {
- if (item.cat !== lastCat) {
- lastCat = item.cat;
- const catEl = document.createElement('div');
- catEl.className = 'faq-category';
- catEl.textContent = item.cat;
- list.appendChild(catEl);
- }
- const el = document.createElement('div');
- el.className = 'faq-item';
- el.innerHTML = `<div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">${item.q}</span><span class="faq-arrow">▼</span></div><div class="faq-a">${item.a}</div>`;
- list.appendChild(el);
- });
+  faqLoaded = true;
+  const list = document.getElementById('faq-list');
+  list.innerHTML = '';
+  let lastCat = '';
+  FAQ_STATIC.forEach(item => {
+    if (item.cat !== lastCat) {
+      lastCat = item.cat;
+      const catEl = document.createElement('div');
+      catEl.className = 'faq-category';
+      catEl.textContent = item.cat;
+      list.appendChild(catEl);
+    }
+    const el = document.createElement('div');
+    el.className = 'faq-item';
+    el.innerHTML = `<div class="faq-q" onclick="toggleFAQ(this)"><span class="faq-q-text">${item.q}</span><span class="faq-arrow">▼</span></div><div class="faq-a">${item.a}</div>`;
+    list.appendChild(el);
+  });
 }
 
 function filterFAQ(q) {
- const kw = q.trim().toLowerCase();
- document.querySelectorAll('.faq-item').forEach(el => {
- el.style.display = (!kw || el.textContent.toLowerCase().includes(kw)) ? '' : 'none';
- });
- document.querySelectorAll('.faq-category').forEach(el => el.style.display = kw ? 'none' : '');
+  const kw = q.trim().toLowerCase();
+  document.querySelectorAll('.faq-item').forEach(el => {
+    el.style.display = (!kw || el.textContent.toLowerCase().includes(kw)) ? '' : 'none';
+  });
+  document.querySelectorAll('.faq-category').forEach(el => el.style.display = kw ? 'none' : '');
 }
 
 function toggleFAQ(el) {
- el.nextElementSibling.classList.toggle('open');
- el.querySelector('.faq-arrow').classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+  el.querySelector('.faq-arrow').classList.toggle('open');
 }
 
 // ── 聯絡表單 ─────────────────────────────────────────────
 const typeLabels = { order:'訂單問題', return:'退換貨申請', product:'商品諮詢', shipping:'配送問題', preorder:'預購相關', other:'其他' };
 
 async function submitContact() {
- const type = document.getElementById('c-type').value;
- const email = document.getElementById('c-email').value.trim();
- const msg = document.getElementById('c-msg').value.trim();
- if (!type) { alert('請選擇問題類型'); return; }
- if (!email || !email.includes('@')) { alert('請輸入有效 Email'); return; }
- if (!msg) { alert('請填寫問題描述'); return; }
+  const type = document.getElementById('c-type').value;
+  const email = document.getElementById('c-email').value.trim();
+  const msg = document.getElementById('c-msg').value.trim();
+  if (!type) { alert('請選擇問題類型'); return; }
+  if (!email || !email.includes('@')) { alert('請輸入有效 Email'); return; }
+  if (!msg) { alert('請填寫問題描述'); return; }
 
- const btn = document.getElementById('c-btn');
- btn.disabled = true;
- btn.innerHTML = '<span class="spinner"></span>送出中…';
+  const btn = document.getElementById('c-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>送出中…';
 
- try {
- await fetch(SHEET_URL, {
- method: 'POST', mode: 'no-cors',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({
- timestamp: new Date().toISOString(),
- source: 'Support Page', type: 'customer_inquiry',
- answers: JSON.stringify([
- { q: '問題類型', a: typeLabels[type] },
- { q: '訂單編號', a: document.getElementById('c-order').value || '（未填）' },
- { q: 'Email', a: email }, { q: '描述', a: msg }
- ]),
- summary: `[${typeLabels[type]}] ${email}\n${msg.slice(0,100)}`
- })
- });
- document.getElementById('c-result').innerHTML = `<div class="result-box"><div class="result-icon">️</div><div class="result-title">已收到</div><div class="result-desc">客服將於工作時間回覆至 ${email}。<br>緊急事項請透過 LINE @enamorshop 聯繫。</div></div>`;
- btn.disabled = false; btn.textContent = '送出';
- ['c-type','c-order','c-email','c-msg'].forEach(id => document.getElementById(id).value = '');
- } catch(e) {
- btn.disabled = false; btn.textContent = '送出';
- document.getElementById('c-result').innerHTML = `<div class="err-msg">送出失敗，請直接透過 LINE 聯繫。</div>`;
- }
+  try {
+    await fetch(SHEET_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        timestamp: new Date().toISOString(),
+        source: 'Support Page', type: 'customer_inquiry',
+        answers: JSON.stringify([
+          { q: '問題類型', a: typeLabels[type] },
+          { q: '訂單編號', a: document.getElementById('c-order').value || '（未填）' },
+          { q: 'Email', a: email }, { q: '描述', a: msg }
+        ]),
+        summary: `[${typeLabels[type]}] ${email}\n${msg.slice(0,100)}`
+      })
+    });
+    document.getElementById('c-result').innerHTML = `<div class="result-box"><div class="result-icon">️</div><div class="result-title">已收到</div><div class="result-desc">客服將於工作時間回覆至 ${email}。<br>緊急事項請透過 LINE @enamorshop 聯繫。</div></div>`;
+    btn.disabled = false; btn.textContent = '送出';
+    ['c-type','c-order','c-email','c-msg'].forEach(id => document.getElementById(id).value = '');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '送出';
+    document.getElementById('c-result').innerHTML = `<div class="err-msg">送出失敗，請直接透過 LINE 聯繫。</div>`;
+  }
 }
 </script>
 </body>
