@@ -393,26 +393,27 @@ async function submitToOms(){
   ];
 
   let lastErr='';
+  let logs=[];
   for(const att of attempts){
     try{
       console.log(`createPurchase 嘗試 ${att.label}:`,JSON.stringify(att.body).substring(0,300));
       const res=await oP('/api/v2/default/action/createPurchase',att.body);
-      console.log(`createPurchase ${att.label} 回傳:`,JSON.stringify(res).substring(0,500));
-      if(res.result){
+      console.log(`createPurchase ${att.label} 回傳:`,res);
+      if(res.result===true||res.done===true){
         st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 成功送出 ${matched.length} 筆（${att.label}），採購單號 ${poNo}</span>`;
         toast('✓ 採購單已送出到 OMS');
         btn.disabled=false;
         return;
       }
-      lastErr=res.msg||'未知錯誤';
-      console.warn(`${att.label} 失敗: ${lastErr}`);
+      lastErr=res.msg||JSON.stringify(res);
+      logs.push(`${att.label}: ${lastErr}`);
     }catch(err){
       lastErr=err.message;
-      console.warn(`${att.label} 異常: ${lastErr}`);
+      logs.push(`${att.label}: ${err.message}`);
     }
   }
-  st.innerHTML=`<span style="color:var(--red);font-weight:600">✗ 兩種格式都失敗：${lastErr}</span>`;
-  toast('送出失敗：'+lastErr);
+  st.innerHTML=`<span style="color:var(--red);font-weight:600">✗ 兩種格式都失敗<br>${logs.map(l=>'· '+l).join('<br>')}</span>`;
+  toast('送出失敗');
   btn.disabled=false;
 }
 
