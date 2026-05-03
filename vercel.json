@@ -5,5 +5,11 @@
       "maxDuration": 30
     }
   },
-  "outputDirectory": "public"
+  "outputDirectory": "public",
+  "crons": [
+    {
+      "path": "/api/stock-alert",
+      "schedule": "0 4 * * *"
+    }
+  ]
 }
