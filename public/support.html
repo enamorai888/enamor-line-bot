@@ -23,49 +23,72 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-weight: 300; min-height: 100vh; display: flex; flex-direction: column; font-size: 125%; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-weight: 300; height: 100vh; display: flex; flex-direction: column; font-size: 125%; overflow: hidden; }
 
-  /* ── header ── */
-  header { border-bottom: 1px solid var(--border); padding: 20px 24px 16px; text-align: center; flex-shrink: 0; }
-  .logo img { height: 28px; }
-  .header-sub { font-size: 10px; letter-spacing: 0.25em; color: var(--text-dim); text-transform: uppercase; margin-top: 5px; }
+  /* ── Header ── */
+  header { border-bottom: 1px solid var(--border); padding: 16px 24px 12px; text-align: center; flex-shrink: 0; background: var(--bg); position: relative; }
+  .logo img { height: 26px; }
+  .header-sub { font-size: 10px; letter-spacing: 0.25em; color: var(--text-dim); text-transform: uppercase; margin-top: 4px; }
 
-  /* ── AI 對話區（上半） ── */
-  #chat-section {
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--border);
+  /* ── 返回按鈕（功能模式才顯示） ── */
+  .back-btn {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px 12px;
+    display: none;
+    font-family: var(--sans);
+  }
+  .back-btn:hover { color: var(--accent); }
+  body.feature-mode .back-btn { display: block; }
+
+  /* ── 主畫面 ── */
+  #main-area {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    height: 42vh;
-    min-height: 280px;
-    max-height: 420px;
+    overflow: hidden;
+    min-height: 0;
   }
+
+  /* ── AI 對話區（預設模式） ── */
+  #chat-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+  body.feature-mode #chat-section { display: none; }
 
   #chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 16px 20px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
 
   .msg { max-width: 82%; font-size: 13px; line-height: 1.65; padding: 10px 14px; }
   .msg.ai { align-self: flex-start; background: var(--surface); border: 1px solid var(--border); color: var(--text); }
   .msg.user { align-self: flex-end; background: var(--text); color: var(--bg); }
-  .msg.system { align-self: center; background: transparent; font-size: 11px; color: var(--text-dim); letter-spacing: 0.05em; }
-
   .msg.ai .typing { display: inline-block; }
   .msg.ai .typing::after { content: '▋'; animation: blink 0.8s infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
   #chat-input-row {
     display: flex;
-    gap: 0;
     border-top: 1px solid var(--border);
     flex-shrink: 0;
+    background: var(--surface);
   }
-
   #chat-input {
     flex: 1;
     border: none;
@@ -80,7 +103,6 @@
     height: 48px;
     line-height: 1.4;
   }
-
   #chat-send {
     width: 56px;
     background: #2196F3;
@@ -98,27 +120,68 @@
   #chat-send:hover { opacity: 0.7; }
   #chat-send:disabled { opacity: 0.3; cursor: not-allowed; }
 
-  /* ── 功能入口（下半） ── */
-  #feature-section { flex: 1; overflow-y: auto; }
-
-  /* ── Tab Bar ── */
-  .tab-bar {
-    display: flex;
-    border-bottom: 1px solid var(--border);
+  /* ── 底部工具列（折疊選單） ── */
+  #toolbar {
+    border-top: 1px solid var(--border);
     background: var(--surface);
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    flex-shrink: 0;
   }
+  body.feature-mode #toolbar { display: none; }
 
-  .tab {
-    flex: 1; padding: 14px 6px; text-align: center;
-    font-size: 13px; letter-spacing: 0.05em; color: var(--text-dim);
-    cursor: pointer; border-bottom: 2px solid transparent;
-    transition: all 0.2s; user-select: none;
+  .toolbar-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    transition: background 0.2s;
   }
-  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .tab-icon { display: none; }
+  .toolbar-trigger:hover { background: var(--accent-light); color: var(--accent); }
+  .toolbar-trigger .arrow {
+    transition: transform 0.3s;
+    font-size: 10px;
+  }
+  .toolbar-trigger.open .arrow { transform: rotate(180deg); }
+
+  .toolbar-menu {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--border);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  .toolbar-menu.open { max-height: 100px; }
+
+  .tool-btn {
+    padding: 14px 6px;
+    text-align: center;
+    border: none;
+    background: var(--surface);
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text);
+    border-right: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+  .tool-btn:last-child { border-right: none; }
+  .tool-btn:hover { background: var(--accent-light); color: var(--accent); }
+  .tool-icon { display: block; font-size: 16px; margin-bottom: 4px; color: var(--accent); }
+
+  /* ── 功能區（feature mode 才顯示） ── */
+  #feature-area {
+    flex: 1;
+    overflow-y: auto;
+    display: none;
+    background: var(--bg);
+  }
+  body.feature-mode #feature-area { display: block; }
 
   main { max-width: 600px; margin: 0 auto; padding: 24px 20px 48px; width: 100%; }
 
@@ -170,7 +233,6 @@
 
   .otp-timer { font-size: 11px; color: var(--text-dim); text-align: center; margin-top: 8px; }
 
-  /* ── 訂單卡片 ── */
   .order-card {
     border: 1px solid var(--border); padding: 14px 16px;
     margin-bottom: 10px; background: var(--surface);
@@ -193,13 +255,11 @@
     background: transparent; text-decoration: none;
   }
 
-  /* ── 結果框 ── */
   .result-box { padding: 20px; border: 1px solid var(--border); background: var(--surface); text-align: center; }
   .result-icon { font-size: 30px; margin-bottom: 10px; }
   .result-title { font-family: var(--display); font-size: 20px; margin-bottom: 6px; }
   .result-desc { font-size: 12px; color: var(--text-dim); line-height: 1.7; }
 
-  /* ── FAQ ── */
   .faq-item { border-bottom: 1px solid var(--border); }
   .faq-q { padding: 14px 0; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   .faq-q-text { flex: 1; line-height: 1.5; }
@@ -209,7 +269,6 @@
   .faq-a.open { display: block; }
   .faq-category { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); padding: 18px 0 6px; }
 
-  /* ── 聯絡 ── */
   .contact-option {
     border: 1px solid var(--border); padding: 14px 18px; margin-bottom: 10px;
     display: flex; align-items: center; gap: 14px; cursor: pointer;
@@ -223,7 +282,6 @@
   .contact-note { font-size: 11px; color: var(--text-dim); }
   .contact-arrow { color: var(--text-dim); font-size: 12px; }
 
-  /* ── LINE 加好友橫幅 ── */
   .line-banner {
     background: #06C755; color: white; padding: 12px 20px;
     display: flex; align-items: center; gap: 12px;
@@ -245,159 +303,182 @@
 
 <!-- Header -->
 <header>
+  <button class="back-btn" onclick="exitFeature()">← 返回</button>
   <div class="logo"><img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR"></div>
-  <div class="header-sub">客服中心</div>
+  <div class="header-sub" id="header-sub">客服中心</div>
 </header>
 
-<!-- AI 對話區 -->
-<div id="chat-section">
-  <div id="chat-messages">
-    <div class="msg ai">您好 我是 EnamoR 的 AI 客服，請問有什麼可以幫您？<br>您可以直接輸入問題，或使用下方功能查詢訂單、退換貨等。</div>
-  </div>
-  <div id="chat-input-row">
-    <textarea id="chat-input" placeholder="輸入您的問題…" rows="1" onkeydown="handleChatKey(event)"></textarea>
-    <button id="chat-send" onclick="sendChat()"></button>
-  </div>
-</div>
+<!-- 主區域 -->
+<div id="main-area">
 
-<!-- 功能入口區 -->
-<div id="feature-section">
-  <div class="tab-bar">
-    <div class="tab active" onclick="switchTab('order')"><span class="tab-icon"></span>查訂單</div>
-    <div class="tab" onclick="switchTab('cancel')"><span class="tab-icon">↩️</span>取消</div>
-    <div class="tab" onclick="switchTab('faq')"><span class="tab-icon"></span>常見問題</div>
-    <div class="tab" onclick="switchTab('contact')"><span class="tab-icon">️</span>聯絡</div>
+  <!-- AI 對話區 -->
+  <div id="chat-section">
+    <div id="chat-messages">
+      <div class="msg ai">您好 我是 EnamoR 的 AI 客服，請問有什麼可以幫您？<br>您可以直接輸入問題，或點選下方功能查詢訂單、退換貨等。</div>
+    </div>
+    <div id="chat-input-row">
+      <textarea id="chat-input" placeholder="輸入您的問題…" rows="1" onkeydown="handleChatKey(event)"></textarea>
+      <button id="chat-send" onclick="sendChat()"></button>
+    </div>
   </div>
 
-  <main>
+  <!-- 功能區 -->
+  <div id="feature-area">
+    <main>
 
-    <!-- 查訂單 -->
-    <div class="tab-content active" id="tab-order">
-      <div id="order-step1">
-        <div class="section-title">查詢訂單</div>
-        <div class="section-desc">輸入您的 Email，發送驗證碼後即可查看訂單狀態。</div>
-        <div class="steps">
-          <div class="step active"><div class="step-dot">1</div><div class="step-label">Email</div></div>
-          <div class="step"><div class="step-dot">2</div><div class="step-label">驗證</div></div>
-          <div class="step"><div class="step-dot">3</div><div class="step-label">訂單</div></div>
+      <!-- 查訂單 -->
+      <div class="tab-content" id="tab-order">
+        <div id="order-step1">
+          <div class="section-title">查詢訂單</div>
+          <div class="section-desc">輸入您的 Email，發送驗證碼後即可查看訂單狀態。</div>
+          <div class="steps">
+            <div class="step active"><div class="step-dot">1</div><div class="step-label">Email</div></div>
+            <div class="step"><div class="step-dot">2</div><div class="step-label">驗證</div></div>
+            <div class="step"><div class="step-dot">3</div><div class="step-label">訂單</div></div>
+          </div>
+          <div class="field">
+            <label>電子郵件</label>
+            <input type="email" id="order-email" placeholder="your@email.com">
+            <div class="err-msg" id="order-email-err"></div>
+          </div>
+          <button class="btn-primary" id="order-send-btn" onclick="orderSendOTP()">發送驗證碼</button>
+        </div>
+
+        <div id="order-step2" style="display:none;">
+          <div class="section-title">輸入驗證碼</div>
+          <div class="section-desc" id="order-otp-desc"></div>
+          <div class="steps">
+            <div class="step done"><div class="step-dot"></div><div class="step-label">Email</div></div>
+            <div class="step active"><div class="step-dot">2</div><div class="step-label">驗證</div></div>
+            <div class="step"><div class="step-dot">3</div><div class="step-label">訂單</div></div>
+          </div>
+          <div class="field">
+            <label>6 位數驗證碼</label>
+            <input type="tel" id="order-otp" placeholder="000000" maxlength="6" inputmode="numeric">
+            <div class="otp-timer" id="order-timer"></div>
+            <div class="err-msg" id="order-otp-err"></div>
+          </div>
+          <button class="btn-primary" onclick="orderVerifyOTP()">確認</button>
+          <button class="btn-outline" onclick="orderSendOTP(true)">重新發送</button>
+        </div>
+
+        <div id="order-step3" style="display:none;">
+          <div class="section-title">您的訂單</div>
+          <div id="order-list"></div>
+          <button class="btn-outline" style="margin-top:14px;" onclick="resetOrderFlow()">查詢其他 Email</button>
+        </div>
+      </div>
+
+      <!-- 取消訂單 -->
+      <div class="tab-content" id="tab-cancel">
+        <div class="section-title">取消訂單</div>
+        <div class="section-desc">下單後 12 小時內可自助取消。</div>
+        <div class="notice"> 已出貨或超過 12 小時的訂單無法自助取消，請透過「聯絡」提交申請。</div>
+        <a href="https://enamor-line-bot.vercel.app/cancel.html" class="contact-option">
+          <div class="contact-icon">↩️</div>
+          <div class="contact-info">
+            <div class="contact-name">前往自助取消頁面</div>
+            <div class="contact-note">Email 驗證後操作，約 2 分鐘完成</div>
+          </div>
+          <div class="contact-arrow">→</div>
+        </a>
+        <hr class="divider">
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.9;">
+          <div style="margin-bottom:10px;font-size:13px;color:var(--text);">退款說明</div>
+          <div>・貨到付款：取消後直接結案，無退款</div>
+          <div>・信用卡 / LINE Pay：7–14 個工作天退回原帳戶</div>
+          <div style="margin-top:8px;">・預購商品：請聯繫客服確認</div>
+        </div>
+      </div>
+
+      <!-- 常見問題 -->
+      <div class="tab-content" id="tab-faq">
+        <div class="field" style="margin-bottom:16px;">
+          <input type="text" id="faq-search" placeholder="搜尋問題…" oninput="filterFAQ(this.value)">
+        </div>
+        <div id="faq-list"><div style="font-size:12px;color:var(--text-dim);"><span class="spinner"></span>載入中…</div></div>
+      </div>
+
+      <!-- 聯絡我們 -->
+      <div class="tab-content" id="tab-contact">
+        <div class="section-title">聯絡我們</div>
+        <div class="section-desc">客服時間：週一至週五 09:00–17:00</div>
+
+        <div id="human-status-box" style="border:1px solid var(--border);padding:16px 18px;margin-bottom:16px;background:var(--surface);">
+          <div style="font-size:13px;margin-bottom:8px;" id="human-status-text">正在確認客服狀態…</div>
+          <div style="font-size:11px;color:var(--text-dim);" id="human-status-sub"></div>
+          <button class="btn-primary" id="human-btn" onclick="openCrisp()" style="margin-top:12px;display:none;">與真人客服對話</button>
+        </div>
+
+        <a href="https://line.me/R/ti/p/@enamorshop" class="line-banner" target="_blank">
+          <div class="contact-icon" style="font-size:24px;"></div>
+          <div class="line-banner-text">
+            <div>加入 LINE 官方帳號</div>
+            <div class="line-banner-sub">@enamorshop · 搶先知道新品與優惠</div>
+          </div>
+          <div class="line-banner-arrow">→</div>
+        </a>
+
+        <hr class="divider">
+        <div style="font-size:13px;margin-bottom:14px;">填寫問題表單</div>
+
+        <div class="field">
+          <label>問題類型</label>
+          <select id="c-type">
+            <option value="">請選擇</option>
+            <option value="order">訂單問題</option>
+            <option value="return">退換貨申請</option>
+            <option value="product">商品諮詢</option>
+            <option value="shipping">配送問題</option>
+            <option value="preorder">預購相關</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>訂單編號（選填）</label>
+          <input type="text" id="c-order" placeholder="EnamoR-1001">
         </div>
         <div class="field">
           <label>電子郵件</label>
-          <input type="email" id="order-email" placeholder="your@email.com">
-          <div class="err-msg" id="order-email-err"></div>
-        </div>
-        <button class="btn-primary" id="order-send-btn" onclick="orderSendOTP()">發送驗證碼</button>
-      </div>
-
-      <div id="order-step2" style="display:none;">
-        <div class="section-title">輸入驗證碼</div>
-        <div class="section-desc" id="order-otp-desc"></div>
-        <div class="steps">
-          <div class="step done"><div class="step-dot"></div><div class="step-label">Email</div></div>
-          <div class="step active"><div class="step-dot">2</div><div class="step-label">驗證</div></div>
-          <div class="step"><div class="step-dot">3</div><div class="step-label">訂單</div></div>
+          <input type="email" id="c-email" placeholder="your@email.com">
         </div>
         <div class="field">
-          <label>6 位數驗證碼</label>
-          <input type="tel" id="order-otp" placeholder="000000" maxlength="6" inputmode="numeric">
-          <div class="otp-timer" id="order-timer"></div>
-          <div class="err-msg" id="order-otp-err"></div>
+          <label>問題描述</label>
+          <textarea id="c-msg" placeholder="請詳細說明問題，方便我們快速處理。"></textarea>
         </div>
-        <button class="btn-primary" onclick="orderVerifyOTP()">確認</button>
-        <button class="btn-outline" onclick="orderSendOTP(true)">重新發送</button>
+        <button class="btn-primary" id="c-btn" onclick="submitContact()">送出</button>
+        <div id="c-result" style="margin-top:14px;"></div>
       </div>
 
-      <div id="order-step3" style="display:none;">
-        <div class="section-title">您的訂單</div>
-        <div id="order-list"></div>
-        <button class="btn-outline" style="margin-top:14px;" onclick="resetOrderFlow()">查詢其他 Email</button>
-      </div>
-    </div>
+    </main>
+  </div>
 
-    <!-- 取消訂單 -->
-    <div class="tab-content" id="tab-cancel">
-      <div class="section-title">取消訂單</div>
-      <div class="section-desc">下單後 12 小時內可自助取消。</div>
-      <div class="notice"> 已出貨或超過 12 小時的訂單無法自助取消，請透過「聯絡」提交申請。</div>
-      <a href="https://enamor-line-bot.vercel.app/cancel.html" class="contact-option">
-        <div class="contact-icon">↩️</div>
-        <div class="contact-info">
-          <div class="contact-name">前往自助取消頁面</div>
-          <div class="contact-note">Email 驗證後操作，約 2 分鐘完成</div>
-        </div>
-        <div class="contact-arrow">→</div>
-      </a>
-      <hr class="divider">
-      <div style="font-size:13px;color:var(--text-dim);line-height:1.9;">
-        <div style="margin-bottom:10px;font-size:13px;color:var(--text);">退款說明</div>
-        <div>・貨到付款：取消後直接結案，無退款</div>
-        <div>・信用卡 / LINE Pay：7–14 個工作天退回原帳戶</div>
-        <div style="margin-top:8px;">・預購商品：請聯繫客服確認</div>
-      </div>
-    </div>
+</div>
 
-    <!-- 常見問題 -->
-    <div class="tab-content" id="tab-faq">
-      <div class="field" style="margin-bottom:16px;">
-        <input type="text" id="faq-search" placeholder="搜尋問題…" oninput="filterFAQ(this.value)">
-      </div>
-      <div id="faq-list"><div style="font-size:12px;color:var(--text-dim);"><span class="spinner"></span>載入中…</div></div>
-    </div>
-
-    <!-- 聯絡我們 -->
-    <div class="tab-content" id="tab-contact">
-      <div class="section-title">聯絡我們</div>
-      <div class="section-desc">客服時間：週一至週五 09:00–17:00</div>
-
-      <!-- 真人客服入口 -->
-      <div id="human-status-box" style="border:1px solid var(--border);padding:16px 18px;margin-bottom:16px;background:var(--surface);">
-        <div style="font-size:13px;margin-bottom:8px;" id="human-status-text">正在確認客服狀態…</div>
-        <div style="font-size:11px;color:var(--text-dim);" id="human-status-sub"></div>
-        <button class="btn-primary" id="human-btn" onclick="openCrisp()" style="margin-top:12px;display:none;">與真人客服對話</button>
-      </div>
-
-      <!-- LINE 加好友 -->
-      <a href="https://line.me/R/ti/p/@enamorshop" class="line-banner" target="_blank">
-        <div class="contact-icon" style="font-size:24px;"></div>
-        <div class="line-banner-text">
-          <div>加入 LINE 官方帳號</div>
-          <div class="line-banner-sub">@enamorshop · 搶先知道新品與優惠</div>
-        </div>
-        <div class="line-banner-arrow">→</div>
-      </a>
-
-      <hr class="divider">
-      <div style="font-size:13px;margin-bottom:14px;">填寫問題表單</div>
-
-      <div class="field">
-        <label>問題類型</label>
-        <select id="c-type">
-          <option value="">請選擇</option>
-          <option value="order">訂單問題</option>
-          <option value="return">退換貨申請</option>
-          <option value="product">商品諮詢</option>
-          <option value="shipping">配送問題</option>
-          <option value="preorder">預購相關</option>
-          <option value="other">其他</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>訂單編號（選填）</label>
-        <input type="text" id="c-order" placeholder="EnamoR-1001">
-      </div>
-      <div class="field">
-        <label>電子郵件</label>
-        <input type="email" id="c-email" placeholder="your@email.com">
-      </div>
-      <div class="field">
-        <label>問題描述</label>
-        <textarea id="c-msg" placeholder="請詳細說明問題，方便我們快速處理。"></textarea>
-      </div>
-      <button class="btn-primary" id="c-btn" onclick="submitContact()">送出</button>
-      <div id="c-result" style="margin-top:14px;"></div>
-    </div>
-
-  </main>
+<!-- 底部工具列（折疊選單） -->
+<div id="toolbar">
+  <div class="toolbar-trigger" id="toolbar-trigger" onclick="toggleToolbar()">
+    <span>客服功能</span>
+    <span class="arrow">▲</span>
+  </div>
+  <div class="toolbar-menu" id="toolbar-menu">
+    <button class="tool-btn" onclick="openFeature('order', '查詢訂單')">
+      <span class="tool-icon">📦</span>
+      查訂單
+    </button>
+    <button class="tool-btn" onclick="openFeature('cancel', '取消訂單')">
+      <span class="tool-icon">↩</span>
+      取消
+    </button>
+    <button class="tool-btn" onclick="openFeature('faq', '常見問題')">
+      <span class="tool-icon">?</span>
+      常見問題
+    </button>
+    <button class="tool-btn" onclick="openFeature('contact', '聯絡我們')">
+      <span class="tool-icon">✉</span>
+      聯絡
+    </button>
+  </div>
 </div>
 
 <script>
@@ -415,10 +496,9 @@ window.CRISP_WEBSITE_ID = '9b63a035-81b9-45ff-8f68-884d9b40868e';
   document.head.appendChild(s);
 })();
 
-// 客服時間判斷（週一至週五 09:00–17:00，台灣時間）
 function isServiceHour() {
   const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
-  const day = now.getDay(); // 0=日, 6=六
+  const day = now.getDay();
   const hour = now.getHours();
   return day >= 1 && day <= 5 && hour >= 9 && hour < 17;
 }
@@ -435,8 +515,6 @@ function initHumanStatus() {
     btn.style.display = 'block';
     btn.textContent = '與真人客服對話';
   } else {
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Taipei' }));
-    const day = now.getDay();
     statusText.textContent = ' 目前非服務時間';
     statusSub.textContent = '客服時間：週一至週五 09:00–17:00，您可以留言，我們將於下個工作日回覆。';
     btn.style.display = 'block';
@@ -464,6 +542,32 @@ function openCrisp() {
   }
 }
 
+// ── 工具列折疊 ──────────────────────────────────────────
+function toggleToolbar() {
+  document.getElementById('toolbar-trigger').classList.toggle('open');
+  document.getElementById('toolbar-menu').classList.toggle('open');
+}
+
+// ── 進入功能模式 ────────────────────────────────────────
+function openFeature(id, title) {
+  document.body.classList.add('feature-mode');
+  document.getElementById('header-sub').textContent = title;
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  if (id === 'faq' && !faqLoaded) loadFAQ();
+  if (id === 'contact') initHumanStatus();
+  document.getElementById('feature-area').scrollTop = 0;
+}
+
+// ── 退出功能模式回到 AI ────────────────────────────────
+function exitFeature() {
+  document.body.classList.remove('feature-mode');
+  document.getElementById('header-sub').textContent = '客服中心';
+  // 收起工具列
+  document.getElementById('toolbar-trigger').classList.remove('open');
+  document.getElementById('toolbar-menu').classList.remove('open');
+}
+
 // ── AI System Prompt ─────────────────────────────────────
 const AI_SYSTEM = `你是 EnamoR 恩娜茉兒的 AI 客服，專業、親切、簡潔。
 
@@ -481,7 +585,7 @@ const AI_SYSTEM = `你是 EnamoR 恩娜茉兒的 AI 客服，專業、親切、�
 回覆原則：
 - 用繁體中文，語氣溫柔有質感
 - 簡短直接，不超過3段
-- 無法確認的事項（如特定訂單）請引導至下方功能操作
+- 無法確認的事項（如特定訂單）請引導使用下方功能查詢
 - 結尾可視情況引導加入 LINE @enamorshop`;
 
 // ── AI 對話 ──────────────────────────────────────────────
@@ -538,16 +642,6 @@ function addMsg(role, text) {
   box.appendChild(el);
   box.scrollTop = box.scrollHeight;
   return el;
-}
-
-// ── Tab 切換 ────────────────────────────────────────────
-function switchTab(id) {
-  const ids = ['order','cancel','faq','contact'];
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ids[i] === id));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-  if (id === 'faq' && !faqLoaded) loadFAQ();
-  if (id === 'contact') initHumanStatus();
 }
 
 // ── 查訂單 ───────────────────────────────────────────────
