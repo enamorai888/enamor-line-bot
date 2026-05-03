@@ -3,7 +3,7 @@
 // 部署位置：enamorai888/enamor-line-bot repo
 // Vercel Cron: 每天 UTC 04:00（= TST 12:00）
 
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 // ── 常數 ──
 const OMS_PROXY = 'https://enamor-oms.vercel.app/api/oms-proxy';
@@ -315,7 +315,7 @@ function buildEmailHTML(alerts) {
 }
 
 // ── Vercel Handler ──
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   // 只允許 GET（Cron 用 GET 觸發）
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
