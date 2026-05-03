@@ -376,7 +376,7 @@ async function submitToOms(){
   const poNo=`PO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}`;
 
   // 組 createPurchase body
-  const body=matched.map(i=>({
+  const items=matched.map(i=>({
     purchase_no: poNo,
     purchase_type: 'default',
     supplier_model: i.vs,
@@ -387,6 +387,7 @@ async function submitToOms(){
     purchase_quantity: i.qty,
     memo: i.memo||'採購平台自動上傳'
   }));
+  const body={batch:items};
 
   try{
     const res=await oP('/api/v2/default/action/createPurchase',body);
