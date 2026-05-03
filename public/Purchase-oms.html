@@ -372,38 +372,47 @@ async function submitToOms(){
   btn.disabled=true;
   st.textContent='送出中...';
 
-  // 產生採購單號：PO-YYYYMMDD-001
   const poNo=`PO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}`;
 
-  // 組 createPurchase body
   const items=matched.map(i=>({
     purchase_no: poNo,
     purchase_type: 'default',
     supplier_model: i.vs,
     products_model: i.bc,
-    products_ean: i.bc,// EAN 和 model 相同（EnamoR 的條碼系統）
+    products_ean: i.bc,
     name: i.nm||i.vs,
     warehouse_no: '1',
     purchase_quantity: i.qty,
     memo: i.memo||'採購平台自動上傳'
   }));
-  const body={batch:items};
 
-  try{
-    const res=await oP('/api/v2/default/action/createPurchase',body);
-    if(res.result){
-      st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 成功送出 ${matched.length} 筆，採購單號 ${poNo}</span>`;
-      toast('✓ 採購單已送出到 OMS');
-    }else{
-      st.innerHTML=`<span style="color:var(--red);font-weight:600">✗ OMS 回傳錯誤：${res.msg||'未知錯誤'}</span>`;
-      toast('送出失敗：'+res.msg);
+  // 先試 {batch: items}，失敗再試直接 Array
+  const attempts=[
+    {label:'batch格式',body:{batch:items}},
+    {label:'Array格式',body:items}
+  ];
+
+  let lastErr='';
+  for(const att of attempts){
+    try{
+      console.log(`createPurchase 嘗試 ${att.label}:`,JSON.stringify(att.body).substring(0,300));
+      const res=await oP('/api/v2/default/action/createPurchase',att.body);
+      console.log(`createPurchase ${att.label} 回傳:`,JSON.stringify(res).substring(0,500));
+      if(res.result){
+        st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 成功送出 ${matched.length} 筆（${att.label}），採購單號 ${poNo}</span>`;
+        toast('✓ 採購單已送出到 OMS');
+        btn.disabled=false;
+        return;
+      }
+      lastErr=res.msg||'未知錯誤';
+      console.warn(`${att.label} 失敗: ${lastErr}`);
+    }catch(err){
+      lastErr=err.message;
+      console.warn(`${att.label} 異常: ${lastErr}`);
     }
-    console.log('createPurchase response:',res);
-  }catch(err){
-    st.innerHTML=`<span style="color:var(--red)">✗ 送出失敗：${err.message}</span>`;
-    toast('送出失敗：'+err.message);
-    console.error(err);
   }
+  st.innerHTML=`<span style="color:var(--red);font-weight:600">✗ 兩種格式都失敗：${lastErr}</span>`;
+  toast('送出失敗：'+lastErr);
   btn.disabled=false;
 }
 
