@@ -120,43 +120,15 @@
   #chat-send:hover { opacity: 0.7; }
   #chat-send:disabled { opacity: 0.3; cursor: not-allowed; }
 
-  /* ── 底部工具列（折疊選單） ── */
+  /* ── 底部工具列（固定展開） ── */
   #toolbar {
     border-top: 1px solid var(--border);
     background: var(--surface);
     flex-shrink: 0;
-  }
-  body.feature-mode #toolbar { display: none; }
-
-  .toolbar-trigger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 12px;
-    cursor: pointer;
-    font-size: 12px;
-    letter-spacing: 0.15em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    transition: background 0.2s;
-  }
-  .toolbar-trigger:hover { background: var(--accent-light); color: var(--accent); }
-  .toolbar-trigger .arrow {
-    transition: transform 0.3s;
-    font-size: 10px;
-  }
-  .toolbar-trigger.open .arrow { transform: rotate(180deg); }
-
-  .toolbar-menu {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    border-top: 1px solid var(--border);
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
   }
-  .toolbar-menu.open { max-height: 100px; }
+  body.feature-mode #toolbar { display: none; }
 
   .tool-btn {
     padding: 14px 6px;
@@ -455,30 +427,24 @@
 
 </div>
 
-<!-- 底部工具列（折疊選單） -->
+<!-- 底部工具列（固定展開） -->
 <div id="toolbar">
-  <div class="toolbar-trigger" id="toolbar-trigger" onclick="toggleToolbar()">
-    <span>客服功能</span>
-    <span class="arrow">▲</span>
-  </div>
-  <div class="toolbar-menu" id="toolbar-menu">
-    <button class="tool-btn" onclick="openFeature('order', '查詢訂單')">
-      <span class="tool-icon">📦</span>
-      查訂單
-    </button>
-    <button class="tool-btn" onclick="openFeature('cancel', '取消訂單')">
-      <span class="tool-icon">↩</span>
-      取消
-    </button>
-    <button class="tool-btn" onclick="openFeature('faq', '常見問題')">
-      <span class="tool-icon">?</span>
-      常見問題
-    </button>
-    <button class="tool-btn" onclick="openFeature('contact', '聯絡我們')">
-      <span class="tool-icon">✉</span>
-      聯絡
-    </button>
-  </div>
+  <button class="tool-btn" onclick="openFeature('order', '查詢訂單')">
+    <span class="tool-icon">📦</span>
+    查訂單
+  </button>
+  <button class="tool-btn" onclick="openFeature('cancel', '取消訂單')">
+    <span class="tool-icon">↩</span>
+    取消
+  </button>
+  <button class="tool-btn" onclick="openFeature('faq', '常見問題')">
+    <span class="tool-icon">?</span>
+    常見問題
+  </button>
+  <button class="tool-btn" onclick="openFeature('contact', '聯絡我們')">
+    <span class="tool-icon">✉</span>
+    聯絡
+  </button>
 </div>
 
 <script>
@@ -542,12 +508,6 @@ function openCrisp() {
   }
 }
 
-// ── 工具列折疊 ──────────────────────────────────────────
-function toggleToolbar() {
-  document.getElementById('toolbar-trigger').classList.toggle('open');
-  document.getElementById('toolbar-menu').classList.toggle('open');
-}
-
 // ── 進入功能模式 ────────────────────────────────────────
 function openFeature(id, title) {
   document.body.classList.add('feature-mode');
@@ -563,9 +523,6 @@ function openFeature(id, title) {
 function exitFeature() {
   document.body.classList.remove('feature-mode');
   document.getElementById('header-sub').textContent = '客服中心';
-  // 收起工具列
-  document.getElementById('toolbar-trigger').classList.remove('open');
-  document.getElementById('toolbar-menu').classList.remove('open');
 }
 
 // ── AI System Prompt ─────────────────────────────────────
