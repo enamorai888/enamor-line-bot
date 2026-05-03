@@ -1,423 +1,125 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EnamoR 採購平台（OMS）</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-:root{--bg:#f7f7f5;--surface:#fff;--surface2:#f3f3f0;--border:#e2dedd;--green:#2d7a3a;--green-light:#f0f7f1;--green-border:#b7dfcc;--red:#c0392b;--red-light:#fef2f2;--red-border:#fecaca;--orange:#e67e22;--orange-light:#fff8f0;--text:#1a1a1a;--muted:#888;--muted2:#bbb}
-*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh}
-header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}.logo-img{height:30px}.header-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px}.spacer{flex:1}.dot{width:7px;height:7px;border-radius:50%;background:#ddd;flex-shrink:0;transition:all .3s}.dot.ok{background:var(--green);box-shadow:0 0 5px rgba(45,122,58,.4)}.dot.err{background:var(--red)}.dot-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
-.wrap{max-width:1280px;margin:0 auto;padding:24px 28px}
-.status-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}.sb-item{display:flex;align-items:center;gap:6px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)}.sb-item .dot{width:6px;height:6px}.sb-item.ok{color:var(--green)}.sb-item.ok .dot{background:var(--green)}
-.action-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}.btn{padding:9px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px;white-space:nowrap}.btn-primary{background:var(--text);color:#fff}.btn-primary:hover{background:#333}.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#256132}.btn-secondary{background:#fff;color:var(--muted);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--text);color:var(--text)}.btn:disabled{opacity:.4;cursor:not-allowed}
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}.card-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-family:'DM Mono',monospace;margin-bottom:5px}.card-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace}.card-sub{font-size:11px;color:var(--muted);margin-top:2px}.card-alert{border-color:var(--red-border);background:var(--red-light)}.card-alert .card-val{color:var(--red)}
-.vendor-config{background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:20px;overflow:hidden}.vc-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}.vc-header h3{font-size:13px;font-weight:600}.vc-toggle{font-size:10px;color:var(--muted2);margin-left:auto}.vc-body{padding:0;max-height:0;overflow:hidden;transition:max-height .3s}.vc-body.open{max-height:800px;padding:12px 16px;overflow-y:auto}.vc-table{width:100%;border-collapse:collapse}.vc-table th{padding:6px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}.vc-table td{padding:6px 10px;font-size:12px;border-bottom:1px solid var(--surface2)}.vc-input{width:60px;text-align:center;font-family:'DM Mono',monospace;font-size:12px;border:1px solid var(--border);border-radius:4px;padding:3px 6px;background:#fff;color:var(--text)}.vc-input:focus{outline:none;border-color:var(--green)}
-.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}.filter-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}.chip{padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap}.chip:hover{border-color:var(--text);color:var(--text)}.chip.active{background:var(--text);border-color:var(--text);color:#fff;font-weight:600}.chip.alert{border-color:var(--red);color:var(--red)}.chip.alert.active{background:var(--red);color:#fff}.search-input{margin-left:auto;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-family:'DM Mono',monospace;color:var(--text);outline:none;width:200px}.search-input:focus{border-color:var(--text)}
-.vendor-block{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}.vendor-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}.vbadge{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:600}.vendor-head h3{font-size:14px;font-weight:600}.vtotal{margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}.btn-dl{padding:6px 14px;border-radius:5px;border:1px solid var(--green);background:#fff;color:var(--green);font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:500}.btn-dl:hover{background:var(--green);color:#fff}
-table{width:100%;border-collapse:collapse}th{padding:8px 12px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--surface2);vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#faf9f8}.mono{font-family:'DM Mono',monospace}.text-center{text-align:center}.text-right{text-align:right}.alert-row td{background:var(--red-light)!important}.size-tag{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:3px;border:1px solid var(--border);display:inline-block}
-.loading{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}@keyframes spin{to{transform:rotate(360deg)}}
-.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}.toast.show{opacity:1;transform:translateY(0)}.hidden{display:none!important}
-</style>
-</head>
-<body>
-<!-- PASSWORD WALL -->
-<div id="authWall" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center">
-  <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:40px;text-align:center;max-width:360px;width:90%">
-    <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" style="height:28px;margin-bottom:20px" onerror="this.style.display='none'">
-    <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:16px">採購平台 · OMS</div>
-    <input type="password" id="authPw" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')authCheck()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:'DM Mono',monospace;text-align:center;outline:none;margin-bottom:12px">
-    <button onclick="authCheck()" style="width:100%;padding:10px;border:none;border-radius:6px;background:var(--text);color:#fff;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;cursor:pointer">進入</button>
-    <div id="authErr" style="color:var(--red);font-size:12px;margin-top:10px;display:none">密碼錯誤</div>
-  </div>
-</div>
-<script>
-function authCheck(){
-  if(document.getElementById('authPw').value==='28447208'){
-    document.getElementById('authWall').style.display='none';
-    sessionStorage.setItem('enamor_auth','1');
-  }else{document.getElementById('authErr').style.display='block'}
+/**
+ * EnamoR OMS Proxy API
+ * Vercel Serverless Function
+ */
+let cachedToken = null;
+let tokenExpiry = 0;
+const OMS_API_URL = process.env.OMS_API_URL || 'https://oms.licodes.net/enamor';
+const OMS_CLIENT_ID = process.env.OMS_CLIENT_ID || 'enamorAPI';
+const OMS_CHECK_VALUE = process.env.OMS_CHECK_VALUE || '0iccZ0Gjsygc';
+const PROXY_SECRET = process.env.OMS_PROXY_SECRET || process.env.PROXY_SECRET || '28447208';
+async function getToken() {
+  if (cachedToken && Date.now() < tokenExpiry) return cachedToken;
+  const url = `${OMS_API_URL}/api/v1/token/getToken`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ClientId: OMS_CLIENT_ID, CheckValue: OMS_CHECK_VALUE }),
+  });
+  if (!res.ok) throw new Error(`OMS Token HTTP ${res.status}: ${await res.text()}`);
+  const data = await res.json();
+  const token = data.retval?.access_token || data.retval?.token || data.access_token || data.token || data.data?.access_token || data.data?.token;
+  if (!token) throw new Error(`OMS Token 解析失敗: ${JSON.stringify(data).substring(0, 500)}`);
+  cachedToken = token;
+  tokenExpiry = Date.now() + 50 * 60 * 1000;
+  return cachedToken;
 }
-if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall').style.display='none';
-</script>
-<header>
-  <img class="logo-img" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
-  <span class="header-title">採購平台 · OMS</span>
-  <div class="spacer"></div>
-  <div class="dot" id="dot"></div>
-  <span class="dot-label" id="dotLabel">待連線</span>
-</header>
-<div class="wrap">
-  <div class="status-bar">
-    <div class="sb-item" id="sbOms"><div class="dot"></div>OMS</div>
-    <div class="sb-item" id="sbSup"><div class="dot"></div>對照表</div>
-    <div class="sb-item" id="sbStk"><div class="dot"></div>庫存</div>
-    <div class="sb-item" id="sbSal"><div class="dot"></div>銷量</div>
-    <div class="sb-item" id="sbPo"><div class="dot"></div>採購單</div>
-  </div>
-  <div class="action-bar">
-    <button class="btn btn-primary" id="btnFetch" onclick="fetchAll()">📡 從 OMS 拉取數據</button>
-    <span id="fetchSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
-    <div class="spacer"></div>
-    <button class="btn btn-green hidden" id="btnExp" onclick="exportAll()">⬇ 匯出採購建議 Excel</button>
-  </div>
-  <div class="loading hidden" id="ldArea"><span class="spinner"></span><span id="ldMsg">讀取中...</span></div>
-  <div id="content" class="hidden">
-    <div class="summary-grid" id="sumGrid"></div>
-    <div class="vendor-config">
-      <div class="vc-header" onclick="toggleCfg()">
-        <h3>⚙ 供應商交期設定</h3>
-        <span style="font-size:11px;color:var(--muted)">交期 + 安全庫存 = 再訂購點（by 供應商）</span>
-        <span class="vc-toggle" id="vcTog">▶</span>
-      </div>
-      <div class="vc-body" id="vcBody">
-        <table class="vc-table"><thead><tr><th>廠商</th><th>名稱</th><th>SKU</th><th>需採購</th><th>交期</th><th>安全</th><th>合計</th></tr></thead><tbody id="vcR"></tbody></table>
-      </div>
-    </div>
-    <div class="filter-bar">
-      <span class="filter-lbl">篩選</span>
-      <div class="chip active" onclick="setF('all',this)">全部</div>
-      <div class="chip alert" onclick="setF('alert',this)">⚠ 需採購</div>
-      <div class="chip" onclick="setF('ok',this)">充足</div>
-      <input class="search-input" placeholder="搜尋..." oninput="sQ=this.value;renderTbl()">
-    </div>
-    <div id="tblArea"></div>
-
-    <!-- 上傳採購確認單 -->
-    <div class="sec-upload" style="background:#fff;border:1px solid var(--border);border-radius:8px;margin-top:24px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-        <h3 style="font-size:14px;font-weight:600">📤 上傳廠商確認單 → OMS</h3>
-        <span style="font-size:11px;color:var(--muted)">上傳廠商回傳的 Excel，自動比對條碼後送 OMS 建立採購單</span>
-      </div>
-      <div style="padding:18px">
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
-          <input type="file" id="poFile" accept=".xlsx,.xls" style="font-family:'DM Mono',monospace;font-size:12px">
-          <button class="btn btn-primary" onclick="parsePoFile()" id="btnParse">解析 Excel</button>
-          <span id="parseSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
-        </div>
-        <div id="poPreview" class="hidden"></div>
-        <div id="poActions" class="hidden" style="margin-top:16px;display:flex;gap:12px;align-items:center">
-          <button class="btn btn-green" onclick="submitToOms()" id="btnSubmit">🚀 送出到 OMS</button>
-          <span id="submitSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-<div class="toast" id="toast"></div>
-<script>
-const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208';
-const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
-const LK='enamor_po_oms_v2',SD=30;
-let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},merged=[],vCfg={},cF='all',sQ='';
-function ldCfg(){try{vCfg=JSON.parse(localStorage.getItem(LK)||'{}')}catch(e){vCfg={}}}
-function svCfg(){localStorage.setItem(LK,JSON.stringify(vCfg))}
-function gVC(v){if(!vCfg[v])vCfg[v]={ld:7,sf:7};return vCfg[v]}
-async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({endpoint:ep,body:b})});return r.json()}
-let revMap={};// 反向：vs+vc+vsz → {bc, nm}
-async function ldSup(){const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:Q?key=${SK}`;const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');const h=rows[0],ci=n=>h.indexOf(n);const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明'),iAct=ci('Shopify啟用'),iNm=ci('商品名稱');supMap={};revMap={};rows.slice(1).forEach(r=>{const c=(r[iC]||'').trim();const active=(r[iAct]||'').trim();if(c&&active==='V'&&!supMap[c]){const vs=(r[iS]||'').trim(),vc=(r[iCo]||'').trim(),vsz=(r[iSz]||'').trim(),nm=iNm>=0?(r[iNm]||'').trim():'';supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs,vsz,vc,nm};const rk=`${vs}|||${vc}|||${vsz}`;if(!revMap[rk])revMap[rk]={bc:c,nm}}});return Object.keys(supMap).length}
-
-async function fetchAll(){
-  const btn=document.getElementById('btnFetch');btn.disabled=true;
-  document.getElementById('ldArea').classList.remove('hidden');
-  document.getElementById('content').classList.add('hidden');
-  try{
-    sL('載入供應商對照表...');const sc=await ldSup();sS('sbSup',1,`對照表 ${sc}`);
-    sL('拉取庫存...');const sr=await oP('/api/v2/default/getStocksData/searchList',{"view_products_stock.stock_group":"10"});stockD=sr.retval||[];sS('sbOms',1,'OMS 正常');sS('sbStk',1,`庫存 ${stockD.length}`);
-    sL('拉取30天訂單明細...');const dd=new Date();dd.setDate(dd.getDate()-SD);const ds=dd.toISOString().slice(0,10);
-    const or=await oP('/api/v2/default/apiOrderList/searchDetail',{"orders.created_at@start":[">=",ds]});
-    const rv=or.retval||{};const oi=rv['訂單明細']||[];const ob=rv['基本資料']||[];
-    sS('sbSal',1,`明細 ${oi.length}（${SD}天）`);
-    // 建 orderId → date mapping
-    const odMap={};ob.forEach(o=>{const oid=(o['orders.orders_id']||'').trim();const dt=(o['orders.created_at']||'').slice(0,10);if(oid&&dt)odMap[oid]=dt});
-    skuSal={};skuDates={};
-    oi.forEach(i=>{const m=(i['orders_products.products_model']||'').trim();const q=parseInt(i['orders_products.products_quantity']||0);const oid=(i['orders_products.orders_id']||'').trim();if(m&&q>0){skuSal[m]=(skuSal[m]||0)+q;const dt=odMap[oid];if(dt){if(!skuDates[m])skuDates[m]={first:dt,last:dt};if(dt<skuDates[m].first)skuDates[m].first=dt;if(dt>skuDates[m].last)skuDates[m].last=dt}}});
-    sL('拉取待處理採購單...');const pr=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.status":"60"});
-    const pv=pr.retval||{};const pi=pv.purchase||pv['purchase']||[];pendPO={};
-    if(Array.isArray(pi)){pi.forEach(p=>{const m=(p['purchase.products_model']||'').trim();const pq=parseInt(p['purchase.purchase_quantity']||0);const sq=parseInt(p['purchase.stock_quantity']||0);const rem=pq-sq;if(m&&rem>0)pendPO[m]=(pendPO[m]||0)+rem})}
-    sS('sbPo',1,`採購中 ${Object.keys(pendPO).length} SKU`);
-    sL('合併計算...');doMerge();
-    document.getElementById('ldArea').classList.add('hidden');
-    document.getElementById('content').classList.remove('hidden');
-    document.getElementById('btnExp').classList.remove('hidden');
-    document.getElementById('dot').className='dot ok';
-    document.getElementById('dotLabel').textContent='數據就緒';
-    document.getElementById('fetchSt').textContent=`更新 ${new Date().toLocaleTimeString('zh-TW')}`;
-    renderAll();
-  }catch(e){
-    document.getElementById('ldArea').classList.add('hidden');
-    document.getElementById('fetchSt').textContent='錯誤：'+e.message;
-    document.getElementById('dot').className='dot err';
-    toast('失敗：'+e.message);console.error(e);
+async function forwardToOMS(endpoint, body) {
+  const token = await getToken();
+  const url = `${OMS_API_URL}${endpoint}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    body: JSON.stringify(body || {}),
+  });
+  const data = await res.json();
+  if (res.status === 401 || (data.result === false && data.msg?.includes('token'))) {
+    cachedToken = null;
+    tokenExpiry = 0;
+    const newToken = await getToken();
+    const retryRes = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${newToken}` },
+      body: JSON.stringify(body || {}),
+    });
+    return await retryRes.json();
   }
-  btn.disabled=false;
+  return data;
 }
-
-function sL(m){document.getElementById('ldMsg').textContent=m}
-function sS(id,ok,t){const e=document.getElementById(id);e.className='sb-item'+(ok?' ok':'');e.innerHTML=`<div class="dot"></div>${t}`}
-
-const SKIP=new Set(['999999','platform_coin','platform_coin_16','SHIPFEE','seller_discount','Discount','universal_products','enprice','free01','luckybag','luckybagp3','VIP_BDG','VVIP_BDG']);
-
-function doMerge(){
-  const sm={};
-  stockD.forEach(s=>{const m=(s['view_products_stock.products_model']||'').trim();const q=parseInt(s['view_products_stock.stock_qty']||0);const n=(s['view_products_stock.products_name']||'').trim();if(!m)return;if(!sm[m])sm[m]={stk:0,nm:n};sm[m].stk+=q});
-  merged=[];
-  const today=new Date().toISOString().slice(0,10);
-  // 只處理供應商對照表裡有的 SKU（= Shopify 上架中）
-  Object.entries(sm).forEach(([bc,inf])=>{
-    const sp=supMap[bc];
-    if(!sp)return;// 不在對照表 = 不在 Shopify，跳過
-    const sold=skuSal[bc]||0;const po=pendPO[bc]||0;
-    const vid=sp.vid;const vc=gVC(vid);
-    // ── 倖存者偏差修正 ──
-    // 如果庫存=0 + 有歷史銷量 + 最後銷售日距今>7天 → 斷貨SKU，用有銷售期間天數算日均
-    let effDays=SD; // 預設30天
-    let isStockout=false;
-    const dates=skuDates[bc];
-    if(inf.stk===0 && sold>0 && dates){
-      const lastMs=new Date(dates.last).getTime();
-      const todayMs=new Date(today).getTime();
-      const daysSinceLast=Math.round((todayMs-lastMs)/(86400000));
-      if(daysSinceLast>7){
-        // 斷貨：用第一筆到最後一筆的天數跨度
-        const firstMs=new Date(dates.first).getTime();
-        const span=Math.round((lastMs-firstMs)/(86400000))+1;
-        effDays=Math.max(1,span);
-        isStockout=true;
+const ALLOWED_ENDPOINTS = [
+  // 1. Token
+  '/api/v1/token/getToken',
+  // 2. 訂單列表
+  '/api/v2/default/apiOrderList/searchList',
+  // 3. 訂單託運單
+  '/api/v2/default/apiShippingDocument/searchList',
+  // 4. 訂單詳細
+  '/api/v2/default/apiOrderList/searchDetail',
+  // 5. 建立出貨訂單
+  '/api/v2/default/action/createOrders',
+  // 6. 更新出貨訂單
+  '/api/v2/default/apiUpdateOrderList/updateList',
+  // 7. 建立退貨訂單
+  '/api/v2/default/action/createReturnOrders',
+  // 8. 庫存查詢
+  '/api/v2/default/getStocksData/searchList',
+  // 9. 建立採購單
+  '/api/v2/default/action/createPurchase',
+  // 10. 退貨確認及調整
+  '/api/v2/orders/confirmReturn',
+  // 11. 賣場商品可售量
+  '/api/v2/default/apiMarketsProductsAssign/searchList',
+  // 12. 組合商品列表
+  '/api/v2/default/apiAssociationProducts/searchList',
+  // 13. 採購單列表
+  '/api/v2/default/apiPurchaseHeaderList/searchList',
+  // 14. 採購單詳細
+  '/api/v2/default/apiPurchaseHeaderList/searchDetail',
+  // 15. 入庫單列表
+  '/api/v2/default/apiStockInVoucherList/searchList',
+  // 16. 入庫單詳細
+  '/api/v2/default/apiStockInVoucherList/searchDetail',
+  // 101. 建立託運單
+  '/api/v2/default/insert/createOrdersShippingFiles',
+];
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-proxy-token');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const proxyToken = req.headers['x-proxy-token'];
+  if (proxyToken !== PROXY_SECRET) return res.status(403).json({ error: '未授權' });
+  try {
+    const { endpoint, body } = req.body;
+    if (!endpoint) return res.status(400).json({ error: '缺少 endpoint 參數' });
+    if (!ALLOWED_ENDPOINTS.includes(endpoint)) return res.status(400).json({ error: `不允許的 endpoint: ${endpoint}` });
+    if (endpoint === '/api/v1/token/getToken') {
+      const token = await getToken();
+      return res.status(200).json({ result: true, msg: 'Token 取得成功', token_preview: token.substring(0, 20) + '...' });
+    }
+    // Debug: log body type and preview for createPurchase
+    if (endpoint.includes('createPurchase')) {
+      console.log('[createPurchase] body type:', typeof body, Array.isArray(body) ? 'isArray' : 'notArray');
+      console.log('[createPurchase] body preview:', JSON.stringify(body).substring(0, 500));
+      // 特殊處理：確保 batch 欄位存在
+      let omsBody = body;
+      if (body && !body.batch && Array.isArray(body)) {
+        omsBody = { batch: body };
+        console.log('[createPurchase] 自動包裝 Array 為 {batch: [...]}');
+      } else if (body && body.batch) {
+        console.log('[createPurchase] 已有 batch 欄位，直接轉發');
+      } else {
+        console.log('[createPurchase] body 格式異常:', body);
       }
+      const data = await forwardToOMS(endpoint, omsBody);
+      console.log('[createPurchase] OMS response:', JSON.stringify(data).substring(0, 500));
+      return res.status(200).json(data);
     }
-    const da=Math.round((sold/effDays)*100)/100;
-    const rop=Math.ceil(da*(vc.ld+vc.sf));const eff=inf.stk+po;
-    const rawSug=Math.max(0,rop-eff);const sug=rawSug>0?Math.ceil(rawSug/10)*10:0;const need=eff<rop&&da>0;
-    const dl=da>0?Math.floor(inf.stk/da):999;
-    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s30:sold,da,po,rop,sug,need,dl,isStockout,effDays});
-  });
-  merged.sort((a,b)=>{if(a.need!==b.need)return a.need?-1:1;return a.dl-b.dl});
-  // 用 OMS 品名回寫 revMap 和 supMap
-  Object.entries(sm).forEach(([bc,inf])=>{
-    if(supMap[bc]&&inf.nm){
-      supMap[bc].nm=inf.nm;
-      const sp=supMap[bc];
-      const rk=`${sp.vs}|||${sp.vc}|||${sp.vsz}`;
-      if(revMap[rk])revMap[rk].nm=inf.nm;
-    }
-  });
-}
-
-function renderAll(){renderSum();renderVC();renderTbl()}
-
-function renderSum(){
-  const al=merged.filter(i=>i.need);const ts=al.reduce((s,i)=>s+i.sug,0);
-  const vs=new Set(merged.map(i=>i.vid));
-  const tStk=merged.reduce((s,i)=>s+i.stk,0);const tPo=merged.reduce((s,i)=>s+i.po,0);
-  const shopifyTotal=Object.keys(supMap).length;
-  const omsMatch=merged.length;
-  const soCount=merged.filter(i=>i.isStockout).length;
-  document.getElementById('sumGrid').innerHTML=`
-    <div class="card ${al.length?'card-alert':''}"><div class="card-lbl">需採購</div><div class="card-val">${al.length}</div><div class="card-sub">SKU 低於再訂購點</div></div>
-    <div class="card"><div class="card-lbl">建議採購量</div><div class="card-val" style="color:var(--green)">${ts.toLocaleString()}</div><div class="card-sub">件（10入倍數）</div></div>
-    <div class="card"><div class="card-lbl">追蹤 SKU</div><div class="card-val">${omsMatch}</div><div class="card-sub">Shopify ${shopifyTotal} · ${vs.size} 供應商</div></div>
-    <div class="card"><div class="card-lbl">總庫存</div><div class="card-val">${tStk.toLocaleString()}</div><div class="card-sub">良品</div></div>
-    <div class="card"><div class="card-lbl">採購中</div><div class="card-val" style="color:var(--orange)">${tPo.toLocaleString()}</div><div class="card-sub">已下單未到</div></div>
-    <div class="card"><div class="card-lbl">斷貨修正</div><div class="card-val" style="color:${soCount?'var(--orange)':'var(--muted)'}">${soCount}</div><div class="card-sub">用有銷售期間日均</div></div>`;
-}
-
-function renderVC(){
-  const vs={};merged.forEach(i=>{if(!vs[i.vid])vs[i.vid]={n:i.vn,c:0,a:0};vs[i.vid].c++;if(i.need)vs[i.vid].a++});
-  document.getElementById('vcR').innerHTML=Object.entries(vs).sort((a,b)=>b[1].a-a[1].a||a[0].localeCompare(b[0])).map(([v,inf])=>{
-    const c=gVC(v);return`<tr><td class="mono" style="font-weight:600">${v}</td><td>${inf.n}</td><td class="mono text-center">${inf.c}</td><td class="mono text-center" style="color:${inf.a?'var(--red)':'var(--muted)'};font-weight:${inf.a?'700':'400'}">${inf.a}</td><td><input class="vc-input" type="number" min="1" max="90" value="${c.ld}" onchange="uVC('${v}','ld',this.value)"></td><td><input class="vc-input" type="number" min="0" max="90" value="${c.sf}" onchange="uVC('${v}','sf',this.value)"></td><td class="mono text-center" style="font-weight:600">${c.ld+c.sf}天</td></tr>`}).join('');
-}
-
-function renderTbl(){
-  let items=merged;
-  if(cF==='alert')items=items.filter(i=>i.need);
-  if(cF==='ok')items=items.filter(i=>!i.need);
-  if(sQ){const q=sQ.toLowerCase();items=items.filter(i=>i.bc.toLowerCase().includes(q)||i.nm.toLowerCase().includes(q)||(i.vs||'').toLowerCase().includes(q)||(i.vid||'').toLowerCase().includes(q))}
-  const vs={};items.forEach(i=>{if(!vs[i.vid])vs[i.vid]={n:i.vn,it:[]};vs[i.vid].it.push(i)});
-  const area=document.getElementById('tblArea');area.innerHTML='';
-  if(!Object.keys(vs).length){area.innerHTML='<div class="loading">沒有符合條件的項目</div>';return}
-  Object.entries(vs).sort((a,b)=>{const aA=a[1].it.some(i=>i.need),bA=b[1].it.some(i=>i.need);if(aA!==bA)return aA?-1:1;return a[0].localeCompare(b[0])}).forEach(([v,inf])=>{
-    const al=inf.it.filter(i=>i.need);const ts=al.reduce((s,i)=>s+i.sug,0);
-    const d=document.createElement('div');d.className='vendor-block';
-    d.innerHTML=`<div class="vendor-head"><span class="vbadge">${v}</span><h3>${inf.n||v}</h3>${al.length?`<span style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;font-weight:600">⚠ ${al.length} 需採購</span>`:''}<span class="vtotal">${inf.it.length} SKU${ts?` · 建議 ${ts} 件`:''}</span>${al.length?`<button class="btn-dl" onclick="expV('${v}')">⬇ ${v}.xlsx</button>`:''}</div>
-    <table><thead><tr><th>商品條碼</th><th>廠商貨號</th><th>顏色</th><th>尺寸</th><th>商品名稱</th><th class="text-right">庫存</th><th class="text-right">採購中</th><th class="text-right">30天銷</th><th class="text-right">日均</th><th class="text-right">ROP</th><th class="text-right">可用</th><th class="text-right" style="color:var(--green);font-weight:700">建議</th></tr></thead>
-    <tbody>${inf.it.map(rR).join('')}</tbody></table>`;
-    area.appendChild(d);
-  });
-}
-
-function rR(i){
-  const c=i.need?'alert-row':'';const dc=i.dl<=7?'var(--red)':i.dl<=14?'var(--orange)':'var(--muted)';
-  const soTag=i.isStockout?`<span style="font-size:9px;color:#fff;background:var(--orange);padding:1px 5px;border-radius:3px;margin-left:4px" title="斷貨修正：用${i.effDays}天算日均">斷貨</span>`:'';
-  return`<tr class="${c}"><td class="mono" style="font-size:11px;color:var(--muted)">${i.bc}</td><td class="mono" style="font-size:11px">${i.vs||i.bc}</td><td style="font-size:12px">${i.vc2||'—'}</td><td>${i.vsz?`<span class="size-tag">${i.vsz}</span>`:'—'}</td><td style="font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.nm}">${i.nm||'—'}</td><td class="mono text-right" style="font-weight:600">${i.stk}</td><td class="mono text-right" style="color:${i.po?'var(--orange)':'var(--muted)'}">${i.po||'—'}</td><td class="mono text-right">${i.s30}</td><td class="mono text-right">${i.da.toFixed(1)}${soTag}</td><td class="mono text-right">${i.rop}</td><td class="mono text-right" style="color:${dc};font-weight:${i.dl<=14?'700':'400'}">${i.dl>=999?'∞':i.dl+'天'}</td><td class="mono text-right" style="font-weight:700;font-size:14px;color:${i.need?'var(--red)':'var(--muted)'}">${i.sug>0?i.sug:'—'}</td></tr>`;
-}
-
-function setF(v,el){cF=v;document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTbl()}
-function toggleCfg(){const b=document.getElementById('vcBody');b.classList.toggle('open');document.getElementById('vcTog').textContent=b.classList.contains('open')?'▼':'▶'}
-function uVC(v,f,val){gVC(v)[f]=parseInt(val)||0;svCfg();doMerge();renderAll();toast(`${v} 已更新`)}
-
-function tdy(){return new Date().toISOString().slice(0,10).replace(/-/g,'')}
-function expV(v){
-  const it=merged.filter(i=>i.vid===v&&i.need);if(!it.length){toast('沒有需採購項目');return}
-  const wb=XLSX.utils.book_new();const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','日均銷量','建議採購量','備註']];
-  it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.da,i.sug,'']));
-  d.push(['','','','','','合計',it.reduce((s,i)=>s+i.sug,0),'']);
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v);
-  XLSX.writeFile(wb,`${tdy()}_採購_${v}.xlsx`);toast(`✓ ${v} 已下載`);
-}
-function exportAll(){
-  const al=merged.filter(i=>i.need);if(!al.length){toast('沒有需採購項目');return}
-  const wb=XLSX.utils.book_new();
-  const s=[['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','日均銷量','再訂購點','建議採購量']];
-  al.forEach(i=>s.push([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.da,i.rop,i.sug]));
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s),'採購彙整');
-  const vs={};al.forEach(i=>{if(!vs[i.vid])vs[i.vid]=[];vs[i.vid].push(i)});
-  Object.entries(vs).forEach(([v,it])=>{const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','日均銷量','建議採購量','備註']];it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.da,i.sug,'']));d.push(['','','','','','合計',it.reduce((s,i)=>s+i.sug,0),'']);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v.substring(0,31))});
-  XLSX.writeFile(wb,`${tdy()}_OMS採購建議.xlsx`);toast('✓ 採購建議已匯出');
-}
-function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
-
-// ── 上傳採購確認單 ──
-let poItems=[];// 解析後的待送項目
-
-function parsePoFile(){
-  const fileEl=document.getElementById('poFile');
-  if(!fileEl.files.length){toast('請選擇檔案');return}
-  if(Object.keys(revMap).length===0){toast('請先拉取數據（需要對照表）');return}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      const wb=XLSX.read(e.target.result,{type:'array'});
-      poItems=[];
-      let unmatchCount=0;
-      wb.SheetNames.forEach(sn=>{
-        const ws=wb.Sheets[sn];
-        const data=XLSX.utils.sheet_to_json(ws,{defval:''});
-        data.forEach(row=>{
-          const vs=(row['廠商貨號']||'').toString().trim();
-          const vc=(row['廠商顏色說明']||'').toString().trim();
-          const vsz=(row['尺寸說明']||'').toString().trim();
-          const qty=parseInt(row['建議採購量']||row['採購量']||row['數量']||0);
-          const memo=(row['備註']||'').toString().trim();
-          if(!vs||qty<=0)return;
-          const rk=`${vs}|||${vc}|||${vsz}`;
-          const match=revMap[rk];
-          if(match){
-            // 從 supMap 拿完整資料
-            const sup=supMap[match.bc]||{};
-            poItems.push({
-              vs,vc,vsz,qty,memo,
-              bc:match.bc,
-              nm:sup.nm||match.nm||'',
-              vid:sup.vid||'',
-              vn:sup.vn||'',
-              matched:true
-            });
-          }else{
-            poItems.push({vs,vc,vsz,qty,memo,bc:'',nm:'',vid:'',vn:'',matched:false});
-            unmatchCount++;
-          }
-        });
-      });
-      if(poItems.length===0){toast('Excel 中沒有有效的採購項目');return}
-      document.getElementById('parseSt').textContent=`解析完成：${poItems.length} 筆${unmatchCount>0?`，${unmatchCount} 筆未對照`:''}`
-      renderPoPreview();
-      document.getElementById('poPreview').classList.remove('hidden');
-      document.getElementById('poActions').classList.remove('hidden');
-      document.getElementById('poActions').style.display='flex';
-    }catch(err){
-      toast('解析失敗：'+err.message);console.error(err);
-    }
-  };
-  reader.readAsArrayBuffer(fileEl.files[0]);
-}
-
-function renderPoPreview(){
-  const matched=poItems.filter(i=>i.matched);
-  const unmatched=poItems.filter(i=>!i.matched);
-  const totalQty=matched.reduce((s,i)=>s+i.qty,0);
-  let html=`<div style="margin-bottom:12px;font-size:13px">
-    <span style="color:var(--green);font-weight:600">✓ 可送出 ${matched.length} 筆（${totalQty} 件）</span>
-    ${unmatched.length?`<span style="color:var(--red);margin-left:16px;font-weight:600">✗ 未對照 ${unmatched.length} 筆（不會送出）</span>`:''}
-  </div>`;
-  html+=`<table><thead><tr>
-    <th>狀態</th><th>商品條碼</th><th>廠商貨號</th><th>顏色</th><th>尺寸</th><th>品名</th><th class="text-right">數量</th><th>備註</th>
-  </tr></thead><tbody>`;
-  poItems.forEach(i=>{
-    const cls=i.matched?'':'alert-row';
-    const st=i.matched?'<span style="color:var(--green);font-weight:700">✓</span>':'<span style="color:var(--red);font-weight:700">✗</span>';
-    html+=`<tr class="${cls}">
-      <td>${st}</td>
-      <td class="mono" style="font-size:11px">${i.bc||'—'}</td>
-      <td class="mono" style="font-size:11px">${i.vs}</td>
-      <td style="font-size:12px">${i.vc||'—'}</td>
-      <td>${i.vsz?`<span class="size-tag">${i.vsz}</span>`:'—'}</td>
-      <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${i.nm||'—'}</td>
-      <td class="mono text-right" style="font-weight:700">${i.qty}</td>
-      <td style="font-size:12px;color:var(--muted)">${i.memo||''}</td>
-    </tr>`;
-  });
-  html+='</tbody></table>';
-  document.getElementById('poPreview').innerHTML=html;
-}
-
-async function submitToOms(){
-  const matched=poItems.filter(i=>i.matched);
-  if(!matched.length){toast('沒有可送出的項目');return}
-  const btn=document.getElementById('btnSubmit');
-  const st=document.getElementById('submitSt');
-  btn.disabled=true;
-  st.textContent='送出中...';
-
-  const poNo=`PO-${new Date().toISOString().slice(0,10).replace(/-/g,'')}`;
-
-  const items=matched.map(i=>({
-    purchase_no: poNo,
-    purchase_type: 'default',
-    supplier_model: i.vs,
-    products_model: i.bc,
-    products_ean: i.bc,
-    name: i.nm||i.vs,
-    warehouse_no: '1',
-    purchase_quantity: i.qty,
-    memo: i.memo||'採購平台自動上傳'
-  }));
-
-  // 先試 {batch: items}，失敗再試直接 Array
-  const attempts=[
-    {label:'batch格式',body:{batch:items}},
-    {label:'Array格式',body:items}
-  ];
-
-  let lastErr='';
-  let logs=[];
-  for(const att of attempts){
-    try{
-      console.log(`createPurchase 嘗試 ${att.label}:`,JSON.stringify(att.body).substring(0,300));
-      const res=await oP('/api/v2/default/action/createPurchase',att.body);
-      console.log(`createPurchase ${att.label} 回傳:`,res);
-      if(res.result===true||res.done===true){
-        st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 成功送出 ${matched.length} 筆（${att.label}），採購單號 ${poNo}</span>`;
-        toast('✓ 採購單已送出到 OMS');
-        btn.disabled=false;
-        return;
-      }
-      lastErr=res.msg||JSON.stringify(res);
-      logs.push(`${att.label}: ${lastErr}`);
-    }catch(err){
-      lastErr=err.message;
-      logs.push(`${att.label}: ${err.message}`);
-    }
+    const data = await forwardToOMS(endpoint, body);
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error('OMS Proxy Error:', err);
+    return res.status(500).json({ error: err.message });
   }
-  st.innerHTML=`<span style="color:var(--red);font-weight:600">✗ 兩種格式都失敗<br>${logs.map(l=>'· '+l).join('<br>')}</span>`;
-  toast('送出失敗');
-  btn.disabled=false;
-}
-
-ldCfg();
-</script>
-</body>
-</html>
+};
