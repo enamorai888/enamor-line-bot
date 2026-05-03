@@ -15,6 +15,13 @@ const ALERT_DAYS = 3; // 可用天數 ≤ 3 天就警示
 const DEFAULT_LEAD = 7;
 const DEFAULT_SAFETY = 7;
 
+// ── 供應商交期覆寫（預設 7+7，這裡列出例外）──
+const VENDOR_OVERRIDE = {
+  'FM': { ld: 30, sf: 7 }
+  // 未來要加其他供應商，照格式加一行即可：
+  // 'XX': { ld: 14, sf: 7 }
+};
+
 // ── OMS Proxy 呼叫 ──
 async function omsCall(endpoint, body) {
   const res = await fetch(OMS_PROXY, {
@@ -144,8 +151,9 @@ async function getAlertItems() {
 
     const sold = skuSales[bc] || 0;
     const po = pendPO[bc] || 0;
-    const ld = DEFAULT_LEAD;
-    const sf = DEFAULT_SAFETY;
+    const vc = VENDOR_OVERRIDE[sp.vid] || { ld: DEFAULT_LEAD, sf: DEFAULT_SAFETY };
+    const ld = vc.ld;
+    const sf = vc.sf;
 
     // 斷貨修正（跟 Purchase-oms.html 同邏輯）
     let effDays = SALES_DAYS;
