@@ -214,24 +214,42 @@ function isProductQuery(text) {
   return keywords.some(k => text.includes(k));
 }
 
-// ── Claude API ─────────────────────────────────────────────────────────
+// ── Claude API（含 retry 5 次 + 8 秒單次超時）────────────────────────
 async function callClaude(messages, systemPrompt) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': CLAUDE_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 400,
-      system: systemPrompt,
-      messages: messages.slice(-12)
-    })
-  });
-  const data = await res.json();
-  return data.content?.[0]?.text || '抱歉，我現在無法回覆，請稍後再試。';
+  const callOnce = async () => {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': CLAUDE_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 800,
+        system: systemPrompt,
+        messages: messages.slice(-12)
+      }),
+      signal: AbortSignal.timeout(8000)
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text;
+    if (!text) throw new Error(data.error?.message || 'no content');
+    return text;
+  };
+
+  let lastErr = null;
+  for (let i = 0; i < 5; i++) {
+    try {
+      return await callOnce();
+    } catch (e) {
+      lastErr = e;
+      console.warn(`Claude API retry ${i + 1}/5 failed:`, e.message);
+      if (i < 4) await new Promise(r => setTimeout(r, 600));
+    }
+  }
+  console.error('Claude API failed after 5 retries:', lastErr?.message);
+  return '抱歉，我現在無法回覆，請稍後再試。';
 }
 
 // ── LINE 回覆 ──────────────────────────────────────────────────────────
