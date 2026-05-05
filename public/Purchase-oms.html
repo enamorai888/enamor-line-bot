@@ -18,7 +18,7 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;d
 .filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}.filter-lbl{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}.chip{padding:4px 14px;border-radius:20px;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;font-family:'DM Mono',monospace;white-space:nowrap}.chip:hover{border-color:var(--text);color:var(--text)}.chip.active{background:var(--text);border-color:var(--text);color:#fff;font-weight:600}.chip.alert{border-color:var(--red);color:var(--red)}.chip.alert.active{background:var(--red);color:#fff}.search-input{margin-left:auto;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg);font-size:12px;font-family:'DM Mono',monospace;color:var(--text);outline:none;width:200px}.search-input:focus{border-color:var(--text)}
 .vendor-block{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}.vendor-head{display:flex;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}.vbadge{font-family:'DM Mono',monospace;font-size:11px;padding:3px 9px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-weight:600}.vendor-head h3{font-size:14px;font-weight:600}.vtotal{margin-left:auto;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}.btn-dl{padding:6px 14px;border-radius:5px;border:1px solid var(--green);background:#fff;color:var(--green);font-size:12px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s;white-space:nowrap;font-weight:500}.btn-dl:hover{background:var(--green);color:#fff}
 .tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:1100px}th{padding:8px 8px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);vertical-align:middle}td{padding:9px 8px;font-size:13px;border-bottom:1px solid var(--surface2);vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#faf9f8}
+table{width:100%;border-collapse:collapse;min-width:1180px}th{padding:8px 8px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);vertical-align:middle}td{padding:9px 8px;font-size:13px;border-bottom:1px solid var(--surface2);vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#faf9f8}
 th.newcol{background:var(--newcol-head);color:var(--newcol-text)}
 td.newcol{background:var(--newcol-bg)}
 tr.alert-row td{background:var(--red-light)!important}
@@ -121,7 +121,7 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
 const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 const LK='enamor_po_oms_v2',SD=30,HISTORY_DAYS=90,MARKETS_NO=[1,8,16];
-let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},preSale={},lastPO={},merged=[],vCfg={},cF='all',sQ='';
+let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},pendPOInfo={},preSale={},lastPO={},merged=[],vCfg={},cF='all',sQ='';
 function ldCfg(){try{vCfg=JSON.parse(localStorage.getItem(LK)||'{}')}catch(e){vCfg={}}}
 function svCfg(){localStorage.setItem(LK,JSON.stringify(vCfg))}
 function gVC(v){if(!vCfg[v])vCfg[v]={ld:7,sf:7};return vCfg[v]}
@@ -144,10 +144,8 @@ async function fetchAll(){
     const odMap={};ob.forEach(o=>{const oid=(o['orders.orders_id']||'').trim();const dt=(o['orders.created_at']||'').slice(0,10);if(oid&&dt)odMap[oid]=dt});
     skuSal={};skuDates={};
     oi.forEach(i=>{const m=(i['orders_products.products_model']||'').trim();const q=parseInt(i['orders_products.products_quantity']||0);const oid=(i['orders_products.orders_id']||'').trim();if(m&&q>0){skuSal[m]=(skuSal[m]||0)+q;const dt=odMap[oid];if(dt){if(!skuDates[m])skuDates[m]={first:dt,last:dt};if(dt<skuDates[m].first)skuDates[m].first=dt;if(dt>skuDates[m].last)skuDates[m].last=dt}}});
-    sL('拉取處理中採購單...');const pr=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.status":"60"});
-    const pv=pr.retval||{};const pi=pv.purchase||pv['purchase']||[];pendPO={};
-    if(Array.isArray(pi)){pi.forEach(p=>{const m=(p['purchase.products_model']||'').trim();const pq=parseInt(p['purchase.purchase_quantity']||0);const sq=parseInt(p['purchase.stock_quantity']||0);const rem=pq-sq;if(m&&rem>0)pendPO[m]=(pendPO[m]||0)+rem})}
-    sS('sbPo',1,`處理中 ${Object.keys(pendPO).length} SKU`);
+    // 處理中採購單會在歷史採購 loop 裡同時收集（避免重複呼叫）
+    pendPO={};pendPOInfo={};
     
     // ── 拉預售出量（三個賣場加總）──
     sL('拉取預售出量（賣場 1）...');preSale={};
@@ -156,13 +154,17 @@ async function fetchAll(){
       sL(`拉取預售出量（賣場 ${mNo}，${mi+1}/${MARKETS_NO.length}）...`);
       try{
         const psR=await oP('/api/v2/default/apiMarketsProductsAssign/searchList',{"dyview_markets_products_calc_assign.markets_no":String(mNo)});
+        console.log(`[預售出 markets_no=${mNo}] 完整回傳:`,psR);
         const psA=psR.retval||[];
+        console.log(`[預售出 markets_no=${mNo}] retval 長度:`,Array.isArray(psA)?psA.length:'not array',Array.isArray(psA)&&psA[0]?'第一筆 keys:'+Object.keys(psA[0]).join(','):'');
         if(Array.isArray(psA)){
+          let added=0;
           psA.forEach(p=>{
             const m=(p['dyview_markets_products_calc_assign.products_model']||'').trim();
             const ps=parseInt(p['dyview_markets_products_calc_assign.calc_proudcts_assign']||0);
-            if(m&&ps>0)preSale[m]=(preSale[m]||0)+ps;
+            if(m&&ps>0){preSale[m]=(preSale[m]||0)+ps;added++}
           });
+          console.log(`[預售出 markets_no=${mNo}] 累計 ${added} 筆有效資料`);
         }
       }catch(e){console.warn(`賣場 ${mNo} 拉取失敗:`,e)}
     }
@@ -197,13 +199,14 @@ async function fetchAll(){
       if(!d)return true; // 沒日期保留
       return new Date(d).getTime()>=hdMs;
     });
-    // 對每張單拉品項
+    // 對每張單拉品項：同時收集「歷史最近採購」+「處理中採購（status=60）」
     lastPO={};
     const total=headers.length;
     for(let i=0;i<total;i++){
       const h=headers[i];
       const pn=(h['purchase_header.purchase_no']||'').trim();
       const cd=(h['purchase_header.created_at']||'').slice(0,10);
+      const hStatus=(h['purchase_header.status']||'').toString();
       if(!pn)continue;
       sL(`拉取採購單明細 ${i+1}/${total}（${pn}）...`);
       try{
@@ -212,17 +215,30 @@ async function fetchAll(){
         if(Array.isArray(da)){
           da.forEach(p=>{
             const m=(p['purchase.products_model']||'').trim();
-            const q=parseInt(p['purchase.purchase_quantity']||0);
-            if(!m||q<=0)return;
-            // 只記錄該 SKU 最近的一筆（按 created_at 比較）
+            const pq=parseInt(p['purchase.purchase_quantity']||0);
+            const sq=parseInt(p['purchase.stock_quantity']||0);
+            if(!m||pq<=0)return;
+            // 歷史最近採購（不論狀態，記每個 SKU 最近一筆）
             if(!lastPO[m]||(cd&&cd>lastPO[m].date)){
-              lastPO[m]={qty:q,date:cd,po:pn};
+              lastPO[m]={qty:pq,date:cd,po:pn};
+            }
+            // 處理中採購（status=60）：累加剩餘量、計張數、記最近日期
+            if(hStatus==='60'){
+              const rem=pq-sq;
+              if(rem>0){
+                pendPO[m]=(pendPO[m]||0)+rem;
+                if(!pendPOInfo[m])pendPOInfo[m]={count:0,latestDate:'',qty:0};
+                pendPOInfo[m].count+=1;
+                pendPOInfo[m].qty+=rem;
+                if(cd&&cd>pendPOInfo[m].latestDate)pendPOInfo[m].latestDate=cd;
+              }
             }
           });
         }
       }catch(e){console.warn(`單號 ${pn} 失敗`,e)}
     }
     sS('sbHis',1,`歷史 ${total} 張 / ${Object.keys(lastPO).length} SKU`);
+    sS('sbPo',1,`處理中 ${Object.keys(pendPO).length} SKU`);
     
     sL('合併計算...');doMerge();
     document.getElementById('ldArea').classList.add('hidden');
@@ -258,6 +274,7 @@ function doMerge(){
     const sold=skuSal[bc]||0;const po=pendPO[bc]||0;
     const ps=preSale[bc]||0;
     const lp=lastPO[bc]||null;
+    const pInfo=pendPOInfo[bc]||null;
     const vid=sp.vid;const vc=gVC(vid);
     // 倖存者偏差修正
     let effDays=SD;
@@ -281,10 +298,12 @@ function doMerge(){
     const rawSug=Math.max(0,rop-eff);
     const sug=rawSug>0?Math.ceil(rawSug/10)*10:0;
     const need=eff<rop&&da>0;
-    // 缺貨數 = ROP - 有效庫存（不夠才有值，夠就 0）
+    // 缺貨數 = ROP - 有效庫存（管理視角：要存多少才安全）
     const shortage=Math.max(0,rop-eff);
+    // 真實欠貨 = 預售出 - 庫存（OMS 視角：客人實際在等多少件）
+    const realShort=Math.max(0,ps-inf.stk);
     const dl=da>0?Math.floor(Math.max(0,inf.stk-ps)/da):999;
-    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s30:sold,da,po,ps,rop,sug,shortage,need,dl,isStockout,effDays,lastPO:lp,eff});
+    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s30:sold,da,po,ps,rop,sug,shortage,realShort,need,dl,isStockout,effDays,lastPO:lp,pInfo,eff});
   });
   merged.sort((a,b)=>{if(a.need!==b.need)return a.need?-1:1;return a.dl-b.dl});
   // OMS 品名回寫
@@ -305,6 +324,7 @@ function renderSum(){
   const vs=new Set(merged.map(i=>i.vid));
   const tStk=merged.reduce((s,i)=>s+i.stk,0);const tPo=merged.reduce((s,i)=>s+i.po,0);
   const tPs=merged.reduce((s,i)=>s+i.ps,0);
+  const tRs=merged.reduce((s,i)=>s+(i.realShort||0),0);
   const shopifyTotal=Object.keys(supMap).length;
   const omsMatch=merged.length;
   const soCount=merged.filter(i=>i.isStockout).length;
@@ -315,6 +335,7 @@ function renderSum(){
     <div class="card"><div class="card-lbl">總庫存</div><div class="card-val">${tStk.toLocaleString()}</div><div class="card-sub">良品</div></div>
     <div class="card"><div class="card-lbl">處理中採購</div><div class="card-val" style="color:var(--orange)">${tPo.toLocaleString()}</div><div class="card-sub">已下單未到</div></div>
     <div class="card"><div class="card-lbl">預售出</div><div class="card-val" style="color:var(--newcol-text)">${tPs.toLocaleString()}</div><div class="card-sub">3 賣場已分配未出</div></div>
+    <div class="card ${tRs>0?'card-alert':''}"><div class="card-lbl">真實欠貨</div><div class="card-val" style="color:${tRs>0?'var(--red)':'var(--muted)'}">${tRs.toLocaleString()}</div><div class="card-sub">客人實際在等</div></div>
     <div class="card"><div class="card-lbl">斷貨修正</div><div class="card-val" style="color:${soCount?'var(--orange)':'var(--muted)'}">${soCount}</div><div class="card-sub">用有銷售期間日均</div></div>`;
 }
 
@@ -344,6 +365,7 @@ function renderTbl(){
       <th class="text-right">庫存</th>
       <th class="text-right">採購中</th>
       <th class="text-right newcol">預售出</th>
+      <th class="text-right newcol">真實<br>欠貨</th>
       <th class="text-right">日均<br><span style="font-weight:400;opacity:.7">(30天)</span></th>
       <th class="text-right">ROP<br><span style="font-weight:400;opacity:.7">/可用天</span></th>
       <th class="text-right newcol">缺貨數</th>
@@ -373,8 +395,9 @@ function rR(i){
     <td>${i.vsz?`<span class="size-tag">${i.vsz}</span>`:'—'}</td>
     <td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${i.nm}">${i.nm||'—'}</td>
     <td class="mono text-right" style="font-weight:600">${i.stk}</td>
-    <td class="mono text-right" style="color:${i.po?'var(--orange)':'var(--muted)'}">${i.po||'—'}</td>
+    <td class="mono text-right" style="color:${i.po?'var(--orange)':'var(--muted)'}">${i.pInfo?`<div class="cell-stack"><div style="font-size:10px;font-weight:400;opacity:.85">${i.pInfo.count}張·${fmtDate(i.pInfo.latestDate)}</div><div style="font-weight:600">${i.pInfo.qty}</div></div>`:(i.po||'—')}</td>
     <td class="mono text-right newcol" style="color:${i.ps?'var(--newcol-text)':'var(--muted2)'};font-weight:${i.ps?'600':'400'}">${i.ps||'—'}</td>
+    <td class="mono text-right newcol">${i.realShort>0?`<span style="color:var(--red);font-weight:700">−${i.realShort}</span>`:'<span style="color:var(--muted2)">—</span>'}</td>
     <td class="mono text-right">
       <div class="cell-stack">
         <div>${i.da.toFixed(1)}${soTag}</div>
@@ -400,20 +423,20 @@ function uVC(v,f,val){gVC(v)[f]=parseInt(val)||0;svCfg();doMerge();renderAll();t
 function tdy(){return new Date().toISOString().slice(0,10).replace(/-/g,'')}
 function expV(v){
   const it=merged.filter(i=>i.vid===v&&i.need);if(!it.length){toast('沒有需採購項目');return}
-  const wb=XLSX.utils.book_new();const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','預售出','日均銷量','缺貨數','上次採購量','上次採購日','建議採購量','備註']];
-  it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.sug,'']));
-  d.push(['','','','','','','','合計','','',it.reduce((s,i)=>s+i.sug,0),'']);
+  const wb=XLSX.utils.book_new();const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','預售出','真實欠貨','日均銷量','缺貨數','上次採購量','上次採購日','建議採購量','備註']];
+  it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.realShort,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.sug,'']));
+  d.push(['','','','','','','','','合計','','',it.reduce((s,i)=>s+i.sug,0),'']);
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v);
   XLSX.writeFile(wb,`${tdy()}_採購_${v}.xlsx`);toast(`✓ ${v} 已下載`);
 }
 function exportAll(){
   const al=merged.filter(i=>i.need);if(!al.length){toast('沒有需採購項目');return}
   const wb=XLSX.utils.book_new();
-  const s=[['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','預售出','日均銷量','缺貨數','上次採購量','上次採購日','再訂購點','建議採購量']];
-  al.forEach(i=>s.push([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.rop,i.sug]));
+  const s=[['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','預售出','真實欠貨','日均銷量','缺貨數','上次採購量','上次採購日','再訂購點','建議採購量']];
+  al.forEach(i=>s.push([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.ps,i.realShort,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.rop,i.sug]));
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s),'採購彙整');
   const vs={};al.forEach(i=>{if(!vs[i.vid])vs[i.vid]=[];vs[i.vid].push(i)});
-  Object.entries(vs).forEach(([v,it])=>{const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','預售出','日均銷量','缺貨數','上次採購量','上次採購日','建議採購量','備註']];it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.sug,'']));d.push(['','','','','','','','合計','','','',it.reduce((s,i)=>s+i.sug,0),'']);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v.substring(0,31))});
+  Object.entries(vs).forEach(([v,it])=>{const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','預售出','真實欠貨','日均銷量','缺貨數','上次採購量','上次採購日','建議採購量','備註']];it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.realShort,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.sug,'']));d.push(['','','','','','','','','合計','','','',it.reduce((s,i)=>s+i.sug,0),'']);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v.substring(0,31))});
   XLSX.writeFile(wb,`${tdy()}_OMS採購建議.xlsx`);toast('✓ 採購建議已匯出');
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
