@@ -240,7 +240,7 @@ async function fetchAll(){
             if(!m||pq<=0)return;
             // 歷史最近採購（不論狀態，記每個 SKU 最近一筆）
             if(!lastPO[m]||(cd&&cd>lastPO[m].date)){
-              lastPO[m]={qty:pq,date:cd,po:pn};
+              lastPO[m]={qty:pq,date:cd,po:pn,status:hStatus};
             }
             // 處理中採購（status=60）：累加剩餘量、計張數、記最近日期
             if(hStatus==='60'){
@@ -397,7 +397,11 @@ function fmtDate(d){if(!d)return '';const m=d.match(/^(\d{4})-(\d{2})-(\d{2})/);
 function rR(i){
   const c=i.need?'alert-row':'';const dc=i.dl<=7?'var(--red)':i.dl<=14?'var(--orange)':'var(--muted)';
   const soTag=i.isStockout?`<span style="font-size:9px;color:#fff;background:var(--orange);padding:1px 5px;border-radius:3px;margin-left:4px" title="斷貨修正：用${i.effDays}天算日均">斷貨</span>`:'';
-  const lastPOCell=i.lastPO?`<div class="cell-stack"><div style="font-weight:600">${i.lastPO.qty}</div><div class="sub">${fmtDate(i.lastPO.date)}</div></div>`:'<span style="color:var(--muted2)">—</span>';
+  const lastPOCell=i.lastPO?(()=>{
+    const stMap={'60':{txt:'處理中',color:'var(--orange)'},'62':{txt:'QC中',color:'var(--orange)'},'65':{txt:'已回寫',color:'var(--green)'},'69':{txt:'已結案',color:'var(--green)'}};
+    const st=stMap[String(i.lastPO.status)]||{txt:i.lastPO.status||'?',color:'var(--muted)'};
+    return `<div class="cell-stack"><div style="font-weight:600">${i.lastPO.qty}</div><div class="sub">${fmtDate(i.lastPO.date)}</div><div style="font-size:9px;color:${st.color};font-weight:500">${st.txt}</div></div>`;
+  })():'<span style="color:var(--muted2)">—</span>';
   const shortageCell=i.shortage>0?`<span style="color:var(--red);font-weight:700">−${i.shortage}</span>`:'<span style="color:var(--muted2)">—</span>';
   return`<tr class="${c}">
     <td class="mono">
@@ -437,20 +441,22 @@ function uVC(v,f,val){gVC(v)[f]=parseInt(val)||0;svCfg();doMerge();renderAll();t
 function tdy(){return new Date().toISOString().slice(0,10).replace(/-/g,'')}
 function expV(v){
   const it=merged.filter(i=>i.vid===v&&i.need);if(!it.length){toast('沒有需採購項目');return}
-  const wb=XLSX.utils.book_new();const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','建議採購量','備註']];
-  it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.sug,'']));
-  d.push(['','','','','','','','合計','','',it.reduce((s,i)=>s+i.sug,0),'']);
+  const stMapXls={'60':'處理中','62':'QC中','65':'已回寫','69':'已結案'};
+  const wb=XLSX.utils.book_new();const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','建議採購量','備註']];
+  it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.sug,'']));
+  d.push(['','','','','','','','合計','','','',it.reduce((s,i)=>s+i.sug,0),'']);
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v);
   XLSX.writeFile(wb,`${tdy()}_採購_${v}.xlsx`);toast(`✓ ${v} 已下載`);
 }
 function exportAll(){
   const al=merged.filter(i=>i.need);if(!al.length){toast('沒有需採購項目');return}
   const wb=XLSX.utils.book_new();
-  const s=[['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','再訂購點','建議採購量']];
-  al.forEach(i=>s.push([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.rop,i.sug]));
+  const stMapXls={'60':'處理中','62':'QC中','65':'已回寫','69':'已結案'};
+  const s=[['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','再訂購點','建議採購量']];
+  al.forEach(i=>s.push([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.rop,i.sug]));
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s),'採購彙整');
   const vs={};al.forEach(i=>{if(!vs[i.vid])vs[i.vid]=[];vs[i.vid].push(i)});
-  Object.entries(vs).forEach(([v,it])=>{const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','建議採購量','備註']];it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.sug,'']));d.push(['','','','','','','','合計','','','',it.reduce((s,i)=>s+i.sug,0),'']);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v.substring(0,31))});
+  Object.entries(vs).forEach(([v,it])=>{const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','建議採購量','備註']];it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.sug,'']));d.push(['','','','','','','','合計','','','','',it.reduce((s,i)=>s+i.sug,0),'']);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v.substring(0,31))});
   XLSX.writeFile(wb,`${tdy()}_OMS採購建議.xlsx`);toast('✓ 採購建議已匯出');
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
