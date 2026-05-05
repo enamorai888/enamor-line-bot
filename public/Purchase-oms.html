@@ -198,24 +198,20 @@ async function fetchAll(){
     sL(`拉取歷史採購單 header（${HISTORY_DAYS} 天）...`);
     const hd=new Date();hd.setDate(hd.getDate()-HISTORY_DAYS);
     const hdStr=hd.toISOString().slice(0,10);
-    // #13 不傳 status = 全狀態（依你之前測試 #13 應支援，若失敗 fallback 分四次拉）
+    // #13 必須傳 status 才有資料 → 分四次拉（60/62/65/69）合併
     let headers=[];
-    try{
-      const hR=await oP('/api/v2/default/apiPurchaseHeaderList/searchList',{"purchase_header.created_at@start":hdStr});
-      const ha=(hR.retval||{}).purchase_header||hR.retval||[];
-      if(Array.isArray(ha))headers=ha;
-    }catch(e){console.warn('header 拉取錯誤',e)}
-    // 若 #13 不支援不傳 status，分四次拉
-    if(headers.length===0){
-      const statusList=['60','62','65','69'];
-      for(const st of statusList){
-        try{
-          const hR=await oP('/api/v2/default/apiPurchaseHeaderList/searchList',{"purchase_header.status":st,"purchase_header.created_at@start":hdStr});
-          const ha=(hR.retval||{}).purchase_header||hR.retval||[];
-          if(Array.isArray(ha))headers=headers.concat(ha);
-        }catch(e){console.warn(`status ${st} 失敗`,e)}
-      }
+    const statusList=['60','62','65','69'];
+    for(const st of statusList){
+      sL(`拉取歷史採購單 header（status=${st}, ${HISTORY_DAYS}天）...`);
+      try{
+        const hR=await oP('/api/v2/default/apiPurchaseHeaderList/searchList',{"purchase_header.status":st,"purchase_header.created_at@start":hdStr});
+        const ha=(hR.retval||{}).purchase_header||hR.retval||[];
+        const cnt=Array.isArray(ha)?ha.length:0;
+        console.log(`[歷史採購 status=${st}] ${cnt} 張`);
+        if(Array.isArray(ha))headers=headers.concat(ha);
+      }catch(e){console.warn(`status ${st} 拉取失敗`,e)}
     }
+    console.log(`[歷史採購] 合計 ${headers.length} 張`);
     // 過濾日期（保險，OMS 可能沒過濾乾淨）
     const hdMs=hd.getTime();
     headers=headers.filter(h=>{
