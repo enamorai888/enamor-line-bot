@@ -93,10 +93,18 @@ const CONFIG = {
   LIFF_ID: "1656208126-IpbLIEuI",
   GAS_URL: "https://script.google.com/macros/s/AKfycbw0pC0u3sQiQTcxw8VVegGhMJwh6JXjtjI_exavqrX_tmVO5WAJr_EXSXKQbzapPQW42g/exec",
   CLOCK_IN_TIME: "08:30",
-  EMPLOYEES: ["邱郁涵","陳妍蓁","郭宜珮","張雅慧","施小如","Rona Lin","FIFI","AMANDA"]
+  EMPLOYEES: ["邱郁涵","陳妍蓁","郭宜珮","張雅慧","施小如","Rona Lin"],
+  ADMINS: ["怡君"],
+  SALARY: {
+    "邱郁涵": {base:32470,trans:1500,food:1500,lab:800,health:516,hrAbs:130.927419,hrSick:65.46371},
+    "陳妍蓁": {base:37970,trans:1500,food:1500,lab:908,health:563,hrAbs:148.90,hrSick:74.45},
+    "郭宜珮": {base:35970,trans:1500,food:1500,lab:870,health:540,hrAbs:145.040323,hrSick:72.520161},
+    "張雅慧": {base:30470,trans:1000,food:1000,lab:728,health:470,hrAbs:122.862903,hrSick:61.431452},
+    "施小如": {base:31970,trans:1500,food:1500,lab:746,health:2465,hrAbs:128.91129,hrSick:64.455645}  // 健保含加掛三位親屬(493+1972)
+  }
 };
 
-const state = { userId:null, userName:null, todayPunch:{in:null,out:null}, leaveType:"事假", fileBase64:null, fileName:null };
+const state = { userId:null, userName:null, isAdmin:false, todayPunch:{in:null,out:null}, leaveType:"事假", fileBase64:null, fileName:null };
 </script>
 
 <div class="topbar">
@@ -233,9 +241,39 @@ const state = { userId:null, userName:null, todayPunch:{in:null,out:null}, leave
     </div>
   </div>
 
+  <!-- PAGE: 管理 - 出勤總覽 -->
+  <div class="page" id="page-admin-attendance">
+    <div class="card">
+      <div class="card-title">本月出勤總覽</div>
+      <div id="adminAttendance"><div class="empty">載入中...</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">請假紀錄</div>
+      <div id="adminLeaves"><div class="empty">載入中...</div></div>
+    </div>
+  </div>
+
+  <!-- PAGE: 管理 - 薪資報表 -->
+  <div class="page" id="page-admin-payroll">
+    <div class="card">
+      <div class="card-title">薪資報表產生</div>
+      <div class="form-group" style="margin-bottom:14px">
+        <label class="form-label">選擇月份</label>
+        <input type="month" class="form-input" id="payrollMonth" onchange="loadPayrollSummary()">
+      </div>
+      <button class="submit-btn" id="genBtn" onclick="generatePayroll()">⬇ 一鍵下載薪資報表 xlsx</button>
+      <div id="payrollStatus" style="margin-top:10px;font-size:12px;color:var(--gray-500);text-align:center"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">月份摘要</div>
+      <div id="payrollSummary"><div class="empty">選擇月份後自動顯示</div></div>
+    </div>
+  </div>
+
 </div>
 
 <nav class="bottomnav" id="bottomNav" style="display:none">
+  <!-- 員工 nav -->
   <button class="nav-item active" id="nav-punch" onclick="showPage('punch')">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>打卡
   </button>
@@ -268,7 +306,8 @@ async function init() {
 
 function showBind() {
   const sel = document.getElementById("bindSelect");
-  CONFIG.EMPLOYEES.forEach(n => {
+  const allNames = [...CONFIG.EMPLOYEES, ...CONFIG.ADMINS];
+  allNames.forEach(n => {
     const o = document.createElement("option");
     o.value = o.textContent = n;
     sel.appendChild(o);
@@ -291,22 +330,52 @@ function logout() {
 }
 
 function showMain() {
-  document.getElementById("topName").textContent = state.userName;
+  state.isAdmin = CONFIG.ADMINS.includes(state.userName);
+  document.getElementById("topName").textContent = state.userName + (state.isAdmin ? " 👑" : "");
   document.getElementById("topAvatar").textContent = state.userName.slice(-1);
-  const agentSel = document.getElementById("leaveAgent");
-  CONFIG.EMPLOYEES.filter(n => n !== state.userName).forEach(n => {
-    const o = document.createElement("option");
-    o.value = o.textContent = n;
-    agentSel.appendChild(o);
-  });
-  const today = new Date().toISOString().slice(0,10);
-  document.getElementById("leaveStart").value = today;
-  document.getElementById("leaveEnd").value = today;
-  document.getElementById("mainContent").style.display = "block";
-  document.getElementById("bottomNav").style.display = "flex";
-  loadTodayPunch();
-  loadMonthStats();
-  prefetchGPS();
+
+  const nav = document.getElementById("bottomNav");
+  if (state.isAdmin) {
+    nav.innerHTML = `
+      <button class="nav-item active" id="nav-admin-attendance" onclick="showPage('admin-attendance')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>出勤
+      </button>
+      <button class="nav-item" id="nav-admin-payroll" onclick="showPage('admin-payroll')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>薪資
+      </button>`;
+    document.getElementById("mainContent").style.display = "block";
+    nav.style.display = "flex";
+    // 設定預設月份
+    const now = new Date();
+    document.getElementById("payrollMonth").value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+    showPage("admin-attendance");
+    loadAdminData();
+  } else {
+    nav.innerHTML = `
+      <button class="nav-item active" id="nav-punch" onclick="showPage('punch')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>打卡
+      </button>
+      <button class="nav-item" id="nav-leave" onclick="showPage('leave')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>請假
+      </button>
+      <button class="nav-item" id="nav-records" onclick="showPage('records')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>紀錄
+      </button>`;
+    const agentSel = document.getElementById("leaveAgent");
+    CONFIG.EMPLOYEES.filter(n => n !== state.userName).forEach(n => {
+      const o = document.createElement("option");
+      o.value = o.textContent = n;
+      agentSel.appendChild(o);
+    });
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById("leaveStart").value = today;
+    document.getElementById("leaveEnd").value = today;
+    document.getElementById("mainContent").style.display = "block";
+    nav.style.display = "flex";
+    loadTodayPunch();
+    loadMonthStats();
+    prefetchGPS();
+  }
 }
 
 function updateClock() {
@@ -493,8 +562,10 @@ async function loadRecords() {
 function showPage(name) {
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
-  document.getElementById("page-"+name).classList.add("active");
-  document.getElementById("nav-"+name).classList.add("active");
+  const pg = document.getElementById("page-"+name);
+  if (pg) pg.classList.add("active");
+  const nb = document.getElementById("nav-"+name);
+  if (nb) nb.classList.add("active");
   if (name==="records") loadRecords();
 }
 
@@ -513,6 +584,102 @@ async function gasGet(params) {
   const qs = new URLSearchParams(params).toString();
   const res = await fetch(CONFIG.GAS_URL+"?"+qs);
   return res.json();
+}
+
+// ===== 管理員功能 =====
+async function loadAdminData() {
+  const ym = new Date().toISOString().slice(0,7);
+  try {
+    const r = await gasGet({action:"getAdminData", ym});
+    renderAdminAttendance(r.attendance||[], r.leaves||[]);
+  } catch(e) {
+    document.getElementById("adminAttendance").innerHTML='<div class="empty">載入失敗</div>';
+  }
+}
+
+function renderAdminAttendance(attendance, leaves) {
+  // 出勤總覽
+  const el = document.getElementById("adminAttendance");
+  if (!attendance.length) { el.innerHTML='<div class="empty">本月尚無打卡資料</div>'; }
+  else {
+    const byEmp = {};
+    attendance.forEach(a => {
+      if (!byEmp[a.name]) byEmp[a.name] = {days:0,late:0,lateMin:0};
+      byEmp[a.name].days++;
+      if (a.lateMin>0) { byEmp[a.name].late++; byEmp[a.name].lateMin+=a.lateMin; }
+    });
+    el.innerHTML = Object.entries(byEmp).map(([name,s])=>`
+      <div class="history-item">
+        <div><div class="hi-date">${name}</div><div class="hi-sub">出勤 ${s.days} 天</div></div>
+        <div style="text-align:right">
+          ${s.late>0?`<span class="tag tag-late">遲到${s.late}次 / ${s.lateMin}分</span>`:`<span class="tag tag-normal">全勤</span>`}
+        </div>
+      </div>`).join("");
+  }
+  // 請假紀錄
+  const el2 = document.getElementById("adminLeaves");
+  if (!leaves.length) { el2.innerHTML='<div class="empty">本月尚無請假</div>'; return; }
+  el2.innerHTML = leaves.slice().reverse().map(l=>`
+    <div class="leave-item">
+      <div class="li-header"><span class="li-type">${l.name} — ${l.type}</span><span style="font-size:11px;color:var(--gray-500)">${l.start}${l.end!==l.start?' ~ '+l.end:''}</span></div>
+      <div class="li-detail">${l.hours?l.hours+'HR　':''}代理：${l.agent}　${l.reason}</div>
+    </div>`).join("");
+}
+
+async function loadPayrollSummary() {
+  const ym = document.getElementById("payrollMonth").value;
+  if (!ym) return;
+  const el = document.getElementById("payrollSummary");
+  el.innerHTML='<div class="empty">計算中...</div>';
+  try {
+    const r = await gasGet({action:"getAdminData", ym});
+    const leaves = r.leaves||[];
+    const summary = Object.entries(CONFIG.SALARY).map(([name,s])=>{
+      const gross = s.base+s.trans+s.food;
+      const myLeaves = leaves.filter(l=>l.name===name);
+      let absD=0,sickD=0;
+      myLeaves.forEach(l=>{
+        const hr = parseFloat(l.hours)||0;
+        if(l.type==="事假") absD+=hr*s.hrAbs;
+        else if(l.type==="病假") sickD+=hr*s.hrSick;
+      });
+      const net = Math.round(gross-absD-sickD-s.lab-s.health);
+      return {name, net, absD:Math.round(absD), sickD:Math.round(sickD)};
+    });
+    el.innerHTML = summary.map(s=>`
+      <div class="history-item">
+        <div><div class="hi-date">${s.name}</div><div class="hi-sub">${s.absD>0?'事假扣'+s.absD+'　':''}${s.sickD>0?'病假扣'+s.sickD:''}${!s.absD&&!s.sickD?'無扣薪':''}</div></div>
+        <div style="text-align:right;font-size:14px;font-weight:500;color:#059142">${s.net.toLocaleString()}</div>
+      </div>`).join("");
+  } catch(e) { el.innerHTML='<div class="empty">載入失敗</div>'; }
+}
+
+async function generatePayroll() {
+  const ym = document.getElementById("payrollMonth").value;
+  if (!ym) { showToast("請選擇月份"); return; }
+  const btn = document.getElementById("genBtn");
+  const status = document.getElementById("payrollStatus");
+  btn.disabled=true; btn.textContent="生成中...";
+  status.textContent="正在從 Sheet 抓取資料...";
+  try {
+    const [year, month] = ym.split("-");
+    status.textContent="GAS 計算薪資中（約10秒）...";
+    const r = await gasGet({action:"generatePayrollXlsx", ym});
+    if (!r || !r.base64) throw new Error(r?.error||"GAS 回傳空資料");
+    status.textContent="下載中...";
+    const link = document.createElement("a");
+    link.href = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,"+r.base64;
+    link.download = `EnamoR_${year}年${parseInt(month)}月薪資報表.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    status.textContent="✓ 下載完成";
+    showToast("薪資報表已下載");
+  } catch(e) {
+    status.textContent="生成失敗："+e.message;
+    showToast("生成失敗，請重試");
+  }
+  btn.disabled=false; btn.textContent="⬇ 一鍵下載薪資報表 xlsx";
 }
 
 init();
