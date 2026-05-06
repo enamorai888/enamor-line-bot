@@ -121,7 +121,7 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
 const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 const LK='enamor_po_oms_v2',SD=30,HISTORY_DAYS=90,MARKETS_NO=[1,8,16];
-let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},pendPOInfo={},preSale={},lastPO={},merged=[],vCfg={},cF='all',sQ='';
+let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},pendPOInfo={},preSale={},lastPO={},vendorPOs={},merged=[],vCfg={},cF='all',sQ='';
 function ldCfg(){try{vCfg=JSON.parse(localStorage.getItem(LK)||'{}')}catch(e){vCfg={}}}
 function svCfg(){localStorage.setItem(LK,JSON.stringify(vCfg))}
 function gVC(v){if(!vCfg[v])vCfg[v]={ld:7,sf:7};return vCfg[v]}
@@ -220,7 +220,7 @@ async function fetchAll(){
       return new Date(d).getTime()>=hdMs;
     });
     // 對每張單拉品項：同時收集「歷史最近採購」+「處理中採購（status=60）」
-    lastPO={};
+    lastPO={};vendorPOs={};
     const total=headers.length;
     for(let i=0;i<total;i++){
       const h=headers[i];
@@ -232,12 +232,23 @@ async function fetchAll(){
       try{
         const dR=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.purchase_no":pn});
         const da=(dR.retval||{}).purchase||[];
+        // 收集這張單的明細（給「採購單列表」用）
+        const poItems=[];let poTotalQty=0,poTotalIn=0,poVid=null;
         if(Array.isArray(da)){
           da.forEach(p=>{
             const m=(p['purchase.products_model']||'').trim();
             const pq=parseInt(p['purchase.purchase_quantity']||0);
             const sq=parseInt(p['purchase.stock_quantity']||0);
+            const nm=(p['purchase.name']||'').trim();
+            const vs=(p['purchase.products.supplier_model']||'').trim();
+            const color=(p['purchase.color']||'').trim();
+            const size=(p['purchase.size']||'').trim();
+            const memo=(p['purchase.memo']||'').trim();
             if(!m||pq<=0)return;
+            // 推 vid（從 supMap 反查）
+            const sp=supMap[m];if(sp&&!poVid)poVid=sp.vid;
+            poItems.push({sku:m,nm,vs,color,size,pq,sq,memo});
+            poTotalQty+=pq;poTotalIn+=sq;
             // 歷史最近採購（不論狀態，記每個 SKU 最近一筆）
             if(!lastPO[m]||(cd&&cd>lastPO[m].date)){
               lastPO[m]={qty:pq,date:cd,po:pn,status:hStatus};
@@ -255,11 +266,25 @@ async function fetchAll(){
             }
           });
         }
+        // 歸到 vendor 採購單列表（用單號內含的廠商代號）
+        // 單號格式 PO-YYYYMMDD-VID 或舊格式 YYMMDD-VID
+        let vid=poVid;
+        if(!vid){
+          const mch=pn.match(/-([A-Z0-9]+)$/i);
+          if(mch)vid=mch[1];
+        }
+        if(vid&&poItems.length){
+          if(!vendorPOs[vid])vendorPOs[vid]=[];
+          vendorPOs[vid].push({pn,date:cd,status:hStatus,totalQty:poTotalQty,totalIn:poTotalIn,skuCount:poItems.length,items:poItems});
+        }
       }catch(e){console.warn(`單號 ${pn} 失敗`,e)}
     }
     sS('sbHis',1,`歷史 ${total} 張 / ${Object.keys(lastPO).length} SKU`);
     sS('sbPo',1,`處理中 ${Object.keys(pendPO).length} SKU`);
     
+    // 排序每個供應商的採購單（最新在前）
+    Object.keys(vendorPOs).forEach(vid=>{vendorPOs[vid].sort((a,b)=>(b.date||'').localeCompare(a.date||''))});
+    console.log(`[採購單列表] ${Object.keys(vendorPOs).length} 個供應商`);
     sL('合併計算...');doMerge();
     document.getElementById('ldArea').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
@@ -372,7 +397,9 @@ function renderTbl(){
   Object.entries(vs).sort((a,b)=>{const aA=a[1].it.some(i=>i.need),bA=b[1].it.some(i=>i.need);if(aA!==bA)return aA?-1:1;return a[0].localeCompare(b[0])}).forEach(([v,inf])=>{
     const al=inf.it.filter(i=>i.need);const ts=al.reduce((s,i)=>s+i.sug,0);
     const d=document.createElement('div');d.className='vendor-block';
-    d.innerHTML=`<div class="vendor-head"><span class="vbadge">${v}</span><h3>${inf.n||v}</h3>${al.length?`<span style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;font-weight:600">⚠ ${al.length} 需採購</span>`:''}<span class="vtotal">${inf.it.length} SKU${ts?` · 建議 ${ts} 件`:''}</span>${al.length?`<button class="btn-dl" onclick="expV('${v}')">⬇ ${v}.xlsx</button>`:''}</div>
+    const poCount=(vendorPOs[v]||[]).length;
+    d.innerHTML=`<div class="vendor-head" onclick="togglePOList('${v}',event)" style="cursor:pointer"><span class="vbadge">${v}</span><h3>${inf.n||v}</h3>${al.length?`<span style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;font-weight:600">⚠ ${al.length} 需採購</span>`:''}<span class="vtotal">${inf.it.length} SKU${ts?` · 建議 ${ts} 件`:''}${poCount?` · <span style="color:var(--green)">90天 ${poCount} 張採購單</span>`:''}</span>${al.length?`<button class="btn-dl" onclick="event.stopPropagation();expV('${v}')">⬇ ${v}.xlsx</button>`:''}<span style="font-size:10px;color:var(--muted2);margin-left:6px" id="poToggle-${v}">▶</span></div>
+    <div class="po-list-wrap" id="poList-${v}" style="display:none;border-bottom:1px solid var(--border);background:#fafaf8"></div>
     <div class="tbl-wrap"><table><thead><tr>
       <th>商品</th>
       <th>顏色</th>
@@ -439,6 +466,108 @@ function toggleCfg(){const b=document.getElementById('vcBody');b.classList.toggl
 function uVC(v,f,val){gVC(v)[f]=parseInt(val)||0;svCfg();doMerge();renderAll();toast(`${v} 已更新`)}
 
 function tdy(){return new Date().toISOString().slice(0,10).replace(/-/g,'')}
+
+// ── 採購單列表（點 vendor header 展開）──
+const PO_STATUS_MAP={'60':{txt:'處理中',color:'var(--orange)'},'62':{txt:'QC中',color:'var(--orange)'},'65':{txt:'已回寫',color:'var(--green)'},'69':{txt:'已結案',color:'var(--green)'}};
+
+function togglePOList(vid,event){
+  // 不影響子元素點擊（如 button）
+  if(event&&event.target.tagName==='BUTTON')return;
+  const wrap=document.getElementById(`poList-${vid}`);
+  const tog=document.getElementById(`poToggle-${vid}`);
+  if(!wrap)return;
+  if(wrap.style.display==='none'){
+    wrap.innerHTML=renderPOList(vid);
+    wrap.style.display='block';
+    if(tog)tog.textContent='▼';
+  }else{
+    wrap.style.display='none';
+    if(tog)tog.textContent='▶';
+  }
+}
+
+function renderPOList(vid){
+  const list=vendorPOs[vid]||[];
+  if(!list.length){
+    return `<div style="padding:14px 18px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">90 天內沒有採購單</div>`;
+  }
+  let html=`<div style="padding:14px 18px">
+    <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">採購單列表（90 天）· ${list.length} 張</div>
+    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+      <thead><tr style="background:var(--surface2)">
+        <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">採購單號</th>
+        <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">建立日期</th>
+        <th style="padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">狀態</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">SKU 數</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">採購量</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">已入庫</th>
+        <th style="padding:7px 10px;text-align:right;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">待入庫</th>
+      </tr></thead><tbody>`;
+  list.forEach((p,idx)=>{
+    const st=PO_STATUS_MAP[String(p.status)]||{txt:p.status||'?',color:'var(--muted)'};
+    const remain=p.totalQty-p.totalIn;
+    const safeId=p.pn.replace(/[^a-zA-Z0-9]/g,'_');
+    html+=`<tr style="cursor:pointer" onclick="togglePODetail('${vid}',${idx},'${safeId}')">
+      <td style="padding:8px 10px;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);font-weight:600">
+        <span style="font-size:10px;color:var(--muted2);margin-right:5px" id="poDetTog-${safeId}">▶</span>${p.pn}
+      </td>
+      <td style="padding:8px 10px;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);color:var(--muted)">${p.date||'—'}</td>
+      <td style="padding:8px 10px;font-size:11px;border-bottom:1px solid var(--surface2)"><span style="color:${st.color};font-weight:600;font-family:'DM Mono',monospace">${st.txt}</span></td>
+      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2)">${p.skuCount}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);font-weight:600">${p.totalQty}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);color:var(--green)">${p.totalIn}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);color:${remain>0?'var(--orange)':'var(--muted2)'};font-weight:${remain>0?'700':'400'}">${remain>0?remain:'—'}</td>
+    </tr>
+    <tr id="poDet-${safeId}" style="display:none"><td colspan="7" style="padding:0;background:#fcfcfa"><div id="poDetCt-${safeId}" style="padding:10px 18px"></div></td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function togglePODetail(vid,idx,safeId){
+  const tr=document.getElementById(`poDet-${safeId}`);
+  const tog=document.getElementById(`poDetTog-${safeId}`);
+  const ct=document.getElementById(`poDetCt-${safeId}`);
+  if(!tr)return;
+  if(tr.style.display==='none'){
+    const po=vendorPOs[vid][idx];
+    let h=`<div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">SKU 明細</div>
+    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:4px;overflow:hidden">
+      <thead><tr style="background:var(--surface2)">
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">廠商貨號</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">商品條碼</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">顏色</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">尺寸</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">品名</th>
+        <th style="padding:5px 9px;text-align:right;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">採購量</th>
+        <th style="padding:5px 9px;text-align:right;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">已入庫</th>
+        <th style="padding:5px 9px;text-align:right;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">待入庫</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">備註</th>
+      </tr></thead><tbody>`;
+    po.items.forEach(it=>{
+      const rem=it.pq-it.sq;
+      h+=`<tr>
+        <td style="padding:5px 9px;font-size:11px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2)">${it.vs||'—'}</td>
+        <td style="padding:5px 9px;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);border-bottom:1px solid var(--surface2)">${it.sku}</td>
+        <td style="padding:5px 9px;font-size:11px;border-bottom:1px solid var(--surface2)">${it.color||'—'}</td>
+        <td style="padding:5px 9px;font-size:11px;border-bottom:1px solid var(--surface2)">${it.size||'—'}</td>
+        <td style="padding:5px 9px;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-bottom:1px solid var(--surface2)" title="${it.nm||''}">${it.nm||'—'}</td>
+        <td style="padding:5px 9px;text-align:right;font-size:11px;font-family:'DM Mono',monospace;font-weight:600;border-bottom:1px solid var(--surface2)">${it.pq}</td>
+        <td style="padding:5px 9px;text-align:right;font-size:11px;font-family:'DM Mono',monospace;color:var(--green);border-bottom:1px solid var(--surface2)">${it.sq}</td>
+        <td style="padding:5px 9px;text-align:right;font-size:11px;font-family:'DM Mono',monospace;color:${rem>0?'var(--orange)':'var(--muted2)'};font-weight:${rem>0?'600':'400'};border-bottom:1px solid var(--surface2)">${rem>0?rem:'—'}</td>
+        <td style="padding:5px 9px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--surface2)">${it.memo||''}</td>
+      </tr>`;
+    });
+    h+='</tbody></table>';
+    ct.innerHTML=h;
+    tr.style.display='table-row';
+    if(tog)tog.textContent='▼';
+  }else{
+    tr.style.display='none';
+    if(tog)tog.textContent='▶';
+  }
+}
+
 function expV(v){
   const it=merged.filter(i=>i.vid===v&&i.need);if(!it.length){toast('沒有需採購項目');return}
   const stMapXls={'60':'處理中','62':'QC中','65':'已回寫','69':'已結案'};
