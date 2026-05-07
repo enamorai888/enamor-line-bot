@@ -67,14 +67,28 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
     <div class="sb-item" id="sbHis"><div class="dot"></div>歷史採購</div>
   </div>
   <div class="action-bar">
-    <button class="btn btn-primary" id="btnFetch" onclick="fetchAll()">📡 從 OMS 拉取數據</button>
+    <button class="btn btn-primary" id="btnFetch" onclick="openLoadModeModal()">📡 從 OMS 拉取數據</button>
     <span id="fetchSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
     <div class="spacer"></div>
     <button class="btn btn-green hidden" id="btnExp" onclick="exportAll()">⬇ 匯出採購建議 Excel</button>
   </div>
+  <!-- 模式提示 banner -->
+  <div id="modeBanner" class="hidden" style="background:#fff8f0;border:1px solid #fed7aa;border-radius:6px;padding:10px 14px;margin-top:10px;display:flex;align-items:center;gap:10px;font-size:12px;font-family:'DM Mono',monospace">
+    <span style="color:var(--orange);font-weight:600">⚠ 單一模式</span>
+    <span id="modeBannerText" style="color:var(--muted);flex:1"></span>
+    <button class="btn btn-secondary" onclick="openLoadModeModal()" style="padding:5px 12px;font-size:11px">重新選擇</button>
+  </div>
   <div class="loading hidden" id="ldArea"><span class="spinner"></span><span id="ldMsg">讀取中...</span></div>
   <div id="content" class="hidden">
     <div class="summary-grid" id="sumGrid"></div>
+    <!-- 全部模式下的快速篩選器 -->
+    <div id="vendorFilter" class="hidden" style="background:#fff;border:1px solid var(--border);border-radius:7px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px">快速篩選</span>
+      <select id="vendorFilterSel" onchange="applyVendorFilter()" style="padding:6px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
+        <option value="">全部供應商</option>
+      </select>
+      <span id="vendorFilterCount" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+    </div>
     <div class="vendor-config">
       <div class="vc-header" onclick="toggleCfg()">
         <h3>⚙ 供應商交期設定</h3>
@@ -122,9 +136,134 @@ const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 const LK='enamor_po_oms_v2',SD=30,HISTORY_DAYS=90,MARKETS_NO=[1,8,16];
 let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},pendPOInfo={},preSale={},lastPO={},vendorPOs={},merged=[],vCfg={},cF='all',sQ='';
+let loadMode='all',loadVendor='';
+const LOAD_MODE_KEY='enamor_load_mode',LOAD_VENDOR_KEY='enamor_load_vendor';
 function ldCfg(){try{vCfg=JSON.parse(localStorage.getItem(LK)||'{}')}catch(e){vCfg={}}}
 function svCfg(){localStorage.setItem(LK,JSON.stringify(vCfg))}
 function gVC(v){if(!vCfg[v])vCfg[v]={ld:7,sf:7};return vCfg[v]}
+
+// ── 載入模式 modal ──
+async function openLoadModeModal(){
+  // 先載入對照表（為了下拉選單）
+  if(!Object.keys(supMap).length){
+    try{await ldSup()}catch(e){toast('對照表載入失敗：'+e.message);return}
+  }
+  // 收集所有有設定的廠商
+  const vendors={};
+  Object.values(supMap).forEach(sp=>{if(sp.vid&&!vendors[sp.vid])vendors[sp.vid]={vn:sp.vn||sp.vid,count:0}});
+  Object.values(supMap).forEach(sp=>{if(sp.vid&&vendors[sp.vid])vendors[sp.vid].count++});
+  // 填下拉
+  const sel=document.getElementById('loadVendorSel');
+  let html='<option value="">— 選擇供應商 —</option>';
+  Object.entries(vendors).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([vid,inf])=>{
+    html+=`<option value="${vid}">${vid} ${inf.vn} (${inf.count} SKU)</option>`;
+  });
+  sel.innerHTML=html;
+  
+  // 套用 localStorage 預設
+  const savedMode=localStorage.getItem(LOAD_MODE_KEY)||'all';
+  const savedVendor=localStorage.getItem(LOAD_VENDOR_KEY)||'';
+  document.querySelector(`input[name="loadMode"][value="${savedMode}"]`).checked=true;
+  if(savedMode==='single'&&savedVendor){
+    sel.value=savedVendor;
+    sel.disabled=false;
+  }
+  onLoadModeChange();
+  
+  document.getElementById('loadModal').style.display='flex';
+}
+
+function closeLoadModal(){
+  document.getElementById('loadModal').style.display='none';
+}
+
+function onLoadModeChange(){
+  const mode=document.querySelector('input[name="loadMode"]:checked').value;
+  const sel=document.getElementById('loadVendorSel');
+  const optAll=document.getElementById('modeOptAll');
+  const optSingle=document.getElementById('modeOptSingle');
+  if(mode==='single'){
+    sel.disabled=false;
+    optSingle.style.borderColor='var(--text)';
+    optSingle.style.background='var(--surface2)';
+    optAll.style.borderColor='var(--border)';
+    optAll.style.background='#fff';
+  }else{
+    sel.disabled=true;
+    optAll.style.borderColor='var(--text)';
+    optAll.style.background='var(--surface2)';
+    optSingle.style.borderColor='var(--border)';
+    optSingle.style.background='#fff';
+  }
+}
+
+function confirmLoadMode(){
+  const mode=document.querySelector('input[name="loadMode"]:checked').value;
+  const vendor=document.getElementById('loadVendorSel').value;
+  if(mode==='single'&&!vendor){
+    toast('請選擇供應商');
+    return;
+  }
+  loadMode=mode;
+  loadVendor=mode==='single'?vendor:'';
+  // 存 localStorage
+  localStorage.setItem(LOAD_MODE_KEY,mode);
+  if(mode==='single')localStorage.setItem(LOAD_VENDOR_KEY,vendor);
+  closeLoadModal();
+  fetchAll();
+}
+
+function updateModeBanner(){
+  const banner=document.getElementById('modeBanner');
+  const text=document.getElementById('modeBannerText');
+  if(loadMode==='single'&&loadVendor){
+    const sp=Object.values(supMap).find(s=>s.vid===loadVendor);
+    text.textContent=`目前只載入「${loadVendor}${sp?' '+sp.vn:''}」、統計數字僅含此供應商`;
+    banner.classList.remove('hidden');
+  }else{
+    banner.classList.add('hidden');
+  }
+}
+
+function toast(m){
+  // 簡易 toast（如果沒有現成的）
+  const old=document.getElementById('_t');if(old)old.remove();
+  const t=document.createElement('div');t.id='_t';
+  t.style.cssText='position:fixed;bottom:20px;right:20px;background:#1a1a1a;color:#fff;padding:10px 16px;border-radius:6px;font-size:12px;font-family:DM Mono,monospace;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,.2)';
+  t.textContent=m;document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2600);
+}
+
+// ── 全部模式下的供應商篩選器 ──
+function initVendorFilter(){
+  if(loadMode==='single'){
+    document.getElementById('vendorFilter').classList.add('hidden');
+    return;
+  }
+  // 從 merged 收集有資料的 vendor
+  const vendors={};
+  merged.forEach(i=>{if(i.vid&&!vendors[i.vid])vendors[i.vid]={vn:i.vn||i.vid,count:0}});
+  merged.forEach(i=>{if(i.vid&&vendors[i.vid])vendors[i.vid].count++});
+  const sel=document.getElementById('vendorFilterSel');
+  let html='<option value="">全部供應商</option>';
+  Object.entries(vendors).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([vid,inf])=>{
+    html+=`<option value="${vid}">${vid} ${inf.vn} (${inf.count})</option>`;
+  });
+  sel.innerHTML=html;
+  document.getElementById('vendorFilter').classList.remove('hidden');
+  document.getElementById('vendorFilterCount').textContent=`共 ${Object.keys(vendors).length} 家`;
+}
+
+function applyVendorFilter(){
+  const v=document.getElementById('vendorFilterSel').value;
+  document.querySelectorAll('.vendor-block').forEach(b=>{
+    const badge=b.querySelector('.vbadge');
+    if(!badge){b.style.display='';return}
+    if(!v||badge.textContent.trim()===v){b.style.display=''}
+    else{b.style.display='none'}
+  });
+}
+
 async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({endpoint:ep,body:b})});return r.json()}
 let revMap={};// 反向：vs+vc+vsz → {bc, nm}
 async function ldSup(){const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:Q?key=${SK}`;const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');const h=rows[0],ci=n=>h.indexOf(n);const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明'),iAct=ci('Shopify啟用'),iNm=ci('商品名稱');supMap={};revMap={};rows.slice(1).forEach(r=>{const c=(r[iC]||'').trim();const active=(r[iAct]||'').trim();if(c&&active==='V'&&!supMap[c]){const vs=(r[iS]||'').trim(),vc=(r[iCo]||'').trim(),vsz=(r[iSz]||'').trim(),nm=iNm>=0?(r[iNm]||'').trim():'';supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs,vsz,vc,nm};const rk=`${vs}|||${vc}|||${vsz}`;if(!revMap[rk])revMap[rk]={bc:c,nm}}});return Object.keys(supMap).length}
@@ -133,10 +272,22 @@ async function fetchAll(){
   const btn=document.getElementById('btnFetch');btn.disabled=true;
   document.getElementById('ldArea').classList.remove('hidden');
   document.getElementById('content').classList.add('hidden');
+  updateModeBanner();
   const t0=Date.now();
   try{
     sL('載入供應商對照表...');const sc=await ldSup();sS('sbSup',1,`對照表 ${sc}`);
-    sL('拉取庫存...');const sr=await oP('/api/v2/default/getStocksData/searchList',{"view_products_stock.stock_group":"10"});stockD=sr.retval||[];sS('sbOms',1,'OMS 正常');sS('sbStk',1,`庫存 ${stockD.length}`);
+    // 單一模式：建立 SKU 白名單
+    let skuFilter=null;
+    if(loadMode==='single'&&loadVendor){
+      skuFilter=new Set();
+      Object.entries(supMap).forEach(([bc,sp])=>{if(sp.vid===loadVendor)skuFilter.add(bc)});
+      console.log(`[單一模式] ${loadVendor} 對應 ${skuFilter.size} 個 SKU`);
+      sL(`單一模式：${loadVendor}（${skuFilter.size} SKU）`);
+    }
+    sL('拉取庫存...');const sr=await oP('/api/v2/default/getStocksData/searchList',{"view_products_stock.stock_group":"10"});
+    let _allStk=sr.retval||[];
+    if(skuFilter){_allStk=_allStk.filter(s=>{const m=(s['view_products_stock.products_model']||'').trim();return skuFilter.has(m)})}
+    stockD=_allStk;sS('sbOms',1,'OMS 正常');sS('sbStk',1,`庫存 ${stockD.length}`);
     sL('拉取30天訂單明細...');const dd=new Date();dd.setDate(dd.getDate()-SD);const ds=dd.toISOString().slice(0,10);
     const or=await oP('/api/v2/default/apiOrderList/searchDetail',{"orders.created_at@start":[">=",ds]});
     const rv=or.retval||{};const oi=rv['訂單明細']||[];const ob=rv['基本資料']||[];
@@ -162,7 +313,7 @@ async function fetchAll(){
           psA.forEach(p=>{
             const m=(p['dyview_markets_products_calc_assign.products_model']||'').trim();
             const na=parseInt(p['dyview_markets_products_calc_assign.not_assign_qty']||0);
-            if(m)mktData[mNo][m]=na;
+            if(m&&(!skuFilter||skuFilter.has(m)))mktData[mNo][m]=na;
           });
           console.log(`[訂單佔用 markets_no=${mNo}] 取得 ${Object.keys(mktData[mNo]).length} 筆 SKU`);
         }
@@ -228,6 +379,11 @@ async function fetchAll(){
       const cd=(h['purchase_header.created_at']||'').slice(0,10);
       const hStatus=(h['purchase_header.status']||'').toString();
       if(!pn)continue;
+      // 單一模式：採購單號內含該 vendor 才處理
+      if(loadMode==='single'&&loadVendor){
+        const mch=pn.match(/-([A-Z0-9]+)$/i);
+        if(!mch||mch[1].toUpperCase()!==loadVendor.toUpperCase())continue;
+      }
       sL(`拉取採購單明細 ${i+1}/${total}（${pn}）...`);
       try{
         const dR=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.purchase_no":pn});
@@ -286,6 +442,7 @@ async function fetchAll(){
     Object.keys(vendorPOs).forEach(vid=>{vendorPOs[vid].sort((a,b)=>(b.date||'').localeCompare(a.date||''))});
     console.log(`[採購單列表] ${Object.keys(vendorPOs).length} 個供應商`);
     sL('合併計算...');doMerge();
+    initVendorFilter();
     document.getElementById('ldArea').classList.add('hidden');
     document.getElementById('content').classList.remove('hidden');
     document.getElementById('btnExp').classList.remove('hidden');
@@ -723,5 +880,36 @@ async function submitToOms(){
 
 ldCfg();
 </script>
+
+<!-- 載入模式對話框 -->
+<div id="loadModal" style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:10px;padding:32px 28px;max-width:480px;width:100%;box-shadow:0 8px 24px rgba(0,0,0,.2)">
+    <h3 style="font-size:16px;margin-bottom:6px">📡 載入模式</h3>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:18px;font-family:'DM Mono',monospace">選擇要載入的範圍</p>
+    
+    <label style="display:block;border:1.5px solid var(--border);border-radius:7px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .15s" id="modeOptAll">
+      <input type="radio" name="loadMode" value="all" checked onchange="onLoadModeChange()" style="margin-right:8px">
+      <span style="font-weight:600;font-size:13px">全部供應商</span>
+      <span style="font-size:11px;color:var(--muted);margin-left:6px;font-family:'DM Mono',monospace">~ 2-3 分鐘</span>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;margin-left:22px">完整統計、可切換篩選</div>
+    </label>
+    
+    <label style="display:block;border:1.5px solid var(--border);border-radius:7px;padding:14px 16px;cursor:pointer;transition:all .15s" id="modeOptSingle">
+      <input type="radio" name="loadMode" value="single" onchange="onLoadModeChange()" style="margin-right:8px">
+      <span style="font-weight:600;font-size:13px">單一供應商</span>
+      <span style="font-size:11px;color:var(--green);margin-left:6px;font-family:'DM Mono',monospace">~ 30-60 秒</span>
+      <div style="font-size:11px;color:var(--muted);margin-top:5px;margin-left:22px">只載入該供應商、統計只含此家</div>
+      <select id="loadVendorSel" disabled style="margin-top:10px;margin-left:22px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;width:calc(100% - 22px)">
+        <option value="">— 對照表載入後選擇 —</option>
+      </select>
+    </label>
+    
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button class="btn btn-secondary" onclick="closeLoadModal()">取消</button>
+      <button class="btn btn-primary" onclick="confirmLoadMode()" id="btnConfirmMode">確定載入</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
