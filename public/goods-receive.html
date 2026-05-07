@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnamoR 到貨對帳</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f7f7f5;--surface:#fff;--surface2:#f3f3f0;--border:#e2dedd;--green:#2d7a3a;--green-light:#f0f7f1;--green-border:#b7dfcc;--red:#c0392b;--red-light:#fef2f2;--red-border:#fecaca;--orange:#e67e22;--orange-light:#fff8f0;--blue:#2980b9;--blue-light:#ebf3fa;--text:#1a1a1a;--muted:#888;--muted2:#bbb}
+*{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh}
+header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.logo-img{height:30px}
+.header-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px}
+.spacer{flex:1}
+.checker-badge{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;padding:4px 10px;background:var(--surface2);border-radius:4px;cursor:pointer}
+.checker-badge:hover{background:var(--border)}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 28px}
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border)}
+.tab{padding:10px 20px;font-size:13px;font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--text);border-bottom-color:var(--text);font-weight:600}
+.btn{padding:9px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;transition:all .15s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.btn-primary{background:var(--text);color:#fff}.btn-primary:hover{background:#333}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#256132}
+.btn-secondary{background:#fff;color:var(--muted);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--text);color:var(--text)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.card-title-sub{font-size:11px;color:var(--muted);font-weight:400;margin-left:auto}
+select,input[type=text],input[type=number]{padding:7px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:13px;background:#fff;color:var(--text);outline:none}
+select:focus,input:focus{border-color:var(--text)}
+.form-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.form-row label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+table{width:100%;border-collapse:collapse}
+th{padding:8px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)}
+td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--surface2);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#faf9f8}
+.mono{font-family:'DM Mono',monospace}
+.text-center{text-align:center}.text-right{text-align:right}
+.qty-input{width:70px;text-align:right;padding:5px 8px;font-family:'DM Mono',monospace;font-size:13px;border:1px solid var(--border);border-radius:4px;outline:none}
+.qty-input:focus{border-color:var(--green)}
+.qty-input.diff-positive{background:var(--blue-light);border-color:var(--blue);color:var(--blue);font-weight:600}
+.qty-input.diff-negative{background:var(--red-light);border-color:var(--red);color:var(--red);font-weight:600}
+.qty-input.diff-ok{background:var(--green-light);border-color:var(--green-border);color:var(--green);font-weight:600}
+.diff-tag{display:inline-block;padding:2px 7px;border-radius:3px;font-size:11px;font-family:'DM Mono',monospace;font-weight:600;margin-left:6px}
+.diff-tag.short{background:var(--red-light);color:var(--red);border:1px solid var(--red-border)}
+.diff-tag.over{background:var(--blue-light);color:var(--blue);border:1px solid var(--blue)}
+.diff-tag.ok{background:var(--green-light);color:var(--green);border:1px solid var(--green-border)}
+.instruction-box{margin-top:6px;padding:6px 10px;font-size:11px;border-radius:4px;line-height:1.4}
+.instruction-box.short{background:var(--red-light);color:var(--red);border-left:3px solid var(--red)}
+.instruction-box.over{background:var(--blue-light);color:var(--blue);border-left:3px solid var(--blue)}
+.instruction-box.wrong-existing{background:var(--orange-light);color:var(--orange);border-left:3px solid var(--orange)}
+.instruction-box.wrong-unknown{background:var(--red-light);color:var(--red);border-left:3px solid var(--red);font-weight:600}
+.instruction-box.ok{background:var(--green-light);color:var(--green);border-left:3px solid var(--green)}
+.size-tag{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:3px;border:1px solid var(--border);display:inline-block}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.sum-card{background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 14px}
+.sum-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-family:'DM Mono',monospace;margin-bottom:3px}
+.sum-val{font-size:18px;font-weight:700;font-family:'DM Mono',monospace}
+.sum-card.alert{border-color:var(--red-border);background:var(--red-light)}
+.sum-card.alert .sum-val{color:var(--red)}
+.sum-card.ok{border-color:var(--green-border);background:var(--green-light)}
+.sum-card.ok .sum-val{color:var(--green)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.hidden{display:none!important}
+.loading{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.row-extra{background:#fff8f0!important}
+.btn-icon{padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;cursor:pointer;color:var(--muted)}
+.btn-icon:hover{background:var(--border);color:var(--text)}
+.btn-icon.danger:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.history-row{cursor:pointer;transition:background .15s}
+.history-row:hover{background:var(--surface2)!important}
+.po-status{font-family:'DM Mono',monospace;font-size:11px;font-weight:600}
+.po-status.s60{color:var(--orange)}
+.po-status.s62{color:var(--orange)}
+.po-status.s65{color:var(--green)}
+.po-status.s69{color:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- 密碼牆 -->
+<div id="authWall" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:40px;text-align:center;max-width:360px;width:90%">
+    <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" style="height:28px;margin-bottom:20px" onerror="this.style.display='none'">
+    <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:16px">到貨對帳 · OMS</div>
+    <input type="password" id="authPw" placeholder="密碼" onkeydown="if(event.key==='Enter')authCheck()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:'DM Mono',monospace;text-align:center;outline:none;margin-bottom:12px">
+    <button onclick="authCheck()" style="width:100%;padding:10px;border:none;border-radius:6px;background:var(--text);color:#fff;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;cursor:pointer">進入</button>
+    <div id="authErr" style="color:var(--red);font-size:12px;margin-top:10px;display:none">密碼錯誤</div>
+  </div>
+</div>
+
+<!-- 對帳人姓名輸入 -->
+<div id="checkerWall" style="position:fixed;inset:0;background:var(--bg);z-index:9998;display:none;align-items:center;justify-content:center">
+  <div style="background:#fff;border:1px solid var(--border);border-radius:10px;padding:40px;text-align:center;max-width:360px;width:90%">
+    <div style="font-size:14px;font-weight:600;margin-bottom:8px">對帳人</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px;font-family:'DM Mono',monospace">記錄到帳本，當天有效</div>
+    <input type="text" id="checkerInput" placeholder="輸入姓名（例：小王）" onkeydown="if(event.key==='Enter')setChecker()" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:'DM Mono',monospace;text-align:center;outline:none;margin-bottom:12px">
+    <button onclick="setChecker()" style="width:100%;padding:10px;border:none;border-radius:6px;background:var(--text);color:#fff;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;cursor:pointer">確認</button>
+  </div>
+</div>
+
+<script>
+function authCheck(){
+  if(document.getElementById('authPw').value==='28447208'){
+    document.getElementById('authWall').style.display='none';
+    sessionStorage.setItem('enamor_auth','1');
+    promptChecker();
+  }else{
+    document.getElementById('authErr').style.display='block';
+  }
+}
+if(sessionStorage.getItem('enamor_auth')==='1'){
+  document.getElementById('authWall').style.display='none';
+}
+function promptChecker(){
+  const c=sessionStorage.getItem('enamor_checker');
+  if(!c){
+    document.getElementById('checkerWall').style.display='flex';
+    setTimeout(()=>document.getElementById('checkerInput').focus(),100);
+  }else{
+    initApp();
+  }
+}
+function setChecker(){
+  const v=document.getElementById('checkerInput').value.trim();
+  if(!v){document.getElementById('checkerInput').focus();return}
+  sessionStorage.setItem('enamor_checker',v);
+  document.getElementById('checkerWall').style.display='none';
+  initApp();
+}
+function changeChecker(){
+  if(confirm('要更換對帳人嗎？目前未儲存的資料會遺失。')){
+    sessionStorage.removeItem('enamor_checker');
+    location.reload();
+  }
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  if(sessionStorage.getItem('enamor_auth')==='1'){
+    promptChecker();
+  }
+});
+</script>
+
+<header>
+  <img class="logo-img" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
+  <span class="header-title">到貨對帳 · OMS</span>
+  <a href="/Purchase-oms.html" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-decoration:none;padding:4px 10px;border:1px solid var(--border);border-radius:4px;margin-left:10px">→ 採購平台</a>
+  <div class="spacer"></div>
+  <span class="checker-badge" id="checkerBadge" onclick="changeChecker()" title="點擊更換">對帳人：</span>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" id="tab-receive" onclick="switchTab('receive')">📥 對帳作業</div>
+    <div class="tab" id="tab-history" onclick="switchTab('history')">📋 歷史紀錄</div>
+  </div>
+
+  <!-- 對帳作業 -->
+  <div id="page-receive">
+    <div class="card">
+      <div class="card-title">
+        <span>① 選擇處理中採購單</span>
+        <span class="card-title-sub">只列 status=60</span>
+        <button class="btn btn-secondary" onclick="loadPurchaseOrders()" id="btnReload" style="margin-left:auto">🔄 重新載入</button>
+      </div>
+      <div class="form-row">
+        <label>供應商</label>
+        <select id="vendorSelect" onchange="onVendorChange()" style="min-width:240px">
+          <option value="">— 載入中 —</option>
+        </select>
+        <label>採購單</label>
+        <select id="poSelect" onchange="onPOChange()" style="min-width:280px" disabled>
+          <option value="">—</option>
+        </select>
+        <span id="poInfo" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+      </div>
+    </div>
+
+    <div id="receiveArea" class="hidden">
+      <div class="card">
+        <div class="card-title">
+          <span>② 對帳明細</span>
+          <span class="card-title-sub">輸入「實到量」自動算差異</span>
+          <button class="btn btn-secondary" onclick="addExtraRow()" style="margin-left:auto">+ 新增錯送品項</button>
+        </div>
+        <div class="summary-grid" id="receiveSummary"></div>
+        <table id="receiveTable">
+          <thead><tr>
+            <th style="width:140px">廠商貨號</th>
+            <th>顏色</th>
+            <th>尺寸</th>
+            <th>商品條碼</th>
+            <th>品名</th>
+            <th class="text-right" style="width:70px">採購量</th>
+            <th class="text-right" style="width:90px">實到量</th>
+            <th style="width:80px">差異</th>
+            <th>處理指令</th>
+            <th style="width:50px"></th>
+          </tr></thead>
+          <tbody id="receiveTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>③ 備註與儲存</span>
+        </div>
+        <textarea id="receiveNotes" placeholder="備註（可選）：例如「廠商來電說多送的會請司機收回」" style="width:100%;min-height:60px;padding:10px;border:1px solid var(--border);border-radius:5px;font-family:'Noto Sans TC',sans-serif;font-size:13px;resize:vertical;outline:none"></textarea>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-green" onclick="saveReceive()" id="btnSave">💾 儲存對帳</button>
+          <button class="btn btn-primary" onclick="exportReceiveExcel()" id="btnExport">⬇ 產進貨單 Excel</button>
+          <span id="saveStatus" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="receivePlaceholder" class="card" style="text-align:center;padding:40px;color:var(--muted);font-size:13px">
+      請先選擇採購單
+    </div>
+  </div>
+
+  <!-- 歷史紀錄 -->
+  <div id="page-history" class="hidden">
+    <div class="card">
+      <div class="card-title">
+        <span>📋 對帳歷史</span>
+        <span class="card-title-sub">最近 50 筆</span>
+        <button class="btn btn-secondary" onclick="loadHistory()" style="margin-left:auto">🔄 重新載入</button>
+      </div>
+      <div id="historyArea"><div class="loading"><span class="spinner"></span>讀取中...</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PROXY='https://enamor-oms.vercel.app/api/oms-proxy';
+const RECEIVE_API='https://enamor-oms.vercel.app/api/receive-log';
+const TOKEN='28447208';
+const SHEET_ID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
+const SHEET_KEY='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
+const PO_STATUS_MAP={'60':'處理中','62':'QC中','65':'已回寫','69':'已結案'};
+
+let supMap={};// bc -> {vid, vn, vs, vc, vsz, nm}
+let revMap={};// "vs|||vc|||vsz" -> {bc, nm}
+let allPurchaseOrders=[];// [{pn, vid, vn, date, status, items:[]}]
+let currentPO=null;// 當前選中的採購單
+let receiveItems=[];// 對帳行 [{sku, vs, vc, vsz, nm, ordered, received, isExtra, isMatched}]
+
+// ── OMS proxy helper ──
+async function omsCall(ep, body){
+  const r=await fetch(PROXY,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-proxy-token':TOKEN},
+    body:JSON.stringify({endpoint:ep, body})
+  });
+  return r.json();
+}
+
+// ── 載入供應商對照表 ──
+async function loadSupplierMap(){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/A:Q?key=${SHEET_KEY}`;
+  const r=await fetch(url);
+  if(!r.ok)throw new Error('Sheet '+r.status);
+  const j=await r.json();
+  const rows=j.values||[];
+  if(rows.length<2)throw new Error('Sheet 空');
+  const h=rows[0],ci=n=>h.indexOf(n);
+  const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱');
+  const iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明');
+  const iAct=ci('Shopify啟用'),iNm=ci('商品名稱');
+  supMap={};revMap={};
+  rows.slice(1).forEach(r=>{
+    const c=(r[iC]||'').trim();
+    const active=(r[iAct]||'').trim();
+    if(c&&active==='V'&&!supMap[c]){
+      const vs=(r[iS]||'').trim(),vc=(r[iCo]||'').trim(),vsz=(r[iSz]||'').trim(),nm=iNm>=0?(r[iNm]||'').trim():'';
+      supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs,vsz,vc,nm};
+      const rk=`${vs}|||${vc}|||${vsz}`;
+      if(!revMap[rk])revMap[rk]={bc:c,nm};
+    }
+  });
+}
+
+// ── 初始化 ──
+async function initApp(){
+  document.getElementById('checkerBadge').textContent='對帳人：'+(sessionStorage.getItem('enamor_checker')||'?');
+  try{
+    await loadSupplierMap();
+    await loadPurchaseOrders();
+  }catch(e){
+    toast('載入失敗：'+e.message);
+    console.error(e);
+  }
+}
+
+// ── 載入處理中採購單 ──
+async function loadPurchaseOrders(){
+  const btn=document.getElementById('btnReload');
+  btn.disabled=true;
+  document.getElementById('vendorSelect').innerHTML='<option value="">— 載入中 —</option>';
+  
+  try{
+    // 拉 status=60 的 header
+    const hR=await omsCall('/api/v2/default/apiPurchaseHeaderList/searchList',{"purchase_header.status":"60"});
+    const headers=(hR.retval||{}).purchase_header||hR.retval||[];
+    if(!Array.isArray(headers)||!headers.length){
+      document.getElementById('vendorSelect').innerHTML='<option value="">無處理中採購單</option>';
+      allPurchaseOrders=[];
+      btn.disabled=false;
+      return;
+    }
+    
+    // 對每張單拉明細
+    allPurchaseOrders=[];
+    for(let i=0;i<headers.length;i++){
+      const h=headers[i];
+      const pn=(h['purchase_header.purchase_no']||'').trim();
+      const cd=(h['purchase_header.created_at']||'').slice(0,10);
+      if(!pn)continue;
+      
+      try{
+        const dR=await omsCall('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.purchase_no":pn});
+        const da=(dR.retval||{}).purchase||[];
+        const items=[];let vid=null,vn='';
+        if(Array.isArray(da)){
+          da.forEach(p=>{
+            const sku=(p['purchase.products_model']||'').trim();
+            const pq=parseInt(p['purchase.purchase_quantity']||0);
+            const sq=parseInt(p['purchase.stock_quantity']||0);
+            const nm=(p['purchase.name']||'').trim();
+            const vs=(p['purchase.products.supplier_model']||'').trim();
+            const color=(p['purchase.color']||'').trim();
+            const size=(p['purchase.size']||'').trim();
+            if(!sku||pq<=0)return;
+            const sp=supMap[sku];
+            if(sp&&!vid){vid=sp.vid;vn=sp.vn||'';}
+            items.push({sku,vs,vc:color,vsz:size,nm,pq,sq});
+          });
+        }
+        // 推 vid（如果 supMap 沒查到，從單號末段抓）
+        if(!vid){
+          const m=pn.match(/-([A-Z0-9]+)$/i);
+          if(m)vid=m[1];
+        }
+        if(vid&&items.length){
+          allPurchaseOrders.push({pn,vid,vn,date:cd,status:'60',items});
+        }
+      }catch(e){
+        console.warn(`單號 ${pn} 失敗`,e);
+      }
+    }
+    
+    // 按 vendor 分組填下拉
+    const vendors={};
+    allPurchaseOrders.forEach(o=>{
+      if(!vendors[o.vid])vendors[o.vid]={vn:o.vn,count:0};
+      vendors[o.vid].count++;
+    });
+    
+    let html='<option value="">— 選供應商 —</option>';
+    Object.entries(vendors).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([vid,inf])=>{
+      html+=`<option value="${vid}">${vid} ${inf.vn} (${inf.count} 張)</option>`;
+    });
+    document.getElementById('vendorSelect').innerHTML=html;
+    document.getElementById('poSelect').innerHTML='<option value="">—</option>';
+    document.getElementById('poSelect').disabled=true;
+    document.getElementById('poInfo').textContent=`共 ${allPurchaseOrders.length} 張處理中`;
+    
+  }catch(e){
+    toast('拉採購單失敗：'+e.message);
+    console.error(e);
+  }
+  btn.disabled=false;
+}
+
+// ── 選供應商 ──
+function onVendorChange(){
+  const vid=document.getElementById('vendorSelect').value;
+  const sel=document.getElementById('poSelect');
+  if(!vid){
+    sel.innerHTML='<option value="">—</option>';
+    sel.disabled=true;
+    document.getElementById('receiveArea').classList.add('hidden');
+    document.getElementById('receivePlaceholder').classList.remove('hidden');
+    return;
+  }
+  const list=allPurchaseOrders.filter(o=>o.vid===vid);
+  let html='<option value="">— 選採購單 —</option>';
+  list.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  list.forEach(o=>{
+    const totalQty=o.items.reduce((s,i)=>s+i.pq,0);
+    const inQty=o.items.reduce((s,i)=>s+i.sq,0);
+    const remain=totalQty-inQty;
+    html+=`<option value="${o.pn}">${o.pn} · ${o.date||'?'} · ${o.items.length} SKU · 剩 ${remain}/${totalQty}</option>`;
+  });
+  sel.innerHTML=html;
+  sel.disabled=false;
+}
+
+// ── 選採購單 ──
+async function onPOChange(){
+  const pn=document.getElementById('poSelect').value;
+  if(!pn){
+    document.getElementById('receiveArea').classList.add('hidden');
+    document.getElementById('receivePlaceholder').classList.remove('hidden');
+    currentPO=null;
+    return;
+  }
+  currentPO=allPurchaseOrders.find(o=>o.pn===pn);
+  if(!currentPO)return;
+  
+  // 預填 receiveItems：每個 SKU 預設實到量 = 採購量 - 已入庫量（剩餘）
+  receiveItems=currentPO.items.map(i=>({
+    sku:i.sku,vs:i.vs,vc:i.vc,vsz:i.vsz,nm:i.nm,
+    ordered:i.pq-i.sq,// 採購量-已入庫=本次預期到貨
+    received:i.pq-i.sq,// 預設實到=預期
+    isExtra:false,
+    isMatched:true
+  }));
+  
+  // 嘗試讀已存的對帳紀錄（如果有的話）
+  try{
+    const r=await fetch(`${RECEIVE_API}?action=get&purchase_no=${encodeURIComponent(pn)}`,{
+      headers:{'x-proxy-token':TOKEN}
+    });
+    const j=await r.json();
+    if(j.ok&&j.record){
+      // 用已存資料復原
+      receiveItems=j.record.items.map(i=>({...i}));
+      document.getElementById('receiveNotes').value=j.record.notes||'';
+      toast(`✓ 已載入舊對帳紀錄（${j.record.checker} · ${j.record.checked_at.slice(0,10)}）`);
+    }else{
+      document.getElementById('receiveNotes').value='';
+    }
+  }catch(e){
+    console.warn('讀對帳紀錄失敗（可能還沒對過）',e);
+    document.getElementById('receiveNotes').value='';
+  }
+  
+  document.getElementById('receivePlaceholder').classList.add('hidden');
+  document.getElementById('receiveArea').classList.remove('hidden');
+  renderReceive();
+}
+
+// ── 渲染對帳表 ──
+function renderReceive(){
+  const tbody=document.getElementById('receiveTbody');
+  let html='';
+  receiveItems.forEach((it,idx)=>html+=renderReceiveRow(it,idx));
+  tbody.innerHTML=html;
+  renderSummary();
+}
+
+function renderReceiveRow(it,idx){
+  const diff=(parseInt(it.received)||0)-(parseInt(it.ordered)||0);
+  const isExtraRow=it.isExtra;
+  const inputClass=isExtraRow?'qty-input':(diff===0?'qty-input diff-ok':(diff>0?'qty-input diff-positive':'qty-input diff-negative'));
+  
+  let diffTag='';
+  if(it.ordered>0){
+    if(diff===0)diffTag='<span class="diff-tag ok">一致</span>';
+    else if(diff>0)diffTag=`<span class="diff-tag over">+${diff}</span>`;
+    else diffTag=`<span class="diff-tag short">${diff}</span>`;
+  }
+  
+  let instruction='';
+  if(isExtraRow){
+    if(it.isMatched){
+      instruction=`<div class="instruction-box wrong-existing">⚠ 廠商錯送但對照表有此 SKU<br>👉 為這個 SKU 開新採購單，數量 ${it.received} 件</div>`;
+    }else{
+      instruction=`<div class="instruction-box wrong-unknown">❌ 廠商錯送且對照表無此 SKU<br>👉 入福利品庫</div>`;
+    }
+  }else if(it.ordered>0){
+    if(diff===0){
+      instruction=`<div class="instruction-box ok">✓ 數量一致</div>`;
+    }else if(diff<0){
+      const shortQty=Math.abs(diff);
+      instruction=`<div class="instruction-box short">⚠ 短少 ${shortQty} 件<br>👉 以實到 ${it.received} 件結案；剩餘 ${shortQty} 件待新採購補上</div>`;
+    }else{
+      instruction=`<div class="instruction-box over">⚠ 多送 ${diff} 件<br>👉 以實到 ${it.received} 件結案</div>`;
+    }
+  }
+  
+  // 編輯模式（錯送列）：可改貨號/顏色/尺寸；正常列：唯讀
+  const vsCell=isExtraRow
+    ?`<input type="text" class="qty-input" style="width:100px;text-align:left" value="${it.vs||''}" oninput="updateExtraRow(${idx},'vs',this.value)" placeholder="廠商貨號">`
+    :`<span class="mono" style="font-size:12px">${it.vs||'—'}</span>`;
+  const vcCell=isExtraRow
+    ?`<input type="text" class="qty-input" style="width:80px;text-align:left" value="${it.vc||''}" oninput="updateExtraRow(${idx},'vc',this.value)" placeholder="顏色">`
+    :`<span style="font-size:12px">${it.vc||'—'}</span>`;
+  const vszCell=isExtraRow
+    ?`<input type="text" class="qty-input" style="width:60px;text-align:left" value="${it.vsz||''}" oninput="updateExtraRow(${idx},'vsz',this.value)" placeholder="尺寸">`
+    :(it.vsz?`<span class="size-tag">${it.vsz}</span>`:'—');
+  
+  return `<tr class="${isExtraRow?'row-extra':''}">
+    <td>${vsCell}</td>
+    <td>${vcCell}</td>
+    <td>${vszCell}</td>
+    <td class="mono" style="font-size:11px;color:var(--muted)">${it.sku||'—'}</td>
+    <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${it.nm||''}">${it.nm||(isExtraRow?'<span style="color:var(--muted2)">—</span>':'—')}</td>
+    <td class="mono text-right" style="font-weight:600">${isExtraRow?'<span style="color:var(--muted2)">—</span>':it.ordered}</td>
+    <td class="text-right">
+      <input type="number" min="0" class="${inputClass}" value="${it.received}" oninput="updateReceived(${idx},this.value)">
+    </td>
+    <td>${diffTag}</td>
+    <td>${instruction}</td>
+    <td>${isExtraRow?`<button class="btn-icon danger" onclick="removeExtraRow(${idx})" title="刪除">×</button>`:''}</td>
+  </tr>`;
+}
+
+function updateReceived(idx,val){
+  receiveItems[idx].received=parseInt(val)||0;
+  renderReceive();
+}
+
+function updateExtraRow(idx,field,val){
+  const it=receiveItems[idx];
+  it[field]=val.trim();
+  // 重新比對對照表
+  const rk=`${it.vs}|||${it.vc}|||${it.vsz}`;
+  const m=revMap[rk];
+  if(m){
+    it.sku=m.bc;
+    it.nm=m.nm||(supMap[m.bc]?.nm)||'';
+    it.isMatched=true;
+  }else{
+    it.sku='';
+    it.nm='';
+    it.isMatched=false;
+  }
+  renderReceive();
+}
+
+function addExtraRow(){
+  receiveItems.push({sku:'',vs:'',vc:'',vsz:'',nm:'',ordered:0,received:0,isExtra:true,isMatched:false});
+  renderReceive();
+}
+
+function removeExtraRow(idx){
+  receiveItems.splice(idx,1);
+  renderReceive();
+}
+
+function renderSummary(){
+  const totalOrdered=receiveItems.filter(i=>!i.isExtra).reduce((s,i)=>s+(i.ordered||0),0);
+  const totalReceived=receiveItems.reduce((s,i)=>s+(i.received||0),0);
+  const shortCount=receiveItems.filter(i=>!i.isExtra && i.received<i.ordered).length;
+  const overCount=receiveItems.filter(i=>!i.isExtra && i.received>i.ordered).length;
+  const extraCount=receiveItems.filter(i=>i.isExtra).length;
+  const okCount=receiveItems.filter(i=>!i.isExtra && i.received===i.ordered && i.ordered>0).length;
+  
+  document.getElementById('receiveSummary').innerHTML=`
+    <div class="sum-card"><div class="sum-lbl">應到</div><div class="sum-val">${totalOrdered}</div></div>
+    <div class="sum-card"><div class="sum-lbl">實到</div><div class="sum-val" style="color:var(--green)">${totalReceived}</div></div>
+    <div class="sum-card ${okCount?'ok':''}"><div class="sum-lbl">一致</div><div class="sum-val">${okCount}</div></div>
+    <div class="sum-card ${shortCount?'alert':''}"><div class="sum-lbl">短少</div><div class="sum-val">${shortCount}</div></div>
+    <div class="sum-card ${overCount?'alert':''}"><div class="sum-lbl">多送</div><div class="sum-val">${overCount}</div></div>
+    <div class="sum-card ${extraCount?'alert':''}"><div class="sum-lbl">錯送</div><div class="sum-val">${extraCount}</div></div>`;
+}
+
+// ── 儲存對帳 ──
+async function saveReceive(){
+  if(!currentPO){toast('沒有選採購單');return}
+  const btn=document.getElementById('btnSave');
+  const st=document.getElementById('saveStatus');
+  btn.disabled=true;
+  st.textContent='儲存中...';
+  
+  // 整理每筆狀態
+  const items=receiveItems.map(i=>{
+    let status,instruction;
+    if(i.isExtra){
+      if(i.isMatched){status='extra_existing';instruction=`為 ${i.sku} 開新採購單 ${i.received} 件`}
+      else{status='extra_unknown';instruction='入福利品庫'}
+    }else{
+      const diff=(i.received||0)-(i.ordered||0);
+      if(diff===0){status='ok';instruction='數量一致'}
+      else if(diff<0){status='short';instruction=`短少 ${Math.abs(diff)} 件，以實到 ${i.received} 件結案；剩 ${Math.abs(diff)} 件待新採購`}
+      else{status='over';instruction=`多送 ${diff} 件，以實到 ${i.received} 件結案`}
+    }
+    return {...i,diff:(i.received||0)-(i.ordered||0),status,instruction};
+  });
+  
+  const summary={
+    total_ordered:items.filter(i=>!i.isExtra).reduce((s,i)=>s+(i.ordered||0),0),
+    total_received:items.reduce((s,i)=>s+(i.received||0),0),
+    short_count:items.filter(i=>i.status==='short').length,
+    over_count:items.filter(i=>i.status==='over').length,
+    extra_count:items.filter(i=>i.isExtra).length,
+    ok_count:items.filter(i=>i.status==='ok').length
+  };
+  
+  const payload={
+    action:'save',
+    purchase_no:currentPO.pn,
+    vendor_id:currentPO.vid,
+    checker:sessionStorage.getItem('enamor_checker')||'?',
+    items,summary,
+    notes:document.getElementById('receiveNotes').value
+  };
+  
+  try{
+    const r=await fetch(RECEIVE_API,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-proxy-token':TOKEN},
+      body:JSON.stringify(payload)
+    });
+    const j=await r.json();
+    if(j.ok){
+      st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 已儲存（${new Date().toLocaleTimeString('zh-TW')}）</span>`;
+      toast('✓ 對帳已儲存');
+    }else{
+      st.innerHTML=`<span style="color:var(--red)">✗ ${j.error||'儲存失敗'}</span>`;
+      toast('儲存失敗：'+(j.error||'?'));
+    }
+  }catch(e){
+    st.innerHTML=`<span style="color:var(--red)">✗ ${e.message}</span>`;
+    toast('儲存失敗：'+e.message);
+  }
+  btn.disabled=false;
+}
+
+// ── 產進貨單 Excel（給倉庫人員拿去 OMS 結案）──
+function exportReceiveExcel(){
+  if(!currentPO){toast('沒有選採購單');return}
+  // 進貨單 = 用「實到量」產出（差異另外處理）
+  // 內容：原採購單品項用實到量、錯送品項另開另存
+  const wb=XLSX.utils.book_new();
+  
+  // Sheet 1: 進貨單（給 OMS 結案用）
+  const sheet1=[['廠商貨號','顏色','尺寸','商品條碼','品名','實到量']];
+  receiveItems.filter(i=>!i.isExtra && i.received>0).forEach(i=>{
+    sheet1.push([i.vs||'',i.vc||'',i.vsz||'',i.sku||'',i.nm||'',i.received]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sheet1),'進貨單');
+  
+  // Sheet 2: 差異報表
+  const sheet2=[['類型','廠商貨號','顏色','尺寸','商品條碼','品名','應到','實到','差異','處理指令']];
+  receiveItems.forEach(i=>{
+    let type='正常',inst='數量一致';
+    if(i.isExtra){
+      type='錯送';
+      inst=i.isMatched?`為此 SKU 開新採購單 ${i.received} 件`:'入福利品庫';
+    }else{
+      const d=(i.received||0)-(i.ordered||0);
+      if(d<0){type='短少';inst=`短少 ${Math.abs(d)} 件，剩餘待新採購`}
+      else if(d>0){type='多送';inst=`多送 ${d} 件，以實到結案`}
+    }
+    sheet2.push([type,i.vs||'',i.vc||'',i.vsz||'',i.sku||'',i.nm||'',i.isExtra?'':i.ordered,i.received,i.isExtra?'':((i.received||0)-(i.ordered||0)),inst]);
+  });
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sheet2),'差異報表');
+  
+  const today=new Date().toISOString().slice(0,10).replace(/-/g,'');
+  XLSX.writeFile(wb,`${today}_進貨單_${currentPO.pn}.xlsx`);
+  toast('✓ 進貨單已下載');
+}
+
+// ── Tab 切換 ──
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('page-receive').classList.toggle('hidden',t!=='receive');
+  document.getElementById('page-history').classList.toggle('hidden',t!=='history');
+  if(t==='history')loadHistory();
+}
+
+// ── 歷史紀錄 ──
+async function loadHistory(){
+  const area=document.getElementById('historyArea');
+  area.innerHTML='<div class="loading"><span class="spinner"></span>讀取中...</div>';
+  try{
+    const r=await fetch(`${RECEIVE_API}?action=list&limit=50`,{
+      headers:{'x-proxy-token':TOKEN}
+    });
+    const j=await r.json();
+    if(!j.ok){
+      area.innerHTML=`<div class="loading">${j.error||'讀取失敗'}</div>`;
+      return;
+    }
+    const records=j.records||[];
+    if(!records.length){
+      area.innerHTML='<div class="loading">沒有對帳紀錄</div>';
+      return;
+    }
+    let html='<table><thead><tr><th>採購單號</th><th>供應商</th><th>對帳人</th><th>對帳時間</th><th class="text-right">應到</th><th class="text-right">實到</th><th>差異</th></tr></thead><tbody>';
+    records.forEach(r=>{
+      const s=r.summary||{};
+      const flags=[];
+      if(s.short_count)flags.push(`<span class="diff-tag short">短${s.short_count}</span>`);
+      if(s.over_count)flags.push(`<span class="diff-tag over">多${s.over_count}</span>`);
+      if(s.extra_count)flags.push(`<span class="diff-tag short">錯${s.extra_count}</span>`);
+      if(!flags.length)flags.push(`<span class="diff-tag ok">一致</span>`);
+      html+=`<tr class="history-row" onclick="viewHistory('${r.purchase_no}')">
+        <td class="mono" style="font-weight:600">${r.purchase_no}</td>
+        <td class="mono" style="font-size:11px">${r.vendor_id||'?'}</td>
+        <td>${r.checker||'?'}</td>
+        <td class="mono" style="font-size:11px;color:var(--muted)">${(r.checked_at||'').replace('T',' ').slice(0,16)}</td>
+        <td class="mono text-right">${s.total_ordered||0}</td>
+        <td class="mono text-right" style="color:var(--green);font-weight:600">${s.total_received||0}</td>
+        <td>${flags.join(' ')}</td>
+      </tr>`;
+    });
+    html+='</tbody></table>';
+    area.innerHTML=html;
+  }catch(e){
+    area.innerHTML=`<div class="loading">錯誤：${e.message}</div>`;
+  }
+}
+
+// 點歷史紀錄 → 跳到對帳頁面、自動選那張單
+async function viewHistory(pn){
+  // 找這張單在不在現在的處理中清單
+  const o=allPurchaseOrders.find(o=>o.pn===pn);
+  if(o){
+    switchTab('receive');
+    document.getElementById('vendorSelect').value=o.vid;
+    onVendorChange();
+    setTimeout(()=>{
+      document.getElementById('poSelect').value=pn;
+      onPOChange();
+    },50);
+  }else{
+    // 已不是處理中、只顯示歷史紀錄
+    const r=await fetch(`${RECEIVE_API}?action=get&purchase_no=${encodeURIComponent(pn)}`,{
+      headers:{'x-proxy-token':TOKEN}
+    });
+    const j=await r.json();
+    if(j.ok&&j.record){
+      alert(`採購單 ${pn} 已不在處理中清單（可能已結案）。\n\n對帳人：${j.record.checker}\n對帳時間：${j.record.checked_at.replace('T',' ').slice(0,16)}\n備註：${j.record.notes||'(無)'}`);
+    }
+  }
+}
+
+// ── Toast ──
+function toast(m){
+  const t=document.getElementById('toast');
+  t.textContent=m;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+</script>
+</body>
+</html>
