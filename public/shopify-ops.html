@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnamoR Shopify 操作助手</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&display=swap');
+
+  :root {
+    --charcoal: #1C1C1A;
+    --warm-white: #FAFAF7;
+    --cream: #F5F0E8;
+    --accent: #8B6F47;
+    --accent-light: #C4A882;
+    --mid: #5C5C58;
+    --light: #9C9A92;
+    --border: rgba(28,28,26,0.1);
+    --green: #2D6A4F;
+    --red: #B5536A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 300;
+    background: var(--warm-white);
+    color: var(--charcoal);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    background: var(--charcoal);
+    color: var(--warm-white);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .header-logo {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 2px;
+  }
+  .header-divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(250,250,247,0.2);
+  }
+  .header-title {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--accent-light);
+    letter-spacing: 1px;
+  }
+  .header-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--light);
+    background: rgba(250,250,247,0.08);
+    padding: 4px 12px;
+    border-radius: 2px;
+  }
+
+  /* Login */
+  .login-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--charcoal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .login-overlay.hidden { display: none; }
+  .login-box {
+    text-align: center;
+    color: var(--warm-white);
+  }
+  .login-box h1 {
+    font-size: 24px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+  .login-box p {
+    font-size: 12px;
+    color: var(--light);
+    margin-bottom: 32px;
+    letter-spacing: 1px;
+  }
+  .login-input {
+    width: 280px;
+    padding: 14px 20px;
+    background: rgba(250,250,247,0.06);
+    border: 1px solid rgba(250,250,247,0.15);
+    color: var(--warm-white);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 300;
+    text-align: center;
+    letter-spacing: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .login-input::placeholder {
+    color: var(--light);
+    letter-spacing: 1px;
+    font-size: 12px;
+  }
+  .login-input:focus {
+    border-color: var(--accent);
+  }
+  .login-error {
+    color: var(--red);
+    font-size: 12px;
+    margin-top: 12px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .login-error.show { opacity: 1; }
+
+  /* Chat area */
+  .chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .msg {
+    max-width: 85%;
+    line-height: 1.7;
+    font-size: 14px;
+  }
+  .msg-user {
+    align-self: flex-end;
+    background: var(--charcoal);
+    color: var(--warm-white);
+    padding: 12px 18px;
+    border-radius: 16px 16px 4px 16px;
+  }
+  .msg-ai {
+    align-self: flex-start;
+    background: var(--cream);
+    padding: 16px 20px;
+    border-radius: 16px 16px 16px 4px;
+    border: 1px solid var(--border);
+  }
+  .msg-ai .label {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  /* Code block inside message */
+  .code-block-wrapper {
+    margin: 12px 0 8px;
+    background: var(--charcoal);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .code-block-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: rgba(250,250,247,0.06);
+    border-bottom: 1px solid rgba(250,250,247,0.08);
+  }
+  .code-block-header span {
+    font-size: 11px;
+    color: var(--light);
+    letter-spacing: 1px;
+  }
+  .copy-btn {
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--accent-light);
+    background: none;
+    border: 1px solid rgba(196,168,130,0.3);
+    padding: 3px 12px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover {
+    background: var(--accent);
+    color: var(--warm-white);
+    border-color: var(--accent);
+  }
+  .copy-btn.copied {
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--warm-white);
+  }
+  .code-block-body {
+    padding: 14px;
+    overflow-x: auto;
+  }
+  .code-block-body pre {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #e0ddd5;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* Warning / info box */
+  .info-box {
+    margin: 8px 0;
+    padding: 10px 14px;
+    border-left: 3px solid var(--accent);
+    background: rgba(139,111,71,0.06);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* Typing indicator */
+  .typing {
+    align-self: flex-start;
+    display: flex;
+    gap: 4px;
+    padding: 12px 20px;
+    background: var(--cream);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+  }
+  .typing span {
+    width: 6px;
+    height: 6px;
+    background: var(--light);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* Input area */
+  .input-area {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--warm-white);
+    flex-shrink: 0;
+  }
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .input-field {
+    flex: 1;
+    min-height: 44px;
+    max-height: 120px;
+    padding: 12px 16px;
+    border: 1px solid rgba(28,28,26,0.15);
+    background: white;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-field:focus {
+    border-color: var(--accent);
+  }
+  .input-field::placeholder {
+    color: var(--light);
+  }
+  .send-btn {
+    height: 44px;
+    padding: 0 24px;
+    background: var(--charcoal);
+    color: var(--warm-white);
+    border: none;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover { background: var(--accent); }
+  .send-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Quick actions */
+  .quick-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .quick-btn {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--mid);
+    background: white;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .quick-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Welcome */
+  .welcome {
+    text-align: center;
+    padding: 60px 40px;
+    color: var(--mid);
+  }
+  .welcome h2 {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--charcoal);
+    margin-bottom: 8px;
+  }
+  .welcome p {
+    font-size: 13px;
+    line-height: 1.8;
+    margin-bottom: 24px;
+  }
+
+  /* Scrollbar */
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-W.png" alt="EnamoR" style="height:28px;margin-bottom:8px;">
+    <p>Shopify 操作助手</p>
+    <input type="password" class="login-input" id="loginInput" placeholder="輸入密碼" autofocus>
+    <div class="login-error" id="loginError">密碼錯誤</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="header">
+  <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-W.png" alt="EnamoR" style="height:22px;">
+  <div class="header-divider"></div>
+  <div class="header-title">Shopify 操作助手</div>
+  <div class="header-badge">Internal Tool</div>
+</div>
+
+<div class="chat-container">
+  <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
+      <h2>Shopify 操作助手</h2>
+      <p>
+        用中文告訴我要做什麼，我會產出可以直接貼到<br>
+        Shopify 後台 DevConsole 執行的程式碼。
+      </p>
+      <div class="quick-actions">
+        <button class="quick-btn" onclick="quickSend('查詢商品 201-t-72 的庫存和預購狀態')">查庫存/預購狀態</button>
+        <button class="quick-btn" onclick="quickSend('把 handle 是 xxx 的商品改成售罄模式')">改售罄模式</button>
+        <button class="quick-btn" onclick="quickSend('查所有沒有 preorder_type 的 active 商品')">查無預購商品</button>
+        <button class="quick-btn" onclick="quickSend('把 handle 是 xxx 的商品成份改成 95% Modal 5% Spandex')">改成份</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <div class="input-row">
+      <textarea class="input-field" id="inputField" placeholder="例如：把 201-t-72 改成售罄模式" rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">送出</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PROXY_URL = '/api/claude-proxy';
+const PROXY_TOKEN = '28447208';
+const PASSWORD = '28447208';
+let conversationHistory = [];
+
+// === Login ===
+document.getElementById('loginInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    if (this.value === PASSWORD) {
+      document.getElementById('loginOverlay').classList.add('hidden');
+    } else {
+      document.getElementById('loginError').classList.add('show');
+      this.value = '';
+      setTimeout(() => document.getElementById('loginError').classList.remove('show'), 2000);
+    }
+  }
+});
+
+// === System Prompt ===
+const SYSTEM_PROMPT = `你是 EnamoR 的 Shopify 操作助手。員工會用中文告訴你要做什麼，你產出可以直接貼到 Shopify 後台 DevConsole 執行的 JavaScript 程式碼。
+
+## 重要規則
+
+1. 所有腳本必須使用這個標準模板開頭：
+\`\`\`javascript
+void async function() {
+  const _B = '/store/enamor-5/admin/api/2024-01';
+  const _c = (() => {
+    const s = [...document.querySelectorAll('script:not([src])')].map(e => e.textContent).join('');
+    const m = s.match(/"csrfToken":"([^"]+)"/);
+    return m ? m[1] : '';
+  })();
+  // ... 操作邏輯
+}();
+\`\`\`
+
+2. 用 void async function() 包裹，避免變數衝突
+3. 所有 fetch 都要帶 headers: { 'X-CSRF-Token': _c, 'Content-Type': 'application/json' }
+4. 路徑用相對路徑 /store/enamor-5/admin/api/2024-01，絕對不要用完整 URL
+5. 用繁體中文回覆
+6. 先簡短說明這段程式碼做什麼，再給程式碼
+7. 程式碼要包含 console.log 讓員工看到執行進度和結果
+8. 如果需求不明確（例如沒給商品 handle），先問清楚再給程式碼
+
+## Shopify Metafield 知識
+
+| key | type | 說明 |
+|-----|------|------|
+| preorder_type | single_line_text | 預購類型：a1/a2/b，清空 = 非預購 |
+| split_colors | boolean | 是否展開顏色，EnTry99 填 false |
+| stretch_score | number_integer | 彈性分數 1-5 |
+| compression_feel | single_line_text | Soft / Balanced / Firm |
+| size_tolerance | single_line_text | Narrow / Medium / Wide |
+
+## 預購/售罄邏輯
+
+| preorder_type | inventory_policy | 前台行為 |
+|---|---|---|
+| 有值（a1/a2/b） | continue | 庫存 0 → 顯示預購下單 |
+| 無/空 | deny | 庫存 0 → 顯示已售完 |
+
+改預購/售罄時，必須同時：
+1. 設定或清除 preorder_type metafield
+2. 修改所有 variant 的 inventory_policy（有預購 = continue，無 = deny）
+
+## 商品下架邏輯
+全規格庫存 = 0 且不需預購 → status 改 draft（前台不顯示）
+
+## 常見操作
+
+### 查商品
+- 用 handle 查：/products.json?handle=HANDLE&fields=id,handle,title,status,variants
+- 查 metafields：/products/PRODUCT_ID/metafields.json
+
+### 改 variant
+PUT /variants/VARIANT_ID.json
+body: { variant: { id: VARIANT_ID, inventory_policy: 'deny' } }
+
+### 改 metafield
+PUT /products/PRODUCT_ID/metafields.json 不行，要用：
+POST /products/PRODUCT_ID/metafields.json
+body: { metafield: { namespace: 'custom', key: 'KEY', value: 'VALUE', type: 'single_line_text' } }
+
+更新已存在的 metafield：
+PUT /metafields/METAFIELD_ID.json
+body: { metafield: { id: METAFIELD_ID, value: 'NEW_VALUE' } }
+
+### 改商品狀態
+PUT /products/PRODUCT_ID.json
+body: { product: { id: PRODUCT_ID, status: 'draft' } }
+
+## 注意事項
+- 員工要在 Shopify 後台頁面（admin.shopify.com/store/enamor-5）的 Console 執行
+- 不要用 const BASE 或 const csrfToken（容易跟之前的腳本衝突），用 _B 和 _c
+- 操作多個商品時加上進度 log
+- 批量操作加上延遲避免 rate limit
+- 回覆要簡潔，不需要解釋太多原理`;
+
+// === Chat ===
+function quickSend(text) {
+  document.getElementById('inputField').value = text;
+  sendMessage();
+}
+
+async function sendMessage() {
+  const input = document.getElementById('inputField');
+  const text = input.value.trim();
+  if (!text) return;
+
+  // Hide welcome
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+
+  // Add user message
+  addMessage(text, 'user');
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Add to history
+  conversationHistory.push({ role: 'user', content: text });
+
+  // Disable
+  document.getElementById('sendBtn').disabled = true;
+
+  // Show typing
+  const typing = showTyping();
+
+  try {
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-proxy-token': PROXY_TOKEN
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4096,
+        system: SYSTEM_PROMPT,
+        messages: conversationHistory
+      })
+    });
+
+    const data = await res.json();
+    typing.remove();
+
+    if (data.content && data.content.length > 0) {
+      const aiText = data.content.map(c => c.text || '').join('');
+      conversationHistory.push({ role: 'assistant', content: aiText });
+      addMessage(aiText, 'ai');
+    } else if (data.error) {
+      addMessage('API 錯誤：' + (data.error.message || JSON.stringify(data.error)), 'ai');
+    } else {
+      addMessage('沒有收到回覆，請重試。', 'ai');
+    }
+  } catch (err) {
+    typing.remove();
+    addMessage('連線錯誤：' + err.message, 'ai');
+  }
+
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('inputField').focus();
+}
+
+function addMessage(text, type) {
+  const messages = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg msg-' + type;
+
+  if (type === 'ai') {
+    div.innerHTML = '<span class="label">操作助手</span>' + formatAIResponse(text);
+  } else {
+    div.textContent = text;
+  }
+
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function formatAIResponse(text) {
+  // Extract code blocks
+  const parts = [];
+  let lastIndex = 0;
+  const codeRegex = /```(\w*)\n([\s\S]*?)```/g;
+  let match;
+
+  while ((match = codeRegex.exec(text)) !== null) {
+    // Text before code
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: text.slice(lastIndex, match.index) });
+    }
+    parts.push({ type: 'code', lang: match[1] || 'javascript', content: match[2].trim() });
+    lastIndex = match.index + match[0].length;
+  }
+  // Remaining text
+  if (lastIndex < text.length) {
+    parts.push({ type: 'text', content: text.slice(lastIndex) });
+  }
+
+  return parts.map(p => {
+    if (p.type === 'code') {
+      const id = 'code-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5);
+      return `<div class="code-block-wrapper">
+        <div class="code-block-header">
+          <span>DevConsole 程式碼</span>
+          <button class="copy-btn" onclick="copyCode('${id}', this)">複製</button>
+        </div>
+        <div class="code-block-body"><pre id="${id}">${escapeHtml(p.content)}</pre></div>
+      </div>`;
+    } else {
+      // Format text: bold, line breaks, bullet points
+      let html = escapeHtml(p.content);
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html = html.replace(/\n- /g, '\n  \u2022 ');
+      html = html.replace(/\n/g, '<br>');
+      return html;
+    }
+  }).join('');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function copyCode(id, btn) {
+  const code = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    btn.textContent = '已複製';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '複製';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function showTyping() {
+  const messages = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'typing';
+  div.innerHTML = '<span></span><span></span><span></span>';
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+  return div;
+}
+
+// === Textarea auto-resize ===
+const inputField = document.getElementById('inputField');
+inputField.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+inputField.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+</script>
+</body>
+</html>
