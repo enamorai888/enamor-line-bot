@@ -259,11 +259,15 @@
     </button>
   </div>
   <div class="quick-bar">
-    <button class="quick-item" onclick="quickSend('查詢商品庫存和預購狀態，handle 是 ')">
+    <button class="quick-item" onclick="quickSend('用 handle 查商品 ID，handle 是 ')">
       <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      查 ID
+    </button>
+    <button class="quick-item" onclick="quickSend('查詢商品庫存和預購狀態，商品 ID 是 ')">
+      <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
       查庫存
     </button>
-    <button class="quick-item" onclick="quickSend('把 handle 是 xxx 的商品改成售罄模式（deny + 全售罄就 draft）')">
+    <button class="quick-item" onclick="quickSend('把商品 ID xxx 改成售罄模式（deny + 全售罄就 draft）')">
       <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><path d="M12 2v10"/></svg>
       改售罄
     </button>
@@ -271,7 +275,7 @@
       <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       查無預購
     </button>
-    <button class="quick-item" onclick="quickSend('把 handle 是 xxx 的商品成份 metafield 改成 ')">
+    <button class="quick-item" onclick="quickSend('把商品 ID xxx 的成份 metafield 改成 ')">
       <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
       改成份
     </button>
@@ -325,12 +329,20 @@ preorder_type(a1/a2/b), split_colors(boolean), stretch_score(1-5), compression_f
 全規格庫存0且不預購 → status: draft（下架）
 
 ## API
-查商品: GET /products.json?handle=HANDLE&fields=id,handle,title,status,variants
+查商品（用 handle）: GET /products.json?handle=HANDLE&fields=id,handle,title,status,variants
+查商品（用 ID）: GET /products/ID.json?fields=id,handle,title,status,variants
+用 handle 查 ID: GET /products.json?handle=HANDLE&fields=id,handle,title
 查metafields: GET /products/ID/metafields.json
 改variant: PUT /variants/ID.json {variant:{id,inventory_policy}}
 新增metafield: POST /products/ID/metafields.json {metafield:{namespace:'custom',key,value,type:'single_line_text'}}
 更新metafield: PUT /metafields/ID.json {metafield:{id,value}}
-改狀態: PUT /products/ID.json {product:{id,status}}`;
+改狀態: PUT /products/ID.json {product:{id,status}}
+
+## 員工操作習慣
+- 員工可能給 handle 或 product ID，兩種都要支援
+- 如果員工給 ID（純數字），直接用 /products/ID.json 查
+- 如果員工給 handle（含英文和連字號），用 /products.json?handle=HANDLE 查
+- 所有修改操作（改售罄、改 metafield 等）都用 product ID 執行`;
 
 function quickSend(text) {
   const field = document.getElementById('inputField');
