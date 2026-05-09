@@ -271,13 +271,17 @@
       <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><path d="M12 2v10"/></svg>
       改售罄
     </button>
+    <button class="quick-item" onclick="quickSend('把商品 ID xxx 的 material_text 改成：')">
+      <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+      改成份
+    </button>
+    <button class="quick-item" onclick="quickSend('把商品 ID xxx 的 size_guide 改成：M SIZE 版型正常/彈性極佳 市售褲子尺寸XL以下適穿, L SIZE 版型正常/彈性極佳 市售褲子尺寸2L以下適穿')">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      改尺寸
+    </button>
     <button class="quick-item" onclick="quickSend('查所有沒有 preorder_type 的 active 商品清單')">
       <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
       查無預購
-    </button>
-    <button class="quick-item" onclick="quickSend('把商品 ID xxx 的成份 metafield 改成 ')">
-      <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-      改成份
     </button>
   </div>
 </div>
@@ -320,8 +324,35 @@ const _c = (() => { const s = [...document.querySelectorAll('script:not([src])')
 5. 程式碼含 console.log 顯示進度
 6. 需求不明確先問
 
-## Metafield
-preorder_type(a1/a2/b), split_colors(boolean), stretch_score(1-5), compression_feel(Soft/Balanced/Firm), size_tolerance(Narrow/Medium/Wide)
+## Metafield 完整欄位定義（以下為實際儲存位置，禁止猜測）
+
+### 商品運營類
+| key | namespace | type | 說明 |
+|-----|-----------|------|------|
+| preorder_type | custom | single_line_text | 預購類型：a1/a2/b，清空=非預購 |
+| split_colors | custom | boolean | 展開顏色為獨立商品卡片，EnTry99 填 false |
+| swatch_colors | custom | single_line_text | 色卡定義，格式：黑=#1a1a1a,白皙膚=#f0d9c0 |
+| max_qty | custom | number_integer | 單次最大購買數量 |
+
+### 商品規格類（前台商品描述區顯示）
+| key | namespace | type | 說明 | 範例值 |
+|-----|-----------|------|------|--------|
+| material_text | custom | single_line_text | 成份+尺寸文字+產地（全部在同一個欄位） | 90% 尼龍(抗菌紗、涼感紗)、10% 彈性纖維(杜邦萊卡)【M】彈性極佳 中腰圍23-34吋...產地：台灣 Made in Taiwan |
+| size_guide | custom | json | 尺寸建議表格 | [{"size":"M SIZE","note":"版型正常/彈性極佳 市售褲子尺寸XL 以下適穿"},{"size":"L SIZE","note":"版型正常/彈性極佳 市售褲子尺寸2L 以下適穿"}] |
+| size_options | custom | json | 可選尺寸 | ["L","XL"] |
+
+### 商品體感類
+| key | namespace | type | 說明 |
+|-----|-----------|------|------|
+| stretch_score | custom | number_integer | 彈性分數 1-5 |
+| compression_feel | custom | single_line_text | Soft/Balanced/Firm |
+| size_tolerance | custom | single_line_text | Narrow/Medium/Wide |
+
+### 重要注意
+- 成份、產地、尺寸文字描述都存在 material_text，是同一個欄位
+- size_guide 是 JSON 格式，更新時要維持 JSON 結構
+- 修改 metafield 前必須先查現有值（GET /products/ID/metafields.json），取得 metafield ID 後用 PUT 更新
+- 新增 metafield 用 POST，更新已存在的用 PUT（需要 metafield ID）
 
 ## 預購/售罄
 有 preorder_type → inventory_policy: continue → 庫存0顯示預購
