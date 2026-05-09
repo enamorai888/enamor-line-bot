@@ -571,7 +571,7 @@ async function sendChat() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5',
+        model: 'claude-sonnet-4-6',
         system: AI_SYSTEM,
         messages: chatHistory.slice(-10),
         max_tokens: 500
