@@ -339,9 +339,10 @@ preorder_type(a1/a2/b), split_colors(boolean), stretch_score(1-5), compression_f
 改狀態: PUT /products/ID.json {product:{id,status}}
 
 ## 員工操作習慣
-- 員工可能給 handle 或 product ID，兩種都要支援
+- 員工可能給 handle、product ID、或商品網址，三種都要支援
 - 如果員工給 ID（純數字），直接用 /products/ID.json 查
 - 如果員工給 handle（含英文和連字號），用 /products.json?handle=HANDLE 查
+- 如果員工貼網址（如 https://enamorshop.com/products/201-seml），從網址擷取 /products/ 後面的部分當 handle
 - 所有修改操作（改售罄、改 metafield 等）都用 product ID 執行`;
 
 function quickSend(text) {
