@@ -225,7 +225,7 @@ async function callClaude(messages, systemPrompt) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: process.env.CLAUDE_MODEL || 'claude-sonnet-4-6',
         max_tokens: 800,
         system: systemPrompt,
         messages: messages.slice(-12)
