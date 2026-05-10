@@ -775,25 +775,101 @@ function togglePODetail(vid,idx,safeId){
   }
 }
 
-function expV(v){
+async function expV(v){
   const it=merged.filter(i=>i.vid===v&&i.need);if(!it.length){toast('沒有需採購項目');return}
   const stMapXls={'60':'處理中','62':'QC中','65':'已回寫','69':'已結案'};
-  const wb=XLSX.utils.book_new();const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','建議採購量','備註']];
-  it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.sug,'']));
-  d.push(['','','','','','','','合計','','','',it.reduce((s,i)=>s+i.sug,0),'']);
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v);
-  XLSX.writeFile(wb,`${tdy()}_採購_${v}.xlsx`);toast(`✓ ${v} 已下載`);
+  toast('準備 Excel...');
+  try{await ensureExcelJS()}catch(e){toast('Excel 引擎載入失敗');return}
+  
+  const wb=new ExcelJS.Workbook();
+  const ws=wb.addWorksheet(v.substring(0,31));
+  const h=['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','建議採購量','備註'];
+  ws.addRow(h);
+  const sorted=[...it].sort((a,b)=>{if(a.urgent!==b.urgent)return a.urgent?-1:1;return a.dl-b.dl});
+  sorted.forEach(i=>ws.addRow([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.sug,'']));
+  _applyVendorSheetStyles(ws,sorted,h,[13,14,8,8,9,10,10,10,10,12,12,12,18]);
+  const totalRow=ws.addRow(['','','','','','','','合計','','','',it.reduce((s,i)=>s+i.sug,0),'']);
+  totalRow.eachCell({includeEmpty:true},c=>{c.font=_XL_STYLES.FONT_TOTAL;c.fill=_XL_STYLES.FILL_HEADER;c.border=_XL_STYLES.BORDER_THIN});
+  
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`${tdy()}_採購_${v}.xlsx`;a.click();URL.revokeObjectURL(url);
+  toast(`✓ ${v} 已下載（含底色）`);
 }
-function exportAll(){
+// 載入 ExcelJS（給帶底色的 Excel 匯出用）
+async function ensureExcelJS(){
+  if(typeof ExcelJS!=='undefined')return;
+  await new Promise((res,rej)=>{
+    const sc=document.createElement('script');
+    sc.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+    sc.onload=res;sc.onerror=()=>rej(new Error('ExcelJS 載入失敗'));
+    document.head.appendChild(sc);
+  });
+}
+
+// Excel 樣式常數
+const _XL_STYLES={
+  FILL_URGENT:{type:'pattern',pattern:'solid',fgColor:{argb:'FFFECACA'}},
+  FILL_NEED:{type:'pattern',pattern:'solid',fgColor:{argb:'FFFEE2E2'}},
+  FILL_HEADER:{type:'pattern',pattern:'solid',fgColor:{argb:'FFF3F3F0'}},
+  FONT_HEADER:{bold:true,size:10},
+  FONT_TOTAL:{bold:true},
+  BORDER_THIN:{top:{style:'thin',color:{argb:'FFE2DEDD'}},bottom:{style:'thin',color:{argb:'FFE2DEDD'}}},
+  BORDER_URGENT:{top:{style:'thin',color:{argb:'FFE2DEDD'}},bottom:{style:'thin',color:{argb:'FFE2DEDD'}},left:{style:'medium',color:{argb:'FFC0392B'}}}
+};
+
+// 給單張 sheet 套樣式（共用 helper）
+function _applyVendorSheetStyles(ws,items,headers,widths){
+  // 表頭
+  ws.getRow(1).eachCell({includeEmpty:true},c=>{c.fill=_XL_STYLES.FILL_HEADER;c.font=_XL_STYLES.FONT_HEADER;c.border=_XL_STYLES.BORDER_THIN});
+  // 資料
+  items.forEach((i,idx)=>{
+    const row=ws.getRow(idx+2);
+    const fill=i.urgent?_XL_STYLES.FILL_URGENT:_XL_STYLES.FILL_NEED;
+    const border=i.urgent?_XL_STYLES.BORDER_URGENT:_XL_STYLES.BORDER_THIN;
+    row.eachCell({includeEmpty:true},(c,n)=>{c.fill=fill;c.border=border});
+  });
+  // 欄寬
+  if(widths)widths.forEach((w,i)=>{ws.getColumn(i+1).width=w});
+}
+
+async function exportAll(){
   const al=merged.filter(i=>i.need);if(!al.length){toast('沒有需採購項目');return}
-  const wb=XLSX.utils.book_new();
   const stMapXls={'60':'處理中','62':'QC中','65':'已回寫','69':'已結案'};
-  const s=[['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','再訂購點','建議採購量']];
-  al.forEach(i=>s.push([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.rop,i.sug]));
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s),'採購彙整');
+  toast('準備 Excel...');
+  try{await ensureExcelJS()}catch(e){toast('Excel 引擎載入失敗：'+e.message);return}
+  
+  const wb=new ExcelJS.Workbook();
+  
+  // === Sheet 1: 採購彙整（urgent 排前） ===
+  const ws1=wb.addWorksheet('採購彙整');
+  const headers1=['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','再訂購點','建議採購量'];
+  ws1.addRow(headers1);
+  // 重新排序（urgent 在最前）
+  const sorted=[...al].sort((a,b)=>{if(a.urgent!==b.urgent)return a.urgent?-1:1;return a.dl-b.dl});
+  sorted.forEach(i=>ws1.addRow([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.rop,i.sug]));
+  _applyVendorSheetStyles(ws1,sorted,headers1,[10,18,12,10,8,18,30,8,9,10,10,10,10,12,12,8,10]);
+  
+  // === 各供應商 Sheet ===
   const vs={};al.forEach(i=>{if(!vs[i.vid])vs[i.vid]=[];vs[i.vid].push(i)});
-  Object.entries(vs).forEach(([v,it])=>{const d=[['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','建議採購量','備註']];it.forEach(i=>d.push([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.sug,'']));d.push(['','','','','','','','合計','','','','',it.reduce((s,i)=>s+i.sug,0),'']);XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),v.substring(0,31))});
-  XLSX.writeFile(wb,`${tdy()}_OMS採購建議.xlsx`);toast('✓ 採購建議已匯出');
+  Object.entries(vs).forEach(([v,it])=>{
+    const ws=wb.addWorksheet(v.substring(0,31));
+    const h2=['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','建議採購量','備註'];
+    ws.addRow(h2);
+    const sortedV=[...it].sort((a,b)=>{if(a.urgent!==b.urgent)return a.urgent?-1:1;return a.dl-b.dl});
+    sortedV.forEach(i=>ws.addRow([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.sug,'']));
+    _applyVendorSheetStyles(ws,sortedV,h2,[13,14,8,8,9,10,10,10,10,12,12,12,18]);
+    // 合計列
+    const totalRow=ws.addRow(['','','','','','','','合計','','','',it.reduce((s,i)=>s+i.sug,0),'']);
+    totalRow.eachCell({includeEmpty:true},c=>{c.font=_XL_STYLES.FONT_TOTAL;c.fill=_XL_STYLES.FILL_HEADER;c.border=_XL_STYLES.BORDER_THIN});
+  });
+  
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=`${tdy()}_OMS採購建議.xlsx`;a.click();URL.revokeObjectURL(url);
+  toast('✓ 已匯出（含底色）');
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
 
