@@ -21,8 +21,11 @@ header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;d
 table{width:100%;border-collapse:collapse;min-width:1100px}th{padding:8px 8px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;background:var(--surface2);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);vertical-align:middle}td{padding:9px 8px;font-size:13px;border-bottom:1px solid var(--surface2);vertical-align:middle}tr:last-child td{border-bottom:none}tr:hover td{background:#faf9f8}
 th.newcol{background:var(--newcol-head);color:var(--newcol-text)}
 td.newcol{background:var(--newcol-bg)}
-tr.alert-row td{background:var(--red-light)!important}
-tr.alert-row td.newcol{background:rgba(250,236,231,.65)!important}
+tr.alert-row td{background:#fee2e2!important}
+tr.alert-row td.newcol{background:#fecaca!important}
+tr.urgent-row td{background:#fecaca!important;border-top:1px solid #f87171}
+tr.urgent-row td.newcol{background:#fca5a5!important}
+tr.urgent-row td:first-child{border-left:3px solid var(--red);padding-left:6px}
 .mono{font-family:'DM Mono',monospace}.text-center{text-align:center}.text-right{text-align:right}.size-tag{font-family:'DM Mono',monospace;font-size:11px;background:var(--surface2);padding:2px 7px;border-radius:3px;border:1px solid var(--border);display:inline-block}
 .cell-stack{line-height:1.3}.cell-stack .sub{font-size:10px;color:var(--muted);font-weight:400}
 .loading{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}@keyframes spin{to{transform:rotate(360deg)}}
@@ -121,9 +124,21 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
           <span id="parseSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
         </div>
         <div id="poPreview" class="hidden"></div>
-        <div id="poActions" class="hidden" style="margin-top:16px;display:flex;gap:12px;align-items:center">
-          <button class="btn btn-green" onclick="submitToOms()" id="btnSubmit">🚀 送出到 OMS</button>
-          <span id="submitSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+        <div id="poActions" class="hidden" style="margin-top:16px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div>
+              <label style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">追蹤單號（選填、設了之後鎖）</label>
+              <input type="text" id="poTracking" placeholder="例：黑貓 1234567890" style="width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
+            </div>
+            <div>
+              <label style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">備註（選填、可修改）</label>
+              <input type="text" id="poMemo" placeholder="例：斷貨補的、優先安排會員福利" style="width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
+            </div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center">
+            <button class="btn btn-green" onclick="submitToOms()" id="btnSubmit">🚀 送出到 OMS</button>
+            <span id="submitSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+          </div>
         </div>
       </div>
     </div>
@@ -132,7 +147,7 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
 </div>
 <div class="toast" id="toast"></div>
 <script>
-const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208';
+const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208',PO_META_API='https://enamor-oms.vercel.app/api/po-meta';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 const LK='enamor_po_oms_v2',SD=30,HISTORY_DAYS=90,MARKETS_NO=[1,8,16];
 let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},pendPOInfo={},preSale={},lastPO={},vendorPOs={},merged=[],vCfg={},cF='all',sQ='';
@@ -503,9 +518,16 @@ function doMerge(){
     // 缺貨數 = ROP - 有效庫存（有效庫存已經扣掉訂單佔用量）
     const shortage=Math.max(0,rop-eff);
     const dl=da>0?Math.floor(Math.max(0,inf.stk-ps)/da):999;
-    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s30:sold,da,po,ps,rop,sug,shortage,need,dl,isStockout,effDays,lastPO:lp,pInfo,eff});
+    // urgent = 自由可用 ≤ 3 天 且 採購中=0（最緊急、沒人在補）
+    const urgent=need&&dl<=3&&po===0;
+    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s30:sold,da,po,ps,rop,sug,shortage,need,urgent,dl,isStockout,effDays,lastPO:lp,pInfo,eff});
   });
-  merged.sort((a,b)=>{if(a.need!==b.need)return a.need?-1:1;return a.dl-b.dl});
+  // 排序：緊急(urgent) → 一般需採購(need) → 充足；同層級內按可用天數升序
+  merged.sort((a,b)=>{
+    if(a.urgent!==b.urgent)return a.urgent?-1:1;
+    if(a.need!==b.need)return a.need?-1:1;
+    return a.dl-b.dl;
+  });
   // OMS 品名回寫
   Object.entries(sm).forEach(([bc,inf])=>{
     if(supMap[bc]&&inf.nm){
@@ -579,7 +601,7 @@ function renderTbl(){
 function fmtDate(d){if(!d)return '';const m=d.match(/^(\d{4})-(\d{2})-(\d{2})/);return m?`${m[2]}-${m[3]}`:d.slice(0,10)}
 
 function rR(i){
-  const c=i.need?'alert-row':'';const dc=i.dl<=7?'var(--red)':i.dl<=14?'var(--orange)':'var(--muted)';
+  const c=i.urgent?'urgent-row':(i.need?'alert-row':'');const dc=i.dl<=7?'var(--red)':i.dl<=14?'var(--orange)':'var(--muted)';
   const soTag=i.isStockout?`<span style="font-size:9px;color:#fff;background:var(--orange);padding:1px 5px;border-radius:3px;margin-left:4px" title="斷貨修正：用${i.effDays}天算日均">斷貨</span>`:'';
   const lastPOCell=i.lastPO?(()=>{
     const stMap={'60':{txt:'處理中',color:'var(--orange)'},'62':{txt:'QC中',color:'var(--orange)'},'65':{txt:'已回寫',color:'var(--green)'},'69':{txt:'已結案',color:'var(--green)'}};
@@ -627,16 +649,37 @@ function tdy(){return new Date().toISOString().slice(0,10).replace(/-/g,'')}
 // ── 採購單列表（點 vendor header 展開）──
 const PO_STATUS_MAP={'60':{txt:'處理中',color:'var(--orange)'},'62':{txt:'QC中',color:'var(--orange)'},'65':{txt:'已回寫',color:'var(--green)'},'69':{txt:'已結案',color:'var(--green)'}};
 
-function togglePOList(vid,event){
+// po-meta 快取 {pn: {tracking, memo, ...}}
+let poMetaCache={};
+
+async function togglePOList(vid,event){
   // 不影響子元素點擊（如 button）
   if(event&&event.target.tagName==='BUTTON')return;
   const wrap=document.getElementById(`poList-${vid}`);
   const tog=document.getElementById(`poToggle-${vid}`);
   if(!wrap)return;
   if(wrap.style.display==='none'){
-    wrap.innerHTML=renderPOList(vid);
+    // 先顯示骨架
+    wrap.innerHTML='<div style="padding:14px 18px;font-size:12px;color:var(--muted);font-family:\'DM Mono\',monospace">讀取備註中...</div>';
     wrap.style.display='block';
     if(tog)tog.textContent='▼';
+    // 批次抓 po-meta
+    const list=vendorPOs[vid]||[];
+    const pns=list.map(p=>p.pn).filter(pn=>!(pn in poMetaCache));
+    if(pns.length){
+      try{
+        const r=await fetch(PO_META_API,{
+          method:'POST',
+          headers:{'Content-Type':'application/json','x-proxy-token':T},
+          body:JSON.stringify({action:'batch_get',purchase_nos:pns})
+        });
+        const j=await r.json();
+        if(j.ok&&j.records){
+          pns.forEach(pn=>{poMetaCache[pn]=j.records[pn]||null});
+        }
+      }catch(e){console.warn('讀 po-meta 失敗',e)}
+    }
+    wrap.innerHTML=renderPOList(vid);
   }else{
     wrap.style.display='none';
     if(tog)tog.textContent='▶';
@@ -664,17 +707,24 @@ function renderPOList(vid){
     const st=PO_STATUS_MAP[String(p.status)]||{txt:p.status||'?',color:'var(--muted)'};
     const remain=p.totalQty-p.totalIn;
     const safeId=p.pn.replace(/[^a-zA-Z0-9]/g,'_');
+    const meta=poMetaCache[p.pn]||null;
+    const hasNote=meta&&(meta.tracking||meta.memo);
+    const noteRow=hasNote?`<tr><td colspan="7" style="padding:6px 10px 8px 38px;border-bottom:1px solid var(--surface2);background:#fffbf2">
+      ${meta.tracking?`<span style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-right:14px">📦 ${meta.tracking}</span>`:''}
+      ${meta.memo?`<span style="font-size:11px;color:#6b4a1f">💬 ${meta.memo}</span>`:''}
+    </td></tr>`:'';
     html+=`<tr style="cursor:pointer" onclick="togglePODetail('${vid}',${idx},'${safeId}')">
-      <td style="padding:8px 10px;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);font-weight:600">
+      <td style="padding:8px 10px;font-size:12px;font-family:'DM Mono',monospace;border-bottom:${hasNote?'none':'1px solid var(--surface2)'};font-weight:600">
         <span style="font-size:10px;color:var(--muted2);margin-right:5px" id="poDetTog-${safeId}">▶</span>${p.pn}
       </td>
-      <td style="padding:8px 10px;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);color:var(--muted)">${p.date||'—'}</td>
-      <td style="padding:8px 10px;font-size:11px;border-bottom:1px solid var(--surface2)"><span style="color:${st.color};font-weight:600;font-family:'DM Mono',monospace">${st.txt}</span></td>
-      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2)">${p.skuCount}</td>
-      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);font-weight:600">${p.totalQty}</td>
-      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);color:var(--green)">${p.totalIn}</td>
-      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2);color:${remain>0?'var(--orange)':'var(--muted2)'};font-weight:${remain>0?'700':'400'}">${remain>0?remain:'—'}</td>
+      <td style="padding:8px 10px;font-size:12px;font-family:'DM Mono',monospace;border-bottom:${hasNote?'none':'1px solid var(--surface2)'};color:var(--muted)">${p.date||'—'}</td>
+      <td style="padding:8px 10px;font-size:11px;border-bottom:${hasNote?'none':'1px solid var(--surface2)'}"><span style="color:${st.color};font-weight:600;font-family:'DM Mono',monospace">${st.txt}</span></td>
+      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:${hasNote?'none':'1px solid var(--surface2)'}">${p.skuCount}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:${hasNote?'none':'1px solid var(--surface2)'};font-weight:600">${p.totalQty}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:${hasNote?'none':'1px solid var(--surface2)'};color:var(--green)">${p.totalIn}</td>
+      <td style="padding:8px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;border-bottom:${hasNote?'none':'1px solid var(--surface2)'};color:${remain>0?'var(--orange)':'var(--muted2)'};font-weight:${remain>0?'700':'400'}">${remain>0?remain:'—'}</td>
     </tr>
+    ${noteRow}
     <tr id="poDet-${safeId}" style="display:none"><td colspan="7" style="padding:0;background:#fcfcfa"><div id="poDetCt-${safeId}" style="padding:10px 18px"></div></td></tr>`;
   });
   html+='</tbody></table></div>';
@@ -864,6 +914,19 @@ async function submitToOms(){
     if(ok){
       st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ ${res.msg}，採購單號 ${poNo}</span>`;
       toast('✓ 採購單已送出到 OMS');
+      // 寫 po-meta（追蹤單號 + 備註）
+      const tracking=document.getElementById('poTracking').value.trim();
+      const memo=document.getElementById('poMemo').value.trim();
+      if(tracking||memo){
+        try{
+          await fetch(PO_META_API,{
+            method:'POST',
+            headers:{'Content-Type':'application/json','x-proxy-token':T},
+            body:JSON.stringify({action:'save',purchase_no:poNo,vendor_id:vendorCode,tracking,memo})
+          });
+          console.log('✓ po-meta 已寫入',poNo);
+        }catch(e){console.warn('po-meta 寫入失敗（不影響採購單）',e)}
+      }
     }else{
       let detail='';
       if(res.retval){try{detail='<br>'+JSON.stringify(res.retval).substring(0,300)}catch(e){}}
