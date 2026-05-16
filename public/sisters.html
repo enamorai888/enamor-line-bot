@@ -44,7 +44,7 @@
     padding: 80px 32px 100px;
   }
   .logo { display: block; margin-bottom: 80px; opacity: 0; animation: fadeUp 0.8s ease 0.1s forwards; }
-  .logo img { height: 28px; width: auto; opacity: 0.9; }
+  .logo img { height: 40px; width: auto; opacity: 0.9; }
   .hero { margin-bottom: 64px; opacity: 0; animation: fadeUp 0.8s ease 0.3s forwards; }
   .tag { font-size: 9px; letter-spacing: 4px; color: var(--accent-light); text-transform: uppercase; margin-bottom: 24px; display: block; }
   .hero h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; font-size: clamp(36px, 5vw, 48px); line-height: 1.3; color: var(--charcoal); margin-bottom: 24px; }
@@ -53,7 +53,7 @@
   .divider { width: 40px; height: 1px; background: var(--accent); margin: 48px 0; opacity: 0; animation: fadeUp 0.8s ease 0.5s forwards; }
   .form-wrap { opacity: 0; animation: fadeUp 0.8s ease 0.6s forwards; }
   .field { margin-bottom: 32px; }
-  .field label { display: block; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .field label { display: block; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
   .field input, .field textarea, .field select {
     width: 100%; background: transparent; border: none;
     border-bottom: 1px solid rgba(28,28,26,0.2); color: #1C1C1A;
@@ -61,7 +61,7 @@
     padding: 12px 0; outline: none; transition: border-color 0.3s ease;
     appearance: none; -webkit-appearance: none; border-radius: 0; line-height: 1.8;
   }
-  .field input::placeholder, .field textarea::placeholder { color: rgba(28,28,26,0.5); font-size: 16px; }
+  .field input::placeholder, .field textarea::placeholder { color: rgba(28,28,26,0.45); font-size: 17px; }
   .field input:focus, .field textarea:focus, .field select:focus { border-bottom-color: var(--accent-light); }
   .field textarea { resize: none; min-height: 72px; }
   .field select option { background: var(--cream); color: var(--charcoal); }
@@ -103,8 +103,8 @@
 
   <div class="hero">
     <span class="tag">Sisters Circle</span>
-    <h1>有人把你帶來這裡，<br>因為她<em>真的</em>覺得值得。</h1>
-    <p>這裡沒有折扣、沒有活動。<br>只是一個安靜的地方，讓我們記得你是誰帶來的。</p>
+    <h1>有人想到了您，<br>因為她<em>真的</em>覺得值得分享。</h1>
+    <p>這裡沒有促銷、沒有喧嘩。<br>只是讓我們悄悄記住，是誰把您帶來這裡。</p>
   </div>
 
   <div class="divider"></div>
@@ -113,45 +113,45 @@
     <form id="sistersForm" novalidate>
 
       <div class="field">
-        <label>你的姓名</label>
-        <input type="text" name="name" placeholder="怎麼稱呼你" required>
+        <label>您的姓名</label>
+        <input type="text" name="name" placeholder="您希望我們怎麼稱呼您" required>
       </div>
 
       <div class="field">
         <label>Email</label>
-        <input type="email" name="email" placeholder="之後我們會用這封信聯絡你" required>
+        <input type="email" name="email" placeholder="我們會用這個信箱與您保持聯繫" required>
       </div>
 
       <div class="field">
         <label>設定密碼</label>
         <input type="password" name="password" placeholder="至少 6 個字元" required minlength="6">
-        <p class="field-note">用來登入查閱業績，請自己記住。</p>
+        <p class="field-note">之後用來查看您的專屬優惠與推薦回饋，請妥善保存。</p>
       </div>
 
       <div class="field">
-        <label>推薦你來的人</label>
-        <input type="text" name="referrer" id="referrerField" placeholder="她的名字或 Email" required>
-        <p class="field-note">如果你不確定，可以問她。</p>
+        <label>推薦您來的人</label>
+        <input type="text" name="referrer" id="referrerField" placeholder="帶您來的那位" required>
+        <p class="field-note">如果想不起來，可以問問她。</p>
       </div>
 
       <div class="field">
-        <label>你們是怎麼認識的？</label>
+        <label>您們是怎麼相識的？</label>
         <select name="relationship" id="relSelect" class="empty" required>
           <option value="" disabled selected>選一個最接近的</option>
           <option value="close_friend">認識很久的朋友</option>
           <option value="colleague">同事或工作上認識的</option>
           <option value="online">網路上認識的</option>
           <option value="family">家人</option>
-          <option value="other">說不太清楚</option>
+          <option value="other">其他</option>
         </select>
       </div>
 
       <div class="field">
-        <label>有沒有一件事，是你希望內著能做到的</label>
-        <textarea name="wish" placeholder="不用寫很多，一句話就好。也可以跳過。"></textarea>
+        <label>如果內著能為您做一件事</label>
+        <textarea name="wish" placeholder="一句話就好，也可以跳過這題。"></textarea>
       </div>
 
-      <p class="error-msg" id="errorMsg">請確認必填欄位都填寫了。</p>
+      <p class="error-msg" id="errorMsg">有幾個地方還沒填完，請確認一下。</p>
       <button type="submit" class="btn" id="submitBtn">遞交</button>
 
     </form>
@@ -159,7 +159,7 @@
 
   <div class="success" id="successMsg">
     <span class="success-tag">已收到</span>
-    <h2>我們記得你了。</h2>
+    <h2>我們記住您了。</h2>
     <p>
       確認信已寄到你的信箱。<br>
       通常在幾天內，你會收到我們的回覆。<br><br>
@@ -168,7 +168,7 @@
   </div>
 
   <div class="foot">
-    <p>EnamoR — 台灣製造<br>這個頁面不對外公開。</p>
+    <p>EnamoR — 台灣製造<br>這個圈子，不對外公開。</p>
   </div>
 
 </div>
@@ -203,7 +203,7 @@
     const relationship = form.relationship.value;
 
     if (!name || !email || !password || !referrer || !relationship) {
-      errorMsg.textContent = '請確認必填欄位都填寫了。';
+      errorMsg.textContent = '有幾個地方還沒填完，請確認一下。';
       errorMsg.classList.add('show');
       return;
     }
