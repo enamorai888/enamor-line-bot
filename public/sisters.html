@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnamoR — 姐妹圈</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --charcoal: #1C1C1A;
+    --warm-white: #FAFAF7;
+    --cream: #F5F0E8;
+    --accent: #8B6F47;
+    --accent-light: #C4A882;
+    --mid: #5C5C58;
+    --light: #9C9A92;
+    --border: rgba(28,28,26,0.1);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--cream);
+    color: #1C1C1A;
+    font-family: 'Noto Sans TC', 'PingFang TC', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(28,28,26,0.015) 40px, rgba(28,28,26,0.015) 41px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 80px 32px 100px;
+  }
+  .logo { display: block; margin-bottom: 80px; opacity: 0; animation: fadeUp 0.8s ease 0.1s forwards; }
+  .logo img { height: 28px; width: auto; opacity: 0.9; }
+  .hero { margin-bottom: 64px; opacity: 0; animation: fadeUp 0.8s ease 0.3s forwards; }
+  .tag { font-size: 9px; letter-spacing: 4px; color: var(--accent-light); text-transform: uppercase; margin-bottom: 24px; display: block; }
+  .hero h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 400; font-size: clamp(36px, 5vw, 48px); line-height: 1.3; color: var(--charcoal); margin-bottom: 24px; }
+  .hero h1 em { font-style: italic; color: var(--accent-light); }
+  .hero p { font-size: 14px; color: #5C5C58; line-height: 1.9; max-width: 420px; }
+  .divider { width: 40px; height: 1px; background: var(--accent); margin: 48px 0; opacity: 0; animation: fadeUp 0.8s ease 0.5s forwards; }
+  .form-wrap { opacity: 0; animation: fadeUp 0.8s ease 0.6s forwards; }
+  .field { margin-bottom: 32px; }
+  .field label { display: block; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .field input, .field textarea, .field select {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1px solid rgba(28,28,26,0.2); color: #1C1C1A;
+    font-family: 'Noto Sans TC', sans-serif; font-weight: 300; font-size: 16px;
+    padding: 12px 0; outline: none; transition: border-color 0.3s ease;
+    appearance: none; -webkit-appearance: none; border-radius: 0; line-height: 1.8;
+  }
+  .field input::placeholder, .field textarea::placeholder { color: rgba(28,28,26,0.5); font-size: 16px; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-bottom-color: var(--accent-light); }
+  .field textarea { resize: none; min-height: 72px; }
+  .field select option { background: var(--cream); color: var(--charcoal); }
+  .field select.empty { color: rgba(28,28,26,0.3); }
+  .field select:not(.empty) { color: var(--charcoal); }
+  .field-note { font-size: 10px; color: var(--light); margin-top: 8px; letter-spacing: 0.5px; }
+  .btn {
+    display: inline-block; background: var(--warm-white); color: var(--charcoal);
+    font-family: 'Noto Sans TC', sans-serif; font-weight: 400; font-size: 10px;
+    letter-spacing: 4px; text-transform: uppercase; padding: 18px 52px;
+    border: none; cursor: pointer; transition: background 0.2s ease, color 0.2s ease; margin-top: 16px;
+  }
+  .btn:hover { background: var(--accent); color: var(--warm-white); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .success { display: none; padding: 40px 0; opacity: 0; animation: fadeUp 0.8s ease forwards; }
+  .success.show { display: block; }
+  .success-tag { font-size: 9px; letter-spacing: 4px; color: var(--accent-light); text-transform: uppercase; margin-bottom: 20px; display: block; }
+  .success h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 300; font-size: 28px; color: var(--charcoal); margin-bottom: 16px; line-height: 1.4; }
+  .success p { font-size: 12px; color: var(--mid); line-height: 1.9; }
+  .error-msg { font-size: 11px; color: #C4826A; margin-top: 16px; display: none; }
+  .error-msg.show { display: block; }
+  .foot { margin-top: 80px; padding-top: 32px; border-top: 1px solid rgba(28,28,26,0.1); opacity: 0; animation: fadeUp 0.8s ease 0.8s forwards; }
+  .foot p { font-size: 10px; color: rgba(28,28,26,0.3); letter-spacing: 1px; line-height: 1.9; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+  @media (max-width: 480px) {
+    .wrap { padding: 60px 24px 80px; }
+    .logo { margin-bottom: 60px; }
+    .hero { margin-bottom: 48px; }
+    .btn { width: 100%; text-align: center; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="https://enamorshop.com" class="logo">
+    <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR">
+  </a>
+
+  <div class="hero">
+    <span class="tag">Sisters Circle</span>
+    <h1>有人把你帶來這裡，<br>因為她<em>真的</em>覺得值得。</h1>
+    <p>這裡沒有折扣、沒有活動。<br>只是一個安靜的地方，讓我們記得你是誰帶來的。</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="form-wrap" id="formWrap">
+    <form id="sistersForm" novalidate>
+
+      <div class="field">
+        <label>你的姓名</label>
+        <input type="text" name="name" placeholder="怎麼稱呼你" required>
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="之後我們會用這封信聯絡你" required>
+      </div>
+
+      <div class="field">
+        <label>設定密碼</label>
+        <input type="password" name="password" placeholder="至少 6 個字元" required minlength="6">
+        <p class="field-note">用來登入查閱業績，請自己記住。</p>
+      </div>
+
+      <div class="field">
+        <label>推薦你來的人</label>
+        <input type="text" name="referrer" id="referrerField" placeholder="她的名字或 Email" required>
+        <p class="field-note">如果你不確定，可以問她。</p>
+      </div>
+
+      <div class="field">
+        <label>你們是怎麼認識的？</label>
+        <select name="relationship" id="relSelect" class="empty" required>
+          <option value="" disabled selected>選一個最接近的</option>
+          <option value="close_friend">認識很久的朋友</option>
+          <option value="colleague">同事或工作上認識的</option>
+          <option value="online">網路上認識的</option>
+          <option value="family">家人</option>
+          <option value="other">說不太清楚</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>有沒有一件事，是你希望內著能做到的</label>
+        <textarea name="wish" placeholder="不用寫很多，一句話就好。也可以跳過。"></textarea>
+      </div>
+
+      <p class="error-msg" id="errorMsg">請確認必填欄位都填寫了。</p>
+      <button type="submit" class="btn" id="submitBtn">遞交</button>
+
+    </form>
+  </div>
+
+  <div class="success" id="successMsg">
+    <span class="success-tag">已收到</span>
+    <h2>我們記得你了。</h2>
+    <p>
+      確認信已寄到你的信箱。<br>
+      通常在幾天內，你會收到我們的回覆。<br><br>
+      在那之前，就先好好生活。
+    </p>
+  </div>
+
+  <div class="foot">
+    <p>EnamoR — 台灣製造<br>這個頁面不對外公開。</p>
+  </div>
+
+</div>
+<script>
+  const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwWeYl3iuVstvULuXlp89oJwFgj2R7q9NlFQSUR217criURFBx4ZeqJsoadfTj-dClv/exec';
+
+  // ?ref= 自動填推薦人
+  (function() {
+    const ref = new URLSearchParams(window.location.search).get('ref');
+    if (ref) {
+      const f = document.getElementById('referrerField');
+      if (f) { f.value = decodeURIComponent(ref); f.readOnly = true; f.style.color = 'var(--accent-light)'; }
+    }
+  })();
+
+  // select 顏色
+  document.getElementById('relSelect').addEventListener('change', function() {
+    this.classList.toggle('empty', !this.value);
+  });
+
+  // 提交
+  document.getElementById('sistersForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+
+    const name         = form.name.value.trim();
+    const email        = form.email.value.trim();
+    const password     = form.password.value;
+    const referrer     = form.referrer.value.trim();
+    const relationship = form.relationship.value;
+
+    if (!name || !email || !password || !referrer || !relationship) {
+      errorMsg.textContent = '請確認必填欄位都填寫了。';
+      errorMsg.classList.add('show');
+      return;
+    }
+    if (password.length < 6) {
+      errorMsg.textContent = '密碼至少需要 6 個字元。';
+      errorMsg.classList.add('show');
+      return;
+    }
+    errorMsg.classList.remove('show');
+    btn.disabled = true;
+    btn.textContent = '傳送中…';
+
+    const payload = {
+      type: 'sisters_signup',
+      name, email, password, referrer, relationship,
+      wish: form.wish.value.trim(),
+      timestamp: new Date().toISOString(),
+      source: window.location.href
+    };
+
+    try {
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      document.getElementById('formWrap').style.display = 'none';
+      const success = document.getElementById('successMsg');
+      success.classList.add('show');
+      setTimeout(() => { success.style.opacity = '1'; }, 10);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = '遞交';
+      errorMsg.textContent = '送出時發生問題，請稍後再試。';
+      errorMsg.classList.add('show');
+    }
+  });
+</script>
+</body>
+</html>
