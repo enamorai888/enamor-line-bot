@@ -378,44 +378,53 @@ async function loadProductSheet() {
   }
 }
 
-// 用商品編號查對照表（去重，只回傳 product 層級資料）
+// 用商品編號或 handle 查對照表（模糊匹配：逐步去掉尾碼）
 function lookupProduct(query) {
   const q = query.toUpperCase().replace(/\s/g, '');
+  
+  // 嘗試多種匹配：原始 → 逐步去掉最後一段
+  const candidates = [q];
+  const parts = q.split('-');
+  for (let i = parts.length - 1; i >= 2; i--) {
+    candidates.push(parts.slice(0, i).join('-'));
+  }
+  
+  for (const candidate of candidates) {
+    for (const row of productData) {
+      const sku = (row['商品編號'] || '').toUpperCase().replace(/\s/g, '');
+      const pid = row['Shopify Product ID'] || '';
+      if (sku === candidate && pid) {
+        return [row];
+      }
+    }
+  }
+  
+  // 部分匹配：查詢字串以商品編號開頭
+  const partialResults = [];
   const seen = new Set();
-  const results = [];
   for (const row of productData) {
     const sku = (row['商品編號'] || '').toUpperCase().replace(/\s/g, '');
-    const barcode = (row['商品條碼'] || '').toUpperCase().replace(/\s/g, '');
-    if (sku === q || barcode === q || sku.startsWith(q + '-') || sku === q) {
-      const pid = row['Shopify Product ID'] || row['shopify Product ID'] || '';
-      const key = sku + '|' + pid;
-      if (!seen.has(sku.split('-').slice(0, -1).join('-') || sku)) {
-        seen.add(sku.split('-').slice(0, -1).join('-') || sku);
-        results.push(row);
-      }
+    const pid = row['Shopify Product ID'] || '';
+    if (pid && sku && q.startsWith(sku) && !seen.has(sku)) {
+      seen.add(sku);
+      partialResults.push(row);
     }
   }
-  // 也嘗試用 handle 模式搜尋
-  if (results.length === 0) {
-    const qLower = query.toLowerCase();
-    for (const row of productData) {
-      const sku = (row['商品編號'] || '').toLowerCase();
-      if (sku === qLower) {
-        results.push(row);
-        break;
-      }
-    }
-  }
-  return results;
+  if (partialResults.length > 0) return partialResults;
+  
+  return [];
 }
 
-// 從員工訊息裡提取商品編號
+// 從員工訊息裡提取商品編號或 handle
 function extractProductCode(text) {
-  // 匹配常見的商品編號格式
+  // 1. 從網址擷取 handle
+  const urlMatch = text.match(/enamorshop\.com\/products\/([a-zA-Z0-9\-\.]+)/i);
+  if (urlMatch) return urlMatch[1].split('?')[0];
+  // 2. 匹配商品編號格式
   const patterns = [
     /(?:商品編號|商品|編號|handle|ID)\s*(?:是|為|:：)?\s*([A-Za-z0-9\-\.]+)/i,
-    /\b(\d{3}-[A-Za-z0-9\-\.]+)/,  // 201-xxx, 301-xxx, 601-xxx
-    /\b(SEM[LMH][A-Z]*)\b/i,       // SEML, SEMM, SEMH
+    /\b(\d{3}-[A-Za-z0-9\-\.]+)/,
+    /\b(SEM[LMH][A-Z]*)\b/i,
   ];
   for (const p of patterns) {
     const m = text.match(p);
