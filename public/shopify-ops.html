@@ -259,8 +259,12 @@
     </button>
   </div>
   <div class="quick-bar">
-    <button class="quick-item" onclick="quickSend('用 handle 查商品 ID，handle 是 ')">
+    <button class="quick-item" onclick="quickSend('查商品編號 201-SEML 的完整資料和 Shopify Product ID')">
       <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      查商品
+    </button>
+    <button class="quick-item" onclick="quickSend('用 handle 查商品 ID，handle 是 ')">
+      <svg viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
       查 ID
     </button>
     <button class="quick-item" onclick="quickSend('查詢商品庫存和預購狀態，商品 ID 是 ')">
@@ -293,8 +297,129 @@ const PASSWORD = '28447208';
 const MODEL = 'claude-sonnet-4-6';
 const LOG_SHEET_URL = ''; // 部署 Apps Script 後填入
 
+// Google Sheet 商品對照表
+const SHEET_ID = '1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
+const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=%E5%B7%A5%E4%BD%9C%E8%A1%A81`;
+
 let currentStaff = '';
 let conversationHistory = [];
+let productData = []; // 快取商品對照表
+
+// 載入商品對照表
+async function loadProductSheet() {
+  try {
+    const res = await fetch(SHEET_CSV_URL);
+    const csv = await res.text();
+    const rows = csv.split('\n').map(r => {
+      // 解析 CSV（處理引號內的逗號）
+      const cells = [];
+      let current = '', inQuote = false;
+      for (let i = 0; i < r.length; i++) {
+        const ch = r[i];
+        if (ch === '"') { inQuote = !inQuote; continue; }
+        if (ch === ',' && !inQuote) { cells.push(current.trim()); current = ''; continue; }
+        current += ch;
+      }
+      cells.push(current.trim());
+      return cells;
+    });
+    if (rows.length < 2) return;
+    const headers = rows[0];
+    productData = rows.slice(1).filter(r => r.length > 4 && r[4]).map(r => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = r[i] || ''; });
+      return obj;
+    });
+    console.log(`商品對照表已載入：${productData.length} 筆`);
+  } catch(e) {
+    console.error('載入商品對照表失敗:', e);
+  }
+}
+
+// 用商品編號查對照表（去重，只回傳 product 層級資料）
+function lookupProduct(query) {
+  const q = query.toUpperCase().replace(/\s/g, '');
+  const seen = new Set();
+  const results = [];
+  for (const row of productData) {
+    const sku = (row['商品編號'] || '').toUpperCase().replace(/\s/g, '');
+    const barcode = (row['商品條碼'] || '').toUpperCase().replace(/\s/g, '');
+    if (sku === q || barcode === q || sku.startsWith(q + '-') || sku === q) {
+      const pid = row['Shopify Product ID'] || row['shopify Product ID'] || '';
+      const key = sku + '|' + pid;
+      if (!seen.has(sku.split('-').slice(0, -1).join('-') || sku)) {
+        seen.add(sku.split('-').slice(0, -1).join('-') || sku);
+        results.push(row);
+      }
+    }
+  }
+  // 也嘗試用 handle 模式搜尋
+  if (results.length === 0) {
+    const qLower = query.toLowerCase();
+    for (const row of productData) {
+      const sku = (row['商品編號'] || '').toLowerCase();
+      if (sku === qLower) {
+        results.push(row);
+        break;
+      }
+    }
+  }
+  return results;
+}
+
+// 從員工訊息裡提取商品編號
+function extractProductCode(text) {
+  // 匹配常見的商品編號格式
+  const patterns = [
+    /(?:商品編號|商品|編號|handle|ID)\s*(?:是|為|:：)?\s*([A-Za-z0-9\-\.]+)/i,
+    /\b(\d{3}-[A-Za-z0-9\-\.]+)/,  // 201-xxx, 301-xxx, 601-xxx
+    /\b(SEM[LMH][A-Z]*)\b/i,       // SEML, SEMM, SEMH
+  ];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+// 組合商品資訊注入 AI 訊息
+function buildProductContext(text) {
+  const code = extractProductCode(text);
+  if (!code) return '';
+  const rows = lookupProduct(code);
+  if (rows.length === 0) return '';
+  const r = rows[0];
+  const pid = r['Shopify Product ID'] || r['shopify Product ID'] || '（無）';
+  const mat1 = r['褲身材質'] || '';
+  const mat2 = r['褲底材質'] || '';
+  const origin = r['產地'] || '';
+  const matIdx = r['材質指數'] || '';
+  const series = r['Series'] || '';
+  const mat = r['Mat'] || '';
+  const rise = r['Rise'] || '';
+  const spec = r['Spec'] || '';
+  const feature = r['Feature'] || '';
+  const supplier = r['廠商名稱'] || '';
+  const supplierCode = r['廠商編號'] || '';
+
+  let ctx = `\n\n【商品對照表查詢結果 — 商品編號: ${r['商品編號']}】`;
+  if (pid) ctx += `\nShopify Product ID: ${pid}`;
+  if (supplier) ctx += `\n廠商: ${supplierCode} ${supplier}`;
+  if (series) ctx += `\n系列: ${series}`;
+  if (mat) ctx += `\n材質分類: ${mat}`;
+  if (rise) ctx += `\n腰型: ${rise}`;
+  if (spec) ctx += `\n品類: ${spec}`;
+  if (feature) ctx += `\n特色: ${feature}`;
+  if (mat1) ctx += `\n褲身材質: ${mat1}`;
+  if (mat2) ctx += `\n褲底材質: ${mat2}`;
+  if (origin) ctx += `\n產地: ${origin}`;
+  if (matIdx) ctx += `\n材質指數: ${matIdx}`;
+  ctx += `\n（以上資料來自 Google Sheet 商品對照表，Shopify Product ID 可直接用於 API 操作）`;
+  return ctx;
+}
+
+// 頁面載入時載入對照表
+loadProductSheet();
 
 document.getElementById('loginBtn').addEventListener('click', doLogin);
 document.getElementById('loginInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
@@ -370,10 +495,12 @@ const _c = (() => { const s = [...document.querySelectorAll('script:not([src])')
 改狀態: PUT /products/ID.json {product:{id,status}}
 
 ## 員工操作習慣
-- 員工可能給 handle、product ID、或商品網址，三種都要支援
+- 員工可能給 handle、product ID、商品編號、或商品網址，四種都要支援
 - 如果員工給 ID（純數字），直接用 /products/ID.json 查
 - 如果員工給 handle（含英文和連字號），用 /products.json?handle=HANDLE 查
 - 如果員工貼網址（如 https://enamorshop.com/products/201-seml），從網址擷取 /products/ 後面的部分當 handle
+- 如果員工給商品編號（如 201-SEML），系統會自動從 Google Sheet 對照表帶入 Shopify Product ID 和材質資料，直接使用即可
+- 當訊息裡有【商品對照表查詢結果】區塊時，裡面的 Shopify Product ID 可以直接用，不需要再用 handle 查
 - 所有修改操作（改售罄、改 metafield 等）都用 product ID 執行`;
 
 function quickSend(text) {
@@ -396,10 +523,18 @@ async function sendMessage() {
   document.getElementById('sendBtn').disabled = true;
   const typing = showTyping();
   try {
+    // 查商品對照表，注入上下文
+    const productCtx = buildProductContext(text);
+    const messagesForAI = [...conversationHistory];
+    if (productCtx) {
+      const lastMsg = messagesForAI[messagesForAI.length - 1];
+      messagesForAI[messagesForAI.length - 1] = { ...lastMsg, content: lastMsg.content + productCtx };
+    }
+
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
-      body: JSON.stringify({ model: MODEL, max_tokens: 4096, system: SYSTEM_PROMPT, messages: conversationHistory })
+      body: JSON.stringify({ model: MODEL, max_tokens: 4096, system: SYSTEM_PROMPT, messages: messagesForAI })
     });
     const data = await res.json();
     typing.remove();
