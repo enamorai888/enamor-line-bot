@@ -209,6 +209,35 @@
   .messages::-webkit-scrollbar { width: 3px; }
   .messages::-webkit-scrollbar-track { background: transparent; }
   .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Progress bar */
+  .progress-bar {
+    display: flex; align-items: center; justify-content: center;
+    padding: 10px 16px; gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--warm-white); flex-shrink: 0;
+  }
+  .progress-step {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 400; color: var(--light);
+    transition: color 0.3s;
+  }
+  .progress-step.active { color: var(--accent); }
+  .progress-step.done { color: var(--green); }
+  .progress-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1.5px solid var(--light);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; transition: all 0.3s;
+  }
+  .progress-step.active .progress-dot { border-color: var(--accent); background: var(--accent); color: white; }
+  .progress-step.done .progress-dot { border-color: var(--green); background: var(--green); color: white; }
+  .progress-line {
+    width: 32px; height: 1px;
+    background: var(--light); margin: 0 8px;
+    transition: background 0.3s;
+  }
+  .progress-line.done { background: var(--green); }
 </style>
 </head>
 <body>
@@ -243,43 +272,56 @@
   <div class="staff-badge" id="staffBadge"></div>
 </div>
 
+<div class="progress-bar" id="progressBar">
+  <div class="progress-step active" id="pStep1">
+    <div class="progress-dot">1</div>
+    <span>貼網址</span>
+  </div>
+  <div class="progress-line" id="pLine1"></div>
+  <div class="progress-step" id="pStep2">
+    <div class="progress-dot">2</div>
+    <span>說目的</span>
+  </div>
+  <div class="progress-line" id="pLine2"></div>
+  <div class="progress-step" id="pStep3">
+    <div class="progress-dot">3</div>
+    <span>拿程式碼</span>
+  </div>
+</div>
+
 <div class="chat-container">
   <div class="messages" id="messages">
     <div class="welcome" id="welcome">
-      <p>用中文告訴我要做什麼<br>我會產出可以貼到後台 DevConsole 的程式碼</p>
+      <p>貼上商品網址，告訴我要做什麼<br>我會產出可以貼到後台 DevConsole 的程式碼</p>
     </div>
   </div>
 </div>
 
 <div class="bottom-area">
   <div class="input-row">
-    <textarea class="input-field" id="inputField" placeholder="輸入操作需求..." rows="1"></textarea>
+    <textarea class="input-field" id="inputField" placeholder="貼上商品網址，或輸入操作需求..." rows="1"></textarea>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
     </button>
   </div>
   <div class="quick-bar">
-    <button class="quick-item" onclick="quickSend('查商品編號 201-SEML 的完整資料和 Shopify Product ID')">
+    <button class="quick-item" onclick="quickSend('https://enamorshop.com/products/')">
       <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
       查商品
     </button>
-    <button class="quick-item" onclick="quickSend('用 handle 查商品 ID，handle 是 ')">
-      <svg viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-      查 ID
-    </button>
-    <button class="quick-item" onclick="quickSend('查詢商品庫存和預購狀態，商品 ID 是 ')">
+    <button class="quick-item" onclick="quickSend('改成預購 a2')">
       <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-      查庫存
+      改預購
     </button>
-    <button class="quick-item" onclick="quickSend('把商品 ID xxx 改成售罄模式（deny + 全售罄就 draft）')">
+    <button class="quick-item" onclick="quickSend('改成售罄模式（deny + 全售罄就 draft）')">
       <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><path d="M12 2v10"/></svg>
       改售罄
     </button>
-    <button class="quick-item" onclick="quickSend('把商品 ID xxx 的 material_text 改成：')">
+    <button class="quick-item" onclick="quickSend('改 material_text 成份為：')">
       <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
       改成份
     </button>
-    <button class="quick-item" onclick="quickSend('把商品 ID xxx 的 size_guide 改成：M SIZE 版型正常/彈性極佳 市售褲子尺寸XL以下適穿, L SIZE 版型正常/彈性極佳 市售褲子尺寸2L以下適穿')">
+    <button class="quick-item" onclick="quickSend('改 size_guide 尺寸建議為：')">
       <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       改尺寸
     </button>
@@ -421,6 +463,32 @@ function buildProductContext(text) {
 // 頁面載入時載入對照表
 loadProductSheet();
 
+// 進度條管理
+let currentProgress = 1;
+function updateProgress(step) {
+  currentProgress = step;
+  for (let i = 1; i <= 3; i++) {
+    const s = document.getElementById('pStep' + i);
+    const l = document.getElementById('pLine' + (i - 1));
+    s.className = 'progress-step' + (i < step ? ' done' : i === step ? ' active' : '');
+    if (l) l.className = 'progress-line' + (i <= step ? ' done' : '');
+  }
+}
+
+// 偵測訊息內容更新進度
+function detectProgress(text) {
+  const hasUrl = /enamorshop\.com\/products\/|shopify\.com|^https?:\/\//.test(text);
+  const hasId = /\b\d{13,}\b/.test(text);
+  const hasHandle = /^\d{3}-[a-zA-Z0-9\-]+$/.test(text.trim());
+  if (hasUrl || hasId || hasHandle) {
+    if (currentProgress < 2) updateProgress(2);
+  }
+}
+
+function detectCodeGenerated() {
+  updateProgress(3);
+}
+
 document.getElementById('loginBtn').addEventListener('click', doLogin);
 document.getElementById('loginInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
@@ -519,6 +587,7 @@ async function sendMessage() {
   if (w) w.remove();
   addMessage(text, 'user');
   input.value = ''; input.style.height = 'auto';
+  detectProgress(text);
   conversationHistory.push({ role: 'user', content: text });
   document.getElementById('sendBtn').disabled = true;
   const typing = showTyping();
@@ -542,6 +611,7 @@ async function sendMessage() {
       const aiText = data.content.map(c => c.text || '').join('');
       conversationHistory.push({ role: 'assistant', content: aiText });
       addMessage(aiText, 'ai');
+      if (aiText.includes('```')) detectCodeGenerated();
       logToSheet('對話', text.substring(0, 80));
     } else if (data.error) {
       addMessage('API 錯誤：' + (data.error.message || JSON.stringify(data.error)), 'ai');
