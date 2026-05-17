@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EnamoR Shopify 操作助手</title>
+<title>EnamoR 員工助手</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500&display=swap');
   :root {
@@ -17,6 +17,7 @@
     --border: rgba(28,28,26,0.1);
     --green: #2D6A4F;
     --red: #B5536A;
+    --blue: #2E6DA4;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -39,15 +40,9 @@
   }
   .login-overlay.hidden { display: none; }
   .login-logo { height: 32px; margin-bottom: 4px; }
-  .login-subtitle {
-    font-size: 12px; color: var(--light);
-    letter-spacing: 2px; text-transform: uppercase;
-  }
+  .login-subtitle { font-size: 12px; color: var(--light); letter-spacing: 2px; text-transform: uppercase; }
   .login-section { text-align: center; color: var(--warm-white); }
-  .login-section label {
-    display: block; font-size: 12px; color: var(--light);
-    margin-bottom: 10px; letter-spacing: 1px;
-  }
+  .login-section label { display: block; font-size: 12px; color: var(--light); margin-bottom: 10px; letter-spacing: 1px; }
   .login-input {
     width: 260px; padding: 12px 18px;
     background: rgba(250,250,247,0.06);
@@ -81,15 +76,11 @@
   .header {
     background: var(--warm-white);
     text-align: center;
-    padding: 20px 24px 12px;
+    padding: 16px 24px 0;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0; position: relative;
   }
-  .header-logo { height: 20px; margin-bottom: 6px; }
-  .header-title {
-    font-size: 11px; font-weight: 400;
-    letter-spacing: 3px; text-transform: uppercase; color: var(--light);
-  }
+  .header-logo { height: 20px; margin-bottom: 8px; }
   .staff-badge {
     position: absolute; top: 16px; right: 16px;
     font-size: 10px; font-weight: 400;
@@ -97,6 +88,21 @@
     background: rgba(28,28,26,0.04);
     padding: 3px 10px; border-radius: 2px;
   }
+
+  /* === Mode Tabs === */
+  .mode-tabs {
+    display: flex; border-bottom: 1px solid var(--border);
+  }
+  .mode-tab {
+    flex: 1; padding: 10px 8px;
+    font-family: inherit; font-size: 11px; font-weight: 400;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--light); background: none; border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .mode-tab.active { color: var(--charcoal); border-bottom-color: var(--charcoal); }
+  .mode-tab:hover:not(.active) { color: var(--mid); }
 
   /* === Chat === */
   .chat-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
@@ -122,12 +128,52 @@
     letter-spacing: 2px; text-transform: uppercase;
     color: var(--accent); margin-bottom: 6px; display: block;
   }
+  .msg-cs .label { color: var(--blue); }
+
+  /* Result card for CS mode */
+  .cs-result {
+    background: white; border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-top: 4px;
+    align-self: flex-start; max-width: 92%;
+  }
+  .cs-tags { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  .cs-tag {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    font-weight: 400; letter-spacing: 0.5px;
+  }
+  .tag-tone-抱怨 { background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
+  .tag-tone-催促 { background: #fff8f0; color: #c2570a; border: 1px solid #fed7aa; }
+  .tag-tone-詢問 { background: #f0f7ff; color: var(--blue); border: 1px solid #bfdbfe; }
+  .tag-tone-要求 { background: #fdf4ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+  .tag-scene { background: rgba(28,28,26,0.05); color: var(--mid); border: 1px solid var(--border); }
+  .cs-section-label {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--light); margin-bottom: 8px;
+  }
+  .cs-script {
+    background: var(--cream); border-radius: 8px;
+    padding: 14px; font-size: 14px; line-height: 1.8;
+    white-space: pre-wrap; margin-bottom: 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .cs-copy-btn {
+    width: 100%; padding: 10px;
+    background: var(--charcoal); color: var(--warm-white);
+    border: none; font-family: inherit; font-size: 11px;
+    font-weight: 400; letter-spacing: 3px; text-transform: uppercase;
+    cursor: pointer; border-radius: 4px; transition: background 0.2s;
+  }
+  .cs-copy-btn:hover { background: var(--accent); }
+  .cs-copy-btn.copied { background: var(--green); }
+  .cs-note { font-size: 12px; color: var(--light); margin-top: 10px; line-height: 1.6; }
+  .cs-stock-info {
+    background: #f0f7ff; border: 1px solid #bfdbfe;
+    border-radius: 6px; padding: 10px 12px;
+    font-size: 12px; color: var(--blue); margin-bottom: 12px;
+  }
 
   /* Code block */
-  .code-block-wrapper {
-    margin: 10px 0 6px; background: var(--charcoal);
-    border-radius: 8px; overflow: hidden;
-  }
+  .code-block-wrapper { margin: 10px 0 6px; background: var(--charcoal); border-radius: 8px; overflow: hidden; }
   .code-block-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 6px 12px;
@@ -156,23 +202,19 @@
     padding: 10px 18px; background: white;
     border-radius: 16px; border: 1px solid var(--border);
   }
-  .typing span {
-    width: 5px; height: 5px; background: var(--light);
-    border-radius: 50%; animation: bounce 1.4s infinite;
-  }
+  .typing span { width: 5px; height: 5px; background: var(--light); border-radius: 50%; animation: bounce 1.4s infinite; }
   .typing span:nth-child(2) { animation-delay: 0.2s; }
   .typing span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce {
-    0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-5px); }
-  }
+  @keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-5px); } }
 
-  /* Welcome */
   .welcome { text-align: center; padding: 40px 24px; color: var(--mid); }
   .welcome p { font-size: 13px; line-height: 1.8; }
 
   /* === Bottom === */
   .bottom-area { border-top: 1px solid var(--border); background: var(--warm-white); flex-shrink: 0; }
+
+  /* Shopify mode input */
+  .shopify-input-area { display: flex; flex-direction: column; }
   .input-row { display: flex; align-items: flex-end; padding: 12px 16px 8px; gap: 8px; }
   .input-field {
     flex: 1; min-height: 40px; max-height: 100px;
@@ -206,9 +248,48 @@
   .quick-item:hover { background: var(--cream); color: var(--accent); }
   .quick-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; }
 
-  .messages::-webkit-scrollbar { width: 3px; }
-  .messages::-webkit-scrollbar-track { background: transparent; }
-  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  /* CS mode input */
+  .cs-input-area { display: flex; flex-direction: column; gap: 0; }
+  .cs-input-row { padding: 12px 16px 6px; display: flex; flex-direction: column; gap: 8px; }
+  .cs-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--light); margin-bottom: 2px; }
+  .cs-textarea {
+    width: 100%; padding: 10px 14px;
+    border: 1px solid rgba(28,28,26,0.15);
+    background: white; font-family: inherit; font-size: 14px;
+    font-weight: 300; line-height: 1.5; resize: none; outline: none;
+    min-height: 60px; max-height: 100px;
+  }
+  .cs-textarea:focus { border-color: var(--blue); }
+  .cs-textarea::placeholder { color: var(--light); }
+  .cs-extra-row { display: flex; gap: 8px; padding: 0 16px 8px; }
+  .cs-extra-input {
+    flex: 1; padding: 8px 12px;
+    border: 1px solid rgba(28,28,26,0.12);
+    background: white; font-family: inherit; font-size: 13px;
+    font-weight: 300; outline: none; color: var(--mid);
+  }
+  .cs-extra-input:focus { border-color: var(--blue); }
+  .cs-extra-input::placeholder { color: var(--light); font-size: 12px; }
+  .cs-send-btn {
+    padding: 0 20px; height: 36px;
+    background: var(--charcoal); color: var(--warm-white);
+    border: none; font-family: inherit; font-size: 11px;
+    font-weight: 400; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; transition: background 0.2s; white-space: nowrap;
+  }
+  .cs-send-btn:hover { background: var(--blue); }
+  .cs-send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .cs-quick-bar { display: flex; border-top: 1px solid var(--border); }
+  .cs-quick-item {
+    flex: 1; padding: 10px 4px;
+    font-family: inherit; font-size: 11px; font-weight: 400;
+    color: var(--mid); background: none; border: none;
+    border-right: 1px solid var(--border); cursor: pointer;
+    transition: all 0.2s; text-align: center;
+  }
+  .cs-quick-item:last-child { border-right: none; }
+  .cs-quick-item:hover { background: #f0f7ff; color: var(--blue); }
 
   /* Progress bar */
   .progress-bar {
@@ -232,28 +313,31 @@
   }
   .progress-step.active .progress-dot { border-color: var(--accent); background: var(--accent); color: white; }
   .progress-step.done .progress-dot { border-color: var(--green); background: var(--green); color: white; }
-  .progress-line {
-    width: 32px; height: 1px;
-    background: var(--light); margin: 0 8px;
-    transition: background 0.3s;
-  }
+  .progress-line { width: 32px; height: 1px; background: var(--light); margin: 0 8px; transition: background 0.3s; }
   .progress-line.done { background: var(--green); }
+
+  .messages::-webkit-scrollbar { width: 3px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
+<!-- Login -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-section">
     <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-W.png" alt="EnamoR" class="login-logo">
-    <div class="login-subtitle">Shopify 操作助手</div>
+    <div class="login-subtitle">員工助手</div>
   </div>
   <div class="login-section">
     <label>選擇操作人員</label>
     <select class="staff-select" id="staffSelect">
       <option value="">-- 請選擇 --</option>
       <option value="苡恩">苡恩</option>
+      <option value="卡皮">卡皮</option>
       <option value="員工A">員工A</option>
-      <option value="員工B">員工B</option>
     </select>
   </div>
   <div class="login-section">
@@ -266,29 +350,26 @@
   </div>
 </div>
 
+<!-- Header -->
 <div class="header">
   <img src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" class="header-logo">
-  <div class="header-title">Shopify 操作助手</div>
   <div class="staff-badge" id="staffBadge"></div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabShopify" onclick="switchMode('shopify')">Shopify 操作</button>
+    <button class="mode-tab" id="tabCS" onclick="switchMode('cs')">客服助手</button>
+  </div>
 </div>
 
+<!-- Shopify mode progress -->
 <div class="progress-bar" id="progressBar">
-  <div class="progress-step active" id="pStep1">
-    <div class="progress-dot">1</div>
-    <span>貼網址</span>
-  </div>
+  <div class="progress-step active" id="pStep1"><div class="progress-dot">1</div><span>貼網址</span></div>
   <div class="progress-line" id="pLine1"></div>
-  <div class="progress-step" id="pStep2">
-    <div class="progress-dot">2</div>
-    <span>說目的</span>
-  </div>
+  <div class="progress-step" id="pStep2"><div class="progress-dot">2</div><span>說目的</span></div>
   <div class="progress-line" id="pLine2"></div>
-  <div class="progress-step" id="pStep3">
-    <div class="progress-dot">3</div>
-    <span>拿程式碼</span>
-  </div>
+  <div class="progress-step" id="pStep3"><div class="progress-dot">3</div><span>拿程式碼</span></div>
 </div>
 
+<!-- Chat area -->
 <div class="chat-container">
   <div class="messages" id="messages">
     <div class="welcome" id="welcome">
@@ -297,63 +378,85 @@
   </div>
 </div>
 
-<div class="bottom-area">
-  <div class="input-row">
-    <textarea class="input-field" id="inputField" placeholder="貼上商品網址，或輸入操作需求..." rows="1"></textarea>
-    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
-    </button>
+<!-- Shopify Bottom -->
+<div class="bottom-area" id="shopifyBottom">
+  <div class="shopify-input-area">
+    <div class="input-row">
+      <textarea class="input-field" id="inputField" placeholder="貼上商品網址，或輸入操作需求..." rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendShopifyMessage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+      </button>
+    </div>
+    <div class="quick-bar">
+      <button class="quick-item" onclick="quickSend('https://enamorshop.com/products/')">
+        <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>查商品
+      </button>
+      <button class="quick-item" onclick="quickSend('改成預購 a2')">
+        <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>改預購
+      </button>
+      <button class="quick-item" onclick="quickSend('改成售罄模式（deny + 全售罄就 draft）')">
+        <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><path d="M12 2v10"/></svg>改售罄
+      </button>
+      <button class="quick-item" onclick="quickSend('改 material_text 成份為：')">
+        <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>改成份
+      </button>
+      <button class="quick-item" onclick="quickSend('改 size_guide 尺寸建議為：')">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>改尺寸
+      </button>
+      <button class="quick-item" onclick="quickSend('查所有沒有 preorder_type 的 active 商品清單')">
+        <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>查無預購
+      </button>
+    </div>
   </div>
-  <div class="quick-bar">
-    <button class="quick-item" onclick="quickSend('https://enamorshop.com/products/')">
-      <svg viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      查商品
-    </button>
-    <button class="quick-item" onclick="quickSend('改成預購 a2')">
-      <svg viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-      改預購
-    </button>
-    <button class="quick-item" onclick="quickSend('改成售罄模式（deny + 全售罄就 draft）')">
-      <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><path d="M12 2v10"/></svg>
-      改售罄
-    </button>
-    <button class="quick-item" onclick="quickSend('改 material_text 成份為：')">
-      <svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-      改成份
-    </button>
-    <button class="quick-item" onclick="quickSend('改 size_guide 尺寸建議為：')">
-      <svg viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
-      改尺寸
-    </button>
-    <button class="quick-item" onclick="quickSend('查所有沒有 preorder_type 的 active 商品清單')">
-      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      查無預購
-    </button>
+</div>
+
+<!-- CS Bottom -->
+<div class="bottom-area hidden" id="csBottom">
+  <div class="cs-input-area">
+    <div class="cs-input-row">
+      <div class="cs-label">客人說的話</div>
+      <textarea class="cs-textarea" id="csInput" placeholder="把客人的 LINE 訊息貼進來..." rows="3"></textarea>
+    </div>
+    <div class="cs-extra-row">
+      <input type="text" class="cs-extra-input" id="csOrderInput" placeholder="訂單編號（選填）">
+      <input type="text" class="cs-extra-input" id="csSkuInput" placeholder="商品 / SKU（選填）">
+      <button class="cs-send-btn" id="csSendBtn" onclick="sendCSMessage()">產話術</button>
+    </div>
+    <div class="cs-quick-bar">
+      <button class="cs-quick-item" onclick="csQuick('交期')">問交期</button>
+      <button class="cs-quick-item" onclick="csQuick('庫存')">問庫存</button>
+      <button class="cs-quick-item" onclick="csQuick('換貨')">要換貨</button>
+      <button class="cs-quick-item" onclick="csQuick('退款')">要退款</button>
+      <button class="cs-quick-item" onclick="csQuick('不滿意')">不滿意</button>
+    </div>
   </div>
 </div>
 
 <script>
+// ── 設定 ──────────────────────────────────────────────
 const PROXY_URL = '/api/claude-proxy';
 const PROXY_TOKEN = '28447208';
+const OMS_PROXY = 'https://enamor-oms.vercel.app/api/oms-proxy';
 const PASSWORD = '28447208';
 const MODEL = 'claude-sonnet-4-6';
-const LOG_SHEET_URL = ''; // 部署 Apps Script 後填入
-
-// Google Sheet 商品對照表
+const CASE_COLLECTOR_URL = '/api/case-collector';
 const SHEET_ID = '1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
 const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=%E5%B7%A5%E4%BD%9C%E8%A1%A81`;
+const LOG_SHEET_URL = '';
 
 let currentStaff = '';
-let conversationHistory = [];
-let productData = []; // 快取商品對照表
+let currentMode = 'shopify';
+let shopifyHistory = [];
+let csHistory = [];
+let productData = [];
+let currentProgress = 1;
 
-// 載入商品對照表
+// ── 商品對照表 ──────────────────────────────────────
 async function loadProductSheet() {
   try {
     const res = await fetch(SHEET_CSV_URL);
     const csv = await res.text();
     const rows = csv.split('\n').map(r => {
-      // 解析 CSV（處理引號內的逗號）
       const cells = [];
       let current = '', inQuote = false;
       for (let i = 0; i < r.length; i++) {
@@ -372,132 +475,62 @@ async function loadProductSheet() {
       headers.forEach((h, i) => { obj[h] = r[i] || ''; });
       return obj;
     });
-    console.log(`商品對照表已載入：${productData.length} 筆`);
-  } catch(e) {
-    console.error('載入商品對照表失敗:', e);
-  }
+  } catch(e) { console.error('載入商品對照表失敗:', e); }
 }
 
-// 用商品編號或 handle 查對照表（模糊匹配：逐步去掉尾碼）
 function lookupProduct(query) {
   const q = query.toUpperCase().replace(/\s/g, '');
-  
-  // 嘗試多種匹配：原始 → 逐步去掉最後一段
   const candidates = [q];
   const parts = q.split('-');
-  for (let i = parts.length - 1; i >= 2; i--) {
-    candidates.push(parts.slice(0, i).join('-'));
-  }
-  
+  for (let i = parts.length - 1; i >= 2; i--) candidates.push(parts.slice(0, i).join('-'));
   for (const candidate of candidates) {
     for (const row of productData) {
       const sku = (row['商品編號'] || '').toUpperCase().replace(/\s/g, '');
-      const pid = row['Shopify Product ID'] || '';
-      if (sku === candidate && pid) {
-        return [row];
-      }
+      if (sku === candidate && row['Shopify Product ID']) return [row];
     }
   }
-  
-  // 部分匹配：查詢字串以商品編號開頭
-  const partialResults = [];
   const seen = new Set();
-  for (const row of productData) {
+  return productData.filter(row => {
     const sku = (row['商品編號'] || '').toUpperCase().replace(/\s/g, '');
-    const pid = row['Shopify Product ID'] || '';
-    if (pid && sku && q.startsWith(sku) && !seen.has(sku)) {
-      seen.add(sku);
-      partialResults.push(row);
-    }
-  }
-  if (partialResults.length > 0) return partialResults;
-  
-  return [];
+    if (row['Shopify Product ID'] && sku && q.startsWith(sku) && !seen.has(sku)) { seen.add(sku); return true; }
+    return false;
+  });
 }
 
-// 從員工訊息裡提取商品編號或 handle
 function extractProductCode(text) {
-  // 1. 從網址擷取 handle
   const urlMatch = text.match(/enamorshop\.com\/products\/([a-zA-Z0-9\-\.]+)/i);
   if (urlMatch) return urlMatch[1].split('?')[0];
-  // 2. 匹配商品編號格式
   const patterns = [
     /(?:商品編號|商品|編號|handle|ID)\s*(?:是|為|:：)?\s*([A-Za-z0-9\-\.]+)/i,
     /\b(\d{3}-[A-Za-z0-9\-\.]+)/,
     /\b(SEM[LMH][A-Z]*)\b/i,
   ];
-  for (const p of patterns) {
-    const m = text.match(p);
-    if (m) return m[1];
-  }
+  for (const p of patterns) { const m = text.match(p); if (m) return m[1]; }
   return null;
 }
 
-// 組合商品資訊注入 AI 訊息
 function buildProductContext(text) {
   const code = extractProductCode(text);
   if (!code) return '';
   const rows = lookupProduct(code);
-  if (rows.length === 0) return '';
+  if (!rows.length) return '';
   const r = rows[0];
-  const pid = r['Shopify Product ID'] || r['shopify Product ID'] || '（無）';
-  const mat1 = r['褲身材質'] || '';
-  const mat2 = r['褲底材質'] || '';
-  const origin = r['產地'] || '';
-  const matIdx = r['材質指數'] || '';
-  const series = r['Series'] || '';
-  const mat = r['Mat'] || '';
-  const rise = r['Rise'] || '';
-  const spec = r['Spec'] || '';
-  const feature = r['Feature'] || '';
-  const supplier = r['廠商名稱'] || '';
-  const supplierCode = r['廠商編號'] || '';
-
+  const pid = r['Shopify Product ID'] || '（無）';
   let ctx = `\n\n【商品對照表查詢結果 — 商品編號: ${r['商品編號']}】`;
   if (pid) ctx += `\nShopify Product ID: ${pid}`;
-  if (supplier) ctx += `\n廠商: ${supplierCode} ${supplier}`;
-  if (series) ctx += `\n系列: ${series}`;
-  if (mat) ctx += `\n材質分類: ${mat}`;
-  if (rise) ctx += `\n腰型: ${rise}`;
-  if (spec) ctx += `\n品類: ${spec}`;
-  if (feature) ctx += `\n特色: ${feature}`;
-  if (mat1) ctx += `\n褲身材質: ${mat1}`;
-  if (mat2) ctx += `\n褲底材質: ${mat2}`;
-  if (origin) ctx += `\n產地: ${origin}`;
-  if (matIdx) ctx += `\n材質指數: ${matIdx}`;
-  ctx += `\n（以上資料來自 Google Sheet 商品對照表，Shopify Product ID 可直接用於 API 操作）`;
+  if (r['廠商名稱']) ctx += `\n廠商: ${r['廠商編號']} ${r['廠商名稱']}`;
+  if (r['Series']) ctx += `\n系列: ${r['Series']}`;
+  if (r['Mat']) ctx += `\n材質分類: ${r['Mat']}`;
+  if (r['褲身材質']) ctx += `\n褲身材質: ${r['褲身材質']}`;
+  if (r['褲底材質']) ctx += `\n褲底材質: ${r['褲底材質']}`;
+  if (r['產地']) ctx += `\n產地: ${r['產地']}`;
+  ctx += `\n（Shopify Product ID 可直接用於 API 操作）`;
   return ctx;
 }
 
-// 頁面載入時載入對照表
 loadProductSheet();
 
-// 進度條管理
-let currentProgress = 1;
-function updateProgress(step) {
-  currentProgress = step;
-  for (let i = 1; i <= 3; i++) {
-    const s = document.getElementById('pStep' + i);
-    const l = document.getElementById('pLine' + (i - 1));
-    s.className = 'progress-step' + (i < step ? ' done' : i === step ? ' active' : '');
-    if (l) l.className = 'progress-line' + (i <= step ? ' done' : '');
-  }
-}
-
-// 偵測訊息內容更新進度
-function detectProgress(text) {
-  const hasUrl = /enamorshop\.com\/products\/|shopify\.com|^https?:\/\//.test(text);
-  const hasId = /\b\d{13,}\b/.test(text);
-  const hasHandle = /^\d{3}-[a-zA-Z0-9\-]+$/.test(text.trim());
-  if (hasUrl || hasId || hasHandle) {
-    if (currentProgress < 2) updateProgress(2);
-  }
-}
-
-function detectCodeGenerated() {
-  updateProgress(3);
-}
-
+// ── Login ───────────────────────────────────────────
 document.getElementById('loginBtn').addEventListener('click', doLogin);
 document.getElementById('loginInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
@@ -514,7 +547,48 @@ function doLogin() {
   logToSheet('登入', staff + ' 登入系統');
 }
 
-const SYSTEM_PROMPT = `你是 EnamoR 的 Shopify 操作助手。員工會用中文告訴你要做什麼，你產出可以直接貼到 Shopify 後台 DevConsole 執行的 JavaScript 程式碼。
+// ── Mode Switch ─────────────────────────────────────
+function switchMode(mode) {
+  currentMode = mode;
+  document.getElementById('tabShopify').className = 'mode-tab' + (mode === 'shopify' ? ' active' : '');
+  document.getElementById('tabCS').className = 'mode-tab' + (mode === 'cs' ? ' active' : '');
+  document.getElementById('progressBar').classList.toggle('hidden', mode !== 'shopify');
+  document.getElementById('shopifyBottom').classList.toggle('hidden', mode !== 'shopify');
+  document.getElementById('csBottom').classList.toggle('hidden', mode !== 'cs');
+
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '';
+  const welcome = document.createElement('div');
+  welcome.className = 'welcome';
+  welcome.id = 'welcome';
+  if (mode === 'shopify') {
+    welcome.innerHTML = '<p>貼上商品網址，告訴我要做什麼<br>我會產出可以貼到後台 DevConsole 的程式碼</p>';
+    document.getElementById('inputField').focus();
+  } else {
+    welcome.innerHTML = '<p>把客人說的話貼進來<br>AI 判斷語氣情境，直接給你話術</p>';
+    document.getElementById('csInput').focus();
+  }
+  messages.appendChild(welcome);
+}
+
+// ── Progress ────────────────────────────────────────
+function updateProgress(step) {
+  currentProgress = step;
+  for (let i = 1; i <= 3; i++) {
+    const s = document.getElementById('pStep' + i);
+    const l = document.getElementById('pLine' + (i - 1));
+    s.className = 'progress-step' + (i < step ? ' done' : i === step ? ' active' : '');
+    if (l) l.className = 'progress-line' + (i <= step ? ' done' : '');
+  }
+}
+function detectProgress(text) {
+  if (/enamorshop\.com\/products\/|shopify\.com|^https?:\/\//.test(text) || /\b\d{13,}\b/.test(text)) {
+    if (currentProgress < 2) updateProgress(2);
+  }
+}
+
+// ── Shopify Mode ─────────────────────────────────────
+const SHOPIFY_SYSTEM = `你是 EnamoR 的 Shopify 操作助手。員工會用中文告訴你要做什麼，你產出可以直接貼到 Shopify 後台 DevConsole 執行的 JavaScript 程式碼。
 
 ## 重要規則
 1. 所有腳本用 void async function(){...}(); 包裹
@@ -526,69 +600,39 @@ const _c = (() => { const s = [...document.querySelectorAll('script:not([src])')
 5. 程式碼含 console.log 顯示進度
 6. 需求不明確先問
 
-## Metafield 完整欄位定義（以下為實際儲存位置，禁止猜測）
-
-### 商品運營類
+## Metafield 欄位定義
 | key | namespace | type | 說明 |
 |-----|-----------|------|------|
-| preorder_type | custom | single_line_text | 預購類型：a1/a2/b，清空=非預購 |
-| split_colors | custom | boolean | 展開顏色為獨立商品卡片，EnTry99 填 false |
-| swatch_colors | custom | single_line_text | 色卡定義，格式：黑=#1a1a1a,白皙膚=#f0d9c0 |
-| max_qty | custom | number_integer | 單次最大購買數量 |
-
-### 商品規格類（前台商品描述區顯示）
-| key | namespace | type | 說明 | 範例值 |
-|-----|-----------|------|------|--------|
-| material_text | custom | single_line_text | 成份+尺寸文字+產地（全部在同一個欄位） | 90% 尼龍(抗菌紗、涼感紗)、10% 彈性纖維(杜邦萊卡)【M】彈性極佳 中腰圍23-34吋...產地：台灣 Made in Taiwan |
-| size_guide | custom | json | 尺寸建議表格 | [{"size":"M SIZE","note":"版型正常/彈性極佳 市售褲子尺寸XL 以下適穿"},{"size":"L SIZE","note":"版型正常/彈性極佳 市售褲子尺寸2L 以下適穿"}] |
-| size_options | custom | json | 可選尺寸 | ["L","XL"] |
-
-### 商品體感類
-| key | namespace | type | 說明 |
-|-----|-----------|------|------|
+| preorder_type | custom | single_line_text | 預購類型：a1/a2/b |
+| split_colors | custom | boolean | 展開顏色 |
+| material_text | custom | single_line_text | 成份+尺寸文字+產地 |
+| size_guide | custom | json | 尺寸建議表格 |
+| size_options | custom | json | 可選尺寸 |
 | stretch_score | custom | number_integer | 彈性分數 1-5 |
 | compression_feel | custom | single_line_text | Soft/Balanced/Firm |
 | size_tolerance | custom | single_line_text | Narrow/Medium/Wide |
 
-### 重要注意
-- 成份、產地、尺寸文字描述都存在 material_text，是同一個欄位
-- size_guide 是 JSON 格式，更新時要維持 JSON 結構
-- 修改 metafield 前必須先查現有值（GET /products/ID/metafields.json），取得 metafield ID 後用 PUT 更新
-- 新增 metafield 用 POST，更新已存在的用 PUT（需要 metafield ID）
-
 ## 預購/售罄
-有 preorder_type → inventory_policy: continue → 庫存0顯示預購
-無 preorder_type → inventory_policy: deny → 庫存0顯示售完
-全規格庫存0且不預購 → status: draft（下架）
+有 preorder_type → inventory_policy: continue
+無 preorder_type → inventory_policy: deny
+全規格庫存0且不預購 → status: draft
 
 ## API
-查商品（用 handle）: GET /products.json?handle=HANDLE&fields=id,handle,title,status,variants
-查商品（用 ID）: GET /products/ID.json?fields=id,handle,title,status,variants
-用 handle 查 ID: GET /products.json?handle=HANDLE&fields=id,handle,title
+查商品: GET /products.json?handle=HANDLE&fields=id,handle,title,status,variants
 查metafields: GET /products/ID/metafields.json
 改variant: PUT /variants/ID.json {variant:{id,inventory_policy}}
-新增metafield: POST /products/ID/metafields.json {metafield:{namespace:'custom',key,value,type:'single_line_text'}}
+新增metafield: POST /products/ID/metafields.json {metafield:{namespace:'custom',key,value,type}}
 更新metafield: PUT /metafields/ID.json {metafield:{id,value}}
 改狀態: PUT /products/ID.json {product:{id,status}}
 
-## 員工操作習慣
-- 員工可能給 handle、product ID、商品編號、或商品網址，四種都要支援
-- 如果員工給 ID（純數字），直接用 /products/ID.json 查
-- 如果員工給 handle（含英文和連字號），用 /products.json?handle=HANDLE 查
-- 如果員工貼網址（如 https://enamorshop.com/products/201-seml），從網址擷取 /products/ 後面的部分當 handle
-- 如果員工給商品編號（如 201-SEML），系統會自動從 Google Sheet 對照表帶入 Shopify Product ID 和材質資料，直接使用即可
-- 當訊息裡有【商品對照表查詢結果】區塊時，裡面的 Shopify Product ID 可以直接用，不需要再用 handle 查
-- 所有修改操作（改售罄、改 metafield 等）都用 product ID 執行`;
+當訊息裡有【商品對照表查詢結果】時，裡面的 Shopify Product ID 直接用，不需再查 handle。`;
 
 function quickSend(text) {
   const field = document.getElementById('inputField');
-  field.value = text;
-  field.focus();
-  const p = text.indexOf('xxx');
-  if (p > -1) field.setSelectionRange(p, p + 3);
+  field.value = text; field.focus();
 }
 
-async function sendMessage() {
+async function sendShopifyMessage() {
   const input = document.getElementById('inputField');
   const text = input.value.trim();
   if (!text) return;
@@ -597,48 +641,250 @@ async function sendMessage() {
   addMessage(text, 'user');
   input.value = ''; input.style.height = 'auto';
   detectProgress(text);
-  conversationHistory.push({ role: 'user', content: text });
+  shopifyHistory.push({ role: 'user', content: text });
   document.getElementById('sendBtn').disabled = true;
   const typing = showTyping();
   try {
-    // 查商品對照表，注入上下文
     const productCtx = buildProductContext(text);
-    const messagesForAI = [...conversationHistory];
+    const msgs = [...shopifyHistory];
     if (productCtx) {
-      const lastMsg = messagesForAI[messagesForAI.length - 1];
-      messagesForAI[messagesForAI.length - 1] = { ...lastMsg, content: lastMsg.content + productCtx };
+      const last = msgs[msgs.length - 1];
+      msgs[msgs.length - 1] = { ...last, content: last.content + productCtx };
     }
-
     const res = await fetch(PROXY_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
-      body: JSON.stringify({ model: MODEL, max_tokens: 4096, system: SYSTEM_PROMPT, messages: messagesForAI })
+      body: JSON.stringify({ model: MODEL, max_tokens: 4096, system: SHOPIFY_SYSTEM, messages: msgs })
     });
     const data = await res.json();
     typing.remove();
     if (data.content && data.content.length > 0) {
       const aiText = data.content.map(c => c.text || '').join('');
-      conversationHistory.push({ role: 'assistant', content: aiText });
+      shopifyHistory.push({ role: 'assistant', content: aiText });
       addMessage(aiText, 'ai');
-      if (aiText.includes('```')) detectCodeGenerated();
-      logToSheet('對話', text.substring(0, 80));
+      if (aiText.includes('```')) updateProgress(3);
+      logToSheet('Shopify操作', text.substring(0, 80));
     } else if (data.error) {
       addMessage('API 錯誤：' + (data.error.message || JSON.stringify(data.error)), 'ai');
-    } else {
-      addMessage('沒有收到回覆，請重試。', 'ai');
     }
   } catch (err) { typing.remove(); addMessage('連線錯誤：' + err.message, 'ai'); }
   document.getElementById('sendBtn').disabled = false;
   document.getElementById('inputField').focus();
 }
 
+// ── CS Mode ──────────────────────────────────────────
+const CS_SYSTEM = `你是 EnamoR 恩娜茉兒的內部客服 AI 助手，協助員工回覆客人的 LINE 訊息。
+
+## 任務
+1. 判斷語氣：抱怨 / 詢問 / 催促 / 要求（從客人訊息判斷）
+2. 判斷情境：交期問題 / 庫存查詢 / 換貨申請 / 退款詢問 / 商品問題 / 一般詢問 / 不滿意抱怨
+3. 產出話術：EnamoR 品牌語氣，口語但不隨便，不過度道歉，有溫度但有立場
+4. 補充說明：若需要員工補查什麼資訊，在補充說明裡說
+
+## 品牌話術語感
+- 不用「非常抱歉造成您的不便」這類制式話術
+- 不要過度道歉或卑微
+- 口語自然，像真人在說話
+- 有問題就解決問題，不迴避
+- 若需安撫，先同理再說明，不要只說明
+
+## 輸出格式（固定 JSON，不要加其他說明）
+{
+  "tone": "語氣（抱怨/詢問/催促/要求）",
+  "scene": "情境",
+  "script": "可直接複製貼給客人的話術",
+  "note": "給員工的補充說明（若無則空字串）",
+  "need_stock_check": true/false,
+  "need_order_check": true/false,
+  "sku_keyword": "若需查庫存，提取 SKU 關鍵字（若無則空字串）"
+}
+
+只輸出 JSON，不要加 markdown 格式，不要加說明文字。`;
+
+function csQuick(hint) {
+  const input = document.getElementById('csInput');
+  const examples = {
+    '交期': '請問我的包裹什麼時候會到？已經等很久了',
+    '庫存': '請問黑色L還有貨嗎？我想買',
+    '換貨': '我收到的顏色不對，可以換貨嗎',
+    '退款': '我想退款，不想要了',
+    '不滿意': '品質很差，跟照片差很多，我很失望'
+  };
+  input.value = examples[hint] || '';
+  input.focus();
+}
+
+async function queryOmsStock(skuKeyword) {
+  try {
+    const res = await fetch(OMS_PROXY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+      body: JSON.stringify({
+        endpoint: '/api/v2/default/getStocksData/searchList',
+        body: { 'view_products_stock.stock_group': '10' }
+      })
+    });
+    const data = await res.json();
+    const items = data.retval || [];
+    const keyword = skuKeyword.toLowerCase();
+    const matched = items.filter(i => {
+      const model = (i['view_products_stock.products_model'] || '').toLowerCase();
+      const name = (i['view_products_stock.products_name'] || '').toLowerCase();
+      return model.includes(keyword) || name.includes(keyword);
+    });
+    if (!matched.length) return null;
+    return matched.slice(0, 5).map(i => ({
+      sku: i['view_products_stock.products_model'],
+      name: i['view_products_stock.products_name'],
+      qty: parseInt(i['view_products_stock.stock_qty'] || 0)
+    }));
+  } catch(e) { return null; }
+}
+
+async function sendCSMessage() {
+  const csInput = document.getElementById('csInput');
+  const orderInput = document.getElementById('csOrderInput');
+  const skuInput = document.getElementById('csSkuInput');
+  const customerText = csInput.value.trim();
+  if (!customerText) return;
+
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+
+  const displayText = `客人：${customerText}${orderInput.value ? '\n訂單：' + orderInput.value : ''}${skuInput.value ? '\n商品：' + skuInput.value : ''}`;
+  addMessage(displayText, 'user');
+
+  document.getElementById('csSendBtn').disabled = true;
+  const typing = showTyping();
+
+  try {
+    // 準備給 AI 的訊息
+    const userContent = `客人說：${customerText}${orderInput.value ? '\n訂單編號：' + orderInput.value : ''}${skuInput.value ? '\n商品/SKU：' + skuInput.value : ''}`;
+
+    const res = await fetch(PROXY_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+      body: JSON.stringify({
+        model: MODEL, max_tokens: 1000,
+        system: CS_SYSTEM,
+        messages: [{ role: 'user', content: userContent }]
+      })
+    });
+    const data = await res.json();
+    typing.remove();
+
+    if (!data.content || !data.content.length) {
+      addMessage('AI 無回應，請重試', 'ai'); return;
+    }
+
+    const rawText = data.content.map(c => c.text || '').join('').trim();
+    let parsed;
+    try {
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      parsed = JSON.parse(clean);
+    } catch(e) {
+      addMessage('AI 回覆格式錯誤，請重試', 'ai'); return;
+    }
+
+    // 若需要查庫存
+    let stockInfo = null;
+    const skuToCheck = parsed.sku_keyword || skuInput.value;
+    if (parsed.need_stock_check && skuToCheck) {
+      stockInfo = await queryOmsStock(skuToCheck);
+    }
+
+    // 顯示結果卡片
+    showCSResult(parsed, stockInfo, customerText, orderInput.value, skuInput.value);
+
+    // 寫入案件收集
+    saveCSCase(customerText, parsed, orderInput.value, skuInput.value);
+    logToSheet('客服助手', customerText.substring(0, 80));
+
+  } catch(err) { typing.remove(); addMessage('連線錯誤：' + err.message, 'ai'); }
+
+  document.getElementById('csSendBtn').disabled = false;
+  csInput.value = '';
+  orderInput.value = '';
+  skuInput.value = '';
+  csInput.focus();
+}
+
+function showCSResult(parsed, stockInfo, originalText, orderNo, skuNo) {
+  const el = document.getElementById('messages');
+  const card = document.createElement('div');
+  card.className = 'cs-result';
+
+  const toneClass = `tag-tone-${parsed.tone}`;
+  let html = `<div class="cs-tags">
+    <span class="cs-tag ${toneClass}">${parsed.tone}</span>
+    <span class="cs-tag tag-scene">${parsed.scene}</span>
+  </div>`;
+
+  if (stockInfo) {
+    html += `<div class="cs-stock-info">`;
+    html += `<strong>庫存查詢結果：</strong><br>`;
+    stockInfo.forEach(s => {
+      const status = s.qty === 0 ? '⚠ 已斷貨' : s.qty <= 3 ? `⚡ 僅剩 ${s.qty}` : `✓ 有貨 ${s.qty} 件`;
+      html += `${s.sku} ${status}<br>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div class="cs-section-label">話術（可直接複製貼給客人）</div>`;
+  const scriptId = 'script_' + Date.now();
+  html += `<div class="cs-script" id="${scriptId}">${esc(parsed.script)}</div>`;
+  html += `<button class="cs-copy-btn" onclick="copyCSScript('${scriptId}', this)">複製話術</button>`;
+
+  if (parsed.note) {
+    html += `<div class="cs-note">💡 ${esc(parsed.note)}</div>`;
+  }
+
+  card.innerHTML = html;
+  el.appendChild(card);
+  el.scrollTop = el.scrollHeight;
+}
+
+function copyCSScript(id, btn) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '已複製 ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '複製話術'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+async function saveCSCase(customerText, parsed, orderNo, skuNo) {
+  try {
+    await fetch(CASE_COLLECTOR_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'cs_assist',
+        staff: currentStaff,
+        customer_text: customerText,
+        tone: parsed.tone,
+        scene: parsed.scene,
+        script: parsed.script,
+        order_no: orderNo || '',
+        sku: skuNo || '',
+        timestamp: new Date().toISOString()
+      })
+    });
+  } catch(e) { console.log('案件記錄失敗:', e); }
+}
+
+// ── 共用 ─────────────────────────────────────────────
 function addMessage(text, type) {
   const el = document.getElementById('messages');
   const d = document.createElement('div');
   d.className = 'msg msg-' + type;
-  d.innerHTML = type === 'ai' ? '<span class="label">操作助手</span>' + formatAI(text) : '';
-  if (type === 'user') d.textContent = text;
-  el.appendChild(d); el.scrollTop = el.scrollHeight;
+  if (type === 'user') {
+    d.textContent = text;
+  } else {
+    d.innerHTML = `<span class="label">${currentMode === 'cs' ? '客服助手' : '操作助手'}</span>` + formatAI(text);
+  }
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
 }
 
 function formatAI(text) {
@@ -659,12 +905,11 @@ function formatAI(text) {
   }).join('');
 }
 
-function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function copyCode(id, btn) {
   navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
     btn.textContent = '已複製'; btn.classList.add('copied');
-    logToSheet('複製程式碼', document.getElementById(id).textContent.substring(0, 60));
     setTimeout(() => { btn.textContent = '複製'; btn.classList.remove('copied'); }, 2000);
   });
 }
@@ -687,9 +932,14 @@ function logToSheet(action, detail) {
   }).catch(() => {});
 }
 
+// ── Input 行為 ────────────────────────────────────────
 const inputField = document.getElementById('inputField');
 inputField.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 100) + 'px'; });
-inputField.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+inputField.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendShopifyMessage(); } });
+
+const csInputField = document.getElementById('csInput');
+csInputField.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 100) + 'px'; });
+csInputField.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendCSMessage(); } });
 </script>
 </body>
 </html>
