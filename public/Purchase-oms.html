@@ -110,6 +110,37 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
     <span id="modeBannerText" style="color:var(--muted);flex:1"></span>
     <button class="btn btn-secondary" onclick="openLoadModeModal()" style="padding:5px 12px;font-size:11px">重新選擇</button>
   </div>
+
+  <!-- ============ by day 歷史採購單查詢 ============ -->
+  <div id="historyBlock" style="background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden">
+    <div id="historyHeader" style="padding:12px 18px;background:#f9fafb;cursor:pointer;display:flex;align-items:center;gap:10px;user-select:none;border-bottom:1px solid var(--border)" onclick="toggleHistoryBlock()">
+      <h3 style="font-size:13px;font-weight:600">📅 by day 採購單查詢</h3>
+      <span style="font-size:11px;color:var(--muted)">跨廠商，按日期排序</span>
+      <span style="margin-left:auto;font-size:11px;color:var(--muted2)" id="historyToggle">▶ 展開</span>
+    </div>
+    <div id="historyBody" style="display:none;padding:16px 18px">
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px">
+        <div>
+          <label style="display:block;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">開始日期</label>
+          <input type="date" id="historyStartDate" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px">
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">結束日期</label>
+          <input type="date" id="historyEndDate" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px">
+        </div>
+        <button class="btn btn-primary" onclick="searchHistory()" id="btnSearchHistory">查詢</button>
+        <button class="btn btn-secondary" onclick="setHistoryQuick(7)">近 7 天</button>
+        <button class="btn btn-secondary" onclick="setHistoryQuick(30)">近 30 天</button>
+        <button class="btn btn-secondary" onclick="setHistoryQuick(90)">近 90 天</button>
+        <select id="historyVendorFilter" onchange="renderHistoryResult()" style="padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;margin-left:auto">
+          <option value="">全部廠商</option>
+        </select>
+      </div>
+      <div id="historyStatus" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:10px"></div>
+      <div id="historyResult"></div>
+    </div>
+  </div>
+
   <div class="loading hidden" id="ldArea"><span class="spinner"></span><span id="ldMsg">讀取中...</span></div>
   <div id="content" class="hidden">
     <div class="summary-grid" id="sumGrid"></div>
@@ -175,6 +206,7 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
 const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208';
 const PO_META_API='https://enamor-oms.vercel.app/api/po-meta';
 const RECEIVE_API='https://enamor-oms.vercel.app/api/receive-log';
+const SEND_EMAIL_API='https://enamor-oms.vercel.app/api/send-purchase-email';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 const LK='enamor_po_oms_v2',SD=30,HISTORY_DAYS=90,MARKETS_NO=[1,8,16];
 let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},pendPOInfo={},preSale={},lastPO={},vendorPOs={},merged=[],vCfg={},cF='all',sQ='';
@@ -777,9 +809,108 @@ async function submitToOms(){
       st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ ${res.msg}，採購單號 ${poNo}</span>`;toast('✓ 採購單已送出');
       const tracking=document.getElementById('poTracking').value.trim();const memo=document.getElementById('poMemo').value.trim();
       if(tracking||memo){try{await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'save',purchase_no:poNo,vendor_id:vendorCode,tracking,memo})});}catch(e){}}
+      // 寄送 email 通知（失敗不影響採購單已成立的事實）
+      const supplierName=(Object.values(supMap).find(s=>s.vid===vendorCode)||{}).vn||'';
+      const emailOrders=[{purchase_no:poNo,vendor:`${vendorCode}${supplierName?' '+supplierName:''}`,sku_count:matched.length,total_qty:matched.reduce((s,i)=>s+i.qty,0),tracking,memo}];
+      try{
+        const er=await fetch(SEND_EMAIL_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({orders:emailOrders})});
+        const ej=await er.json();
+        if(ej.ok||ej.result){st.innerHTML+=`<span style="color:var(--green);font-size:11px;margin-left:8px">✉ 通知信已寄出</span>`;}
+        else{st.innerHTML+=`<span style="color:var(--orange);font-size:11px;margin-left:8px">⚠ 通知信寄送失敗（採購單已建立）</span>`;console.warn('Email 失敗:',ej);}
+      }catch(emailErr){st.innerHTML+=`<span style="color:var(--orange);font-size:11px;margin-left:8px">⚠ 通知信寄送失敗（採購單已建立）</span>`;console.warn('Email 失敗:',emailErr);}
     }else{st.innerHTML=`<span style="color:var(--red);font-weight:600">✗ ${res.msg||'未知錯誤'}</span>`;toast('送出失敗');}
   }catch(err){st.innerHTML=`<span style="color:var(--red)">✗ ${err.message}</span>`;toast('送出失敗');}
   btn.disabled=false;
+}
+
+// ===== by day 歷史採購單查詢 =====
+let historyRows=[];
+function toggleHistoryBlock(){
+  const body=document.getElementById('historyBody');const tog=document.getElementById('historyToggle');
+  if(body.style.display==='none'){
+    body.style.display='block';tog.textContent='▼ 收合';
+    // 第一次展開時，設預設日期為近 30 天
+    if(!document.getElementById('historyStartDate').value){
+      const today=new Date();const ago30=new Date();ago30.setDate(today.getDate()-30);
+      document.getElementById('historyStartDate').value=ago30.toISOString().slice(0,10);
+      document.getElementById('historyEndDate').value=today.toISOString().slice(0,10);
+    }
+  }else{body.style.display='none';tog.textContent='▶ 展開';}
+}
+function setHistoryQuick(days){
+  const end=new Date();const start=new Date();start.setDate(end.getDate()-days);
+  document.getElementById('historyStartDate').value=start.toISOString().slice(0,10);
+  document.getElementById('historyEndDate').value=end.toISOString().slice(0,10);
+  searchHistory();
+}
+async function searchHistory(){
+  const start=document.getElementById('historyStartDate').value;
+  const end=document.getElementById('historyEndDate').value;
+  const status=document.getElementById('historyStatus');const result=document.getElementById('historyResult');
+  const btn=document.getElementById('btnSearchHistory');
+  if(!start){toast('請選擇開始日期');return;}
+  btn.disabled=true;status.innerHTML='<span class="spinner"></span> 查詢中…';result.innerHTML='';
+  try{
+    // 拉 4 種狀態的採購單
+    const statusList=['60','62','65','69'];let headers=[];
+    for(const st of statusList){
+      try{const hR=await oP('/api/v2/default/apiPurchaseHeaderList/searchList',{"purchase_header.status":st});const ha=(hR.retval||{}).purchase_header||hR.retval||[];if(Array.isArray(ha))headers=headers.concat(ha);}catch(e){console.warn(`status ${st} 失敗`,e);}
+    }
+    // 過濾日期範圍
+    const startMs=new Date(start+'T00:00:00').getTime();
+    const endMs=end?new Date(end+'T23:59:59').getTime():Infinity;
+    headers=headers.filter(h=>{const d=h['purchase_header.created_at']||'';if(!d)return false;const ts=new Date(d).getTime();return ts>=startMs&&ts<=endMs;});
+    // 拉每張單明細，組成 historyRows
+    historyRows=[];
+    for(let i=0;i<headers.length;i++){
+      const h=headers[i];const pn=(h['purchase_header.purchase_no']||'').trim();const cd=(h['purchase_header.created_at']||'').slice(0,10);const hStatus=(h['purchase_header.status']||'').toString();
+      if(!pn)continue;
+      status.innerHTML=`<span class="spinner"></span> 拉取明細 ${i+1}/${headers.length}（${pn}）...`;
+      try{
+        const dR=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.purchase_no":pn});
+        const da=(dR.retval||{}).purchase||[];let totalQty=0,totalIn=0,vid=null;const skuSet=new Set();
+        if(Array.isArray(da)){da.forEach(p=>{const m=(p['purchase.products_model']||'').trim();const pq=parseInt(p['purchase.purchase_quantity']||0);const sq=parseInt(p['purchase.stock_quantity']||0);if(!m||pq<=0)return;skuSet.add(m);totalQty+=pq;totalIn+=sq;const sp=supMap[m];if(sp&&!vid)vid=sp.vid;});}
+        if(!vid){const mch=pn.match(/-([A-Z0-9]+)$/i);if(mch)vid=mch[1];}
+        historyRows.push({pn,date:cd,status:hStatus,totalQty,totalIn,skuCount:skuSet.size,vid:vid||'?'});
+      }catch(e){console.warn(`${pn} 失敗`,e);}
+    }
+    historyRows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    // 更新廠商下拉
+    const vs={};historyRows.forEach(r=>{vs[r.vid]=(vs[r.vid]||0)+1});
+    const sel=document.getElementById('historyVendorFilter');const curVal=sel.value;
+    sel.innerHTML='<option value="">全部廠商</option>'+Object.entries(vs).sort((a,b)=>a[0].localeCompare(b[0])).map(([v,c])=>`<option value="${v}">${v} (${c})</option>`).join('');
+    sel.value=curVal;
+    renderHistoryResult();
+  }catch(err){status.innerHTML=`<span style="color:var(--red)">查詢失敗：${err.message}</span>`;console.error(err);}
+  btn.disabled=false;
+}
+function renderHistoryResult(){
+  const result=document.getElementById('historyResult');const status=document.getElementById('historyStatus');
+  const filterVid=document.getElementById('historyVendorFilter').value;
+  let rows=historyRows;
+  if(filterVid)rows=rows.filter(r=>r.vid===filterVid);
+  if(!rows.length){status.textContent='';result.innerHTML='<div class="loading">此區間沒有採購單</div>';return;}
+  const totalQty=rows.reduce((s,r)=>s+r.totalQty,0);
+  const totalIn=rows.reduce((s,r)=>s+r.totalIn,0);
+  status.innerHTML=`共 <strong>${rows.length}</strong> 張採購單　|　採購量 <strong style="color:var(--text)">${totalQty.toLocaleString()}</strong>　|　已入庫 <strong style="color:var(--green)">${totalIn.toLocaleString()}</strong>　|　待入庫 <strong style="color:var(--orange)">${(totalQty-totalIn).toLocaleString()}</strong>`;
+  const stMap={'60':{txt:'處理中',color:'var(--orange)'},'62':{txt:'QC中',color:'var(--orange)'},'65':{txt:'已回寫',color:'var(--green)'},'69':{txt:'已結案',color:'var(--green)'}};
+  result.innerHTML=`<div class="tbl-wrap"><table style="min-width:900px">
+    <thead><tr>
+      <th>採購單號</th><th>建立日期</th><th>廠商</th><th>狀態</th>
+      <th class="text-right">SKU 數</th><th class="text-right">採購量</th>
+      <th class="text-right">已入庫</th><th class="text-right">待入庫</th>
+    </tr></thead><tbody>
+    ${rows.map(r=>{const st=stMap[r.status]||{txt:r.status,color:'var(--muted)'};const remain=r.totalQty-r.totalIn;return`<tr>
+      <td class="mono" style="font-weight:600">${r.pn}</td>
+      <td class="mono" style="color:var(--muted)">${r.date||'—'}</td>
+      <td class="mono"><span class="vbadge">${r.vid}</span></td>
+      <td><span style="color:${st.color};font-weight:600;font-family:'DM Mono',monospace;font-size:11px">${st.txt}</span></td>
+      <td class="mono text-right">${r.skuCount}</td>
+      <td class="mono text-right" style="font-weight:600">${r.totalQty}</td>
+      <td class="mono text-right" style="color:var(--green)">${r.totalIn}</td>
+      <td class="mono text-right" style="color:${remain>0?'var(--orange);font-weight:700':'var(--muted2)'}">${remain>0?remain:'—'}</td>
+    </tr>`}).join('')}
+    </tbody></table></div>`;
 }
 
 // 初始化
