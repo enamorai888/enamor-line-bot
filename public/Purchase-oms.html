@@ -208,7 +208,10 @@ const PO_META_API='https://enamor-oms.vercel.app/api/po-meta';
 const RECEIVE_API='https://enamor-oms.vercel.app/api/receive-log';
 const SEND_EMAIL_API='https://enamor-oms.vercel.app/api/send-purchase-email';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
-const LK='enamor_po_oms_v2',SD=30,HISTORY_DAYS=90,MARKETS_NO=[1,8,16];
+const LK='enamor_po_oms_v2',SD=30,MARKETS_NO=[1,8,16];
+const HISTORY_DAYS_KEY='enamor_history_days';
+let HISTORY_DAYS=parseInt(localStorage.getItem(HISTORY_DAYS_KEY)||'14');
+if(![7,14,30,60,90].includes(HISTORY_DAYS))HISTORY_DAYS=14;
 let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},pendPOInfo={},preSale={},lastPO={},vendorPOs={},merged=[],vCfg={},cF='all',sQ='';
 let loadMode='all',loadVendor='';
 const LOAD_MODE_KEY='enamor_load_mode',LOAD_VENDOR_KEY='enamor_load_vendor';
@@ -244,6 +247,18 @@ async function openLoadModeModal(){
   document.querySelector(`input[name="loadMode"][value="${savedMode}"]`).checked=true;
   if(savedMode==='single'&&savedVendor){sel.value=savedVendor;sel.disabled=false;}
   onLoadModeChange();
+  // 歷史天數初始化
+  document.querySelectorAll('.hd-opt').forEach(el=>{
+    const d=parseInt(el.dataset.days);
+    if(d===HISTORY_DAYS){el.style.background='var(--text)';el.style.color='#fff';el.style.borderColor='var(--text)';}
+    else{el.style.background='#fff';el.style.color='var(--text)';el.style.borderColor='var(--border)';}
+    el.onclick=()=>{
+      document.querySelectorAll('.hd-opt').forEach(o=>{o.style.background='#fff';o.style.color='var(--text)';o.style.borderColor='var(--border)';});
+      el.style.background='var(--text)';el.style.color='#fff';el.style.borderColor='var(--text)';
+      HISTORY_DAYS=d;
+      localStorage.setItem(HISTORY_DAYS_KEY,String(d));
+    };
+  });
   document.getElementById('loadModal').style.display='flex';
 }
 function closeLoadModal(){document.getElementById('loadModal').style.display='none';}
@@ -265,7 +280,10 @@ function confirmLoadMode(){
 }
 function updateModeBanner(){
   const banner=document.getElementById('modeBanner');const text=document.getElementById('modeBannerText');
-  if(loadMode==='single'&&loadVendor){const sp=Object.values(supMap).find(s=>s.vid===loadVendor);text.textContent=`目前只載入「${loadVendor}${sp?' '+sp.vn:''}」`;banner.classList.remove('hidden');}
+  const parts=[];
+  if(loadMode==='single'&&loadVendor){const sp=Object.values(supMap).find(s=>s.vid===loadVendor);parts.push(`只載入「${loadVendor}${sp?' '+sp.vn:''}」`);}
+  parts.push(`歷史 ${HISTORY_DAYS} 天`);
+  if(loadMode==='single'||HISTORY_DAYS!==90){text.textContent='目前：'+parts.join(' · ');banner.classList.remove('hidden');}
   else{banner.classList.add('hidden');}
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
@@ -619,15 +637,35 @@ function togglePODetail(vid,idx,safeId){
 }
 
 // ── 對帳功能 ──
-function toggleReceive(vid,idx,safeId,event){
+async function toggleReceive(vid,idx,safeId,event){
   if(event)event.stopPropagation();
   const tr=document.getElementById(`poReceive-${safeId}`);const ct=document.getElementById(`poReceiveCt-${safeId}`);
   if(!tr)return;
   if(tr.style.display==='none'){
     const po=vendorPOs[vid][idx];
+    // 第一次展開：先讀雲端既有對帳紀錄
     if(!receiveQty[safeId]){
-      receiveQty[safeId]={};
-      po.items.forEach(it=>{receiveQty[safeId][it.sku]=it.pq-it.sq;});// 預設 = 剩餘應到量
+      ct.innerHTML='<div style="padding:16px 20px;font-size:12px;color:var(--muted);font-family:\'DM Mono\',monospace"><span class="spinner"></span>讀取對帳紀錄...</div>';
+      tr.style.display='table-row';
+      try{
+        const r=await fetch(`${RECEIVE_API}?action=get&purchase_no=${encodeURIComponent(po.pn)}`,{method:'GET',headers:{'x-proxy-token':T}});
+        const j=await r.json();
+        receiveQty[safeId]={};
+        if(j.ok&&j.record&&Array.isArray(j.record.items)){
+          // 用雲端的 received 預填
+          const recMap={};j.record.items.forEach(it=>{recMap[it.sku]=it.received;});
+          po.items.forEach(it=>{receiveQty[safeId][it.sku]=recMap[it.sku]??(it.pq-it.sq);});
+          // notes 寫入 receiveState
+          receiveState[safeId+'_note']=j.record.notes||'';
+          receiveState[safeId+'_loaded']=true;
+        }else{
+          // 沒紀錄就用預設 = 剩餘應到量
+          po.items.forEach(it=>{receiveQty[safeId][it.sku]=it.pq-it.sq;});
+        }
+      }catch(e){
+        console.warn('讀取對帳紀錄失敗',e);
+        po.items.forEach(it=>{receiveQty[safeId][it.sku]=it.pq-it.sq;});
+      }
     }
     ct.innerHTML=renderReceiveArea(vid,idx,safeId);
     tr.style.display='table-row';
@@ -657,8 +695,10 @@ function renderReceiveArea(vid,idx,safeId){
     </tr>`;
   });
   const noteVal=receiveState[safeId+'_note']||'';
-  return`<div class="receive-title">📥 對帳作業
-    <span style="font-size:10px;font-weight:400;color:var(--muted)">輸入實到量，Enter 或點別處自動更新</span>
+  const loaded=receiveState[safeId+'_loaded'];
+  const sourceTag=loaded?'<span style="font-size:10px;color:var(--green);font-weight:400;margin-left:8px">✓ 已從雲端載入</span>':'<span style="font-size:10px;color:var(--muted2);font-weight:400;margin-left:8px">尚未對帳</span>';
+  return`<div class="receive-title">📥 對帳作業${sourceTag}
+    <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:auto">輸入實到量，Enter 或點別處自動更新</span>
   </div>
   <div class="receive-summary">
     <div class="rs-card"><div class="rs-lbl">應到</div><div class="rs-val" id="rsOrdered-${safeId}">${totalOrdered}</div></div>
@@ -731,7 +771,12 @@ async function saveReceive(vid,idx,safeId){
   try{
     const r=await fetch(RECEIVE_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify(payload)});
     const j=await r.json();
-    if(j.ok){if(stEl)stEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 已儲存（${new Date().toLocaleTimeString('zh-TW')}）</span>`;toast('✓ 對帳已儲存');}
+    if(j.ok){
+      // 寫回記憶體，避免同 session 重展被清空
+      receiveState[safeId+'_note']=notes;
+      receiveState[safeId+'_loaded']=true;
+      if(stEl)stEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 已儲存（${new Date().toLocaleTimeString('zh-TW')}）</span>`;toast('✓ 對帳已儲存');
+    }
     else{if(stEl)stEl.innerHTML=`<span style="color:var(--red)">✗ ${j.error||'儲存失敗'}</span>`;toast('儲存失敗');}
   }catch(e){if(stEl)stEl.innerHTML=`<span style="color:var(--red)">✗ ${e.message}</span>`;toast('儲存失敗：'+e.message);}
 }
@@ -937,6 +982,17 @@ ldCfg();loadSkuNotes();loadPoNotes();
         <option value="">— 對照表載入後選擇 —</option>
       </select>
     </label>
+    <div style="margin-top:18px;padding:14px 16px;background:var(--surface2);border-radius:7px">
+      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">歷史採購天數</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="historyDaysRadios">
+        <label class="hd-opt" data-days="7" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">7 天</label>
+        <label class="hd-opt" data-days="14" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">14 天</label>
+        <label class="hd-opt" data-days="30" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">30 天</label>
+        <label class="hd-opt" data-days="60" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">60 天</label>
+        <label class="hd-opt" data-days="90" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">90 天</label>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace">影響「採購單列表」「上次採購」資料範圍。需要更長期可用上方「by day 查詢」</div>
+    </div>
     <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
       <button class="btn btn-secondary" onclick="closeLoadModal()">取消</button>
       <button class="btn btn-primary" onclick="confirmLoadMode()">確定載入</button>
