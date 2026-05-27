@@ -258,8 +258,7 @@ const LOAD_MODE_KEY='enamor_load_mode',LOAD_VENDOR_KEY='enamor_load_vendor';
 
 // 採購單管理 Tab 的資料（獨立 state）
 let poTabRows=[];           // 所有採購單明細列表
-let poTabMetaCache={};      // {pn: {tracking, memo}} 雲端
-let poTabNoteCache={};      // {pn: note} 本機 localStorage
+let poTabMetaCache={};      // {pn: {tracking, memo, note}} 雲端
 let poTabReceiveQty={};     // {safeId: {sku: received}}
 let poTabReceiveState={};   // {safeId+'_note': string, safeId+'_loaded': true}
 
@@ -700,7 +699,6 @@ function renderPOTabVendorRows(vid,list){
         <th style="${th};text-align:right">已入庫</th>
         <th style="${th};text-align:right">待入庫</th>
         <th style="${th};min-width:150px">追蹤單號</th>
-        <th style="${th};min-width:180px">備註</th>
         <th style="${th}">操作</th>
       </tr></thead><tbody>`;
   list.forEach((p,idx)=>{
@@ -708,11 +706,11 @@ function renderPOTabVendorRows(vid,list){
     const remain=p.totalQty-p.totalIn;
     const safeId=p.pn.replace(/[^a-zA-Z0-9]/g,'_');
     const meta=poTabMetaCache[p.pn]||null;
-    const trackingVal=meta?.tracking||'';const memoVal=meta?.memo||'';
-    const poNoteVal=poTabNoteCache[p.pn]||'';
+    const trackingVal=meta?.tracking||'';
+    // 單據備註：優先讀 note，若 note 空但 memo 有值則 fallback 用 memo（舊資料相容）
+    const noteVal=meta?.note||meta?.memo||'';
     const td=`padding:8px 10px;font-size:12px;border-bottom:1px solid var(--surface2)`;
     const isStatus60=p.status==='60';
-    // 我們用 vid + idx 找回採購單，但因為 fetchPOTab 是按 poTabRows 排序，要存原索引
     const origIdx=poTabRows.indexOf(p);
     html+=`<tr>
       <td style="${td};font-family:'DM Mono',monospace;font-weight:600;cursor:pointer" onclick="togglePOTabDetail(${origIdx},'${safeId}')">
@@ -726,28 +724,22 @@ function renderPOTabVendorRows(vid,list){
       <td style="${td};text-align:right;font-family:'DM Mono',monospace;color:${remain>0?'var(--orange)':'var(--muted2)'};font-weight:${remain>0?'700':'400'};cursor:pointer" onclick="togglePOTabDetail(${origIdx},'${safeId}')">${remain>0?remain:'—'}</td>
       <td style="${td}" class="meta-cell" onclick="startMetaEdit('${p.pn}','tracking','${safeId}',event)">
         <span class="meta-display${trackingVal?'':' empty'}" id="metaDisp-tracking-${safeId}">${trackingVal||'—'}</span>
-        <input class="meta-input" id="metaInp-tracking-${safeId}" type="text" value="${trackingVal}" placeholder="例：黑貓 1234567890"
+        <input class="meta-input" id="metaInp-tracking-${safeId}" type="text" value="${trackingVal}" placeholder="例:黑貓 1234567890"
           onblur="saveMetaField('${p.pn}','tracking','${safeId}')"
           onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelMetaEdit('tracking','${safeId}')">
         <span class="meta-saving" id="metaSaving-tracking-${safeId}" style="display:none">儲存中...</span>
-      </td>
-      <td style="${td}" class="meta-cell" onclick="startMetaEdit('${p.pn}','memo','${safeId}',event)">
-        <span class="meta-display${memoVal?'':' empty'}" id="metaDisp-memo-${safeId}">${memoVal||'—'}</span>
-        <input class="meta-input" id="metaInp-memo-${safeId}" type="text" value="${memoVal}" placeholder="例：斷貨補的"
-          onblur="saveMetaField('${p.pn}','memo','${safeId}')"
-          onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelMetaEdit('memo','${safeId}')">
-        <span class="meta-saving" id="metaSaving-memo-${safeId}" style="display:none">儲存中...</span>
       </td>
       <td style="${td}">
         ${isStatus60?`<button style="padding:5px 12px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid var(--orange);background:#fff;color:var(--orange);border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap" onclick="togglePOTabReceive(${origIdx},'${safeId}',event)">📥 對帳</button>`:'<span style="font-size:11px;color:var(--muted2)">—</span>'}
       </td>
     </tr>
-    <tr id="poTabDet-${safeId}" style="display:none"><td colspan="10" style="padding:0;background:#fcfcfa"><div id="poTabDetCt-${safeId}" style="padding:10px 18px"></div></td></tr>
-    <tr id="poTabReceive-${safeId}" style="display:none"><td colspan="10" style="padding:0"><div class="receive-wrap" id="poTabReceiveCt-${safeId}"></div></td></tr>
-    <tr class="po-note-row"><td colspan="10" style="padding:6px 10px;border-bottom:1px solid var(--surface2)">
+    <tr id="poTabDet-${safeId}" style="display:none"><td colspan="9" style="padding:0;background:#fcfcfa"><div id="poTabDetCt-${safeId}" style="padding:10px 18px"></div></td></tr>
+    <tr id="poTabReceive-${safeId}" style="display:none"><td colspan="9" style="padding:0"><div class="receive-wrap" id="poTabReceiveCt-${safeId}"></div></td></tr>
+    <tr class="po-note-row"><td colspan="9" style="padding:6px 10px;border-bottom:1px solid var(--surface2)">
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px">單據備註</span>
-        <input class="po-note-input" id="poTabNoteInp-${safeId}" type="text" value="${poNoteVal}" placeholder="此採購單備註（存本機）" onchange="savePOTabNote('${p.pn}','${safeId}')">
+        <input class="po-note-input" id="poTabNoteInp-${safeId}" type="text" value="${noteVal.replace(/"/g,'&quot;')}" placeholder="此採購單備註（雲端共用）" onchange="savePOTabNote('${p.pn}','${safeId}')">
+        <span id="poTabNoteSt-${safeId}" style="font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace;white-space:nowrap"></span>
       </div>
     </td></tr>`;
   });
@@ -806,13 +798,36 @@ async function saveMetaField(pn,field,safeId){
   saving.style.display='none';disp.style.display='';
 }
 
-function savePOTabNote(pn,safeId){
+async function savePOTabNote(pn,safeId){
   const inp=document.getElementById(`poTabNoteInp-${safeId}`);if(!inp)return;
-  const val=inp.value.trim();
-  poTabNoteCache[pn]=val;
-  try{const all=JSON.parse(localStorage.getItem('enamor_po_notes')||'{}');all[pn]=val;localStorage.setItem('enamor_po_notes',JSON.stringify(all));}catch(e){}
+  const stEl=document.getElementById(`poTabNoteSt-${safeId}`);
+  const newVal=inp.value.trim();
+  if(stEl){stEl.textContent='儲存中...';stEl.style.color='var(--muted2)';}
+  // 寫到 meta.note（雲端）
+  if(!poTabMetaCache[pn])poTabMetaCache[pn]={};
+  const oldVal=poTabMetaCache[pn].note||'';
+  poTabMetaCache[pn].note=newVal;
+  const tracking=poTabMetaCache[pn].tracking||'';
+  const memo=poTabMetaCache[pn].memo||'';
+  const mch=pn.match(/-([A-Z0-9]+)$/i);const vendor_id=mch?mch[1]:'';
+  try{
+    const r=await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'save',purchase_no:pn,vendor_id,tracking,memo,note:newVal})});
+    const j=await r.json();
+    if(j.ok||j.success){
+      if(stEl){stEl.textContent='✓ 已儲存';stEl.style.color='var(--green)';setTimeout(()=>{if(stEl)stEl.textContent='';},2500);}
+      toast('✓ 單據備註已儲存');
+    }
+    else{
+      poTabMetaCache[pn].note=oldVal;
+      if(stEl){stEl.textContent='✗ 儲存失敗';stEl.style.color='var(--red)';}
+      toast('儲存失敗：'+(j.error||'?'));
+    }
+  }catch(e){
+    poTabMetaCache[pn].note=oldVal;
+    if(stEl){stEl.textContent='✗ 儲存失敗';stEl.style.color='var(--red)';}
+    toast('儲存失敗：'+e.message);
+  }
 }
-function loadPOTabNotes(){try{const all=JSON.parse(localStorage.getItem('enamor_po_notes')||'{}');poTabNoteCache=all;}catch(e){poTabNoteCache={};}}
 
 // ====== 對帳功能 ======
 async function togglePOTabReceive(origIdx,safeId,event){
@@ -1038,7 +1053,7 @@ function renderHistoryResult(){
 }
 
 // 初始化
-ldCfg();loadSkuNotes();loadPOTabNotes();
+ldCfg();loadSkuNotes();
 // 預設 Tab：採購建議（A）
 const savedTab=localStorage.getItem('enamor_active_tab');
 if(savedTab==='B'){switchTab('B');}
