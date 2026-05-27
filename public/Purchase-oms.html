@@ -11,6 +11,15 @@
 *{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;min-height:100vh}
 header{background:#fff;border-bottom:1px solid var(--border);padding:10px 28px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}.logo-img{height:30px}.header-title{font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.5px}.spacer{flex:1}.dot{width:7px;height:7px;border-radius:50%;background:#ddd;flex-shrink:0;transition:all .3s}.dot.ok{background:var(--green);box-shadow:0 0 5px rgba(45,122,58,.4)}.dot.err{background:var(--red)}.dot-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 .wrap{max-width:1280px;margin:0 auto;padding:24px 28px}
+/* Tab styles */
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+.tab{padding:10px 22px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:600;color:var(--muted);background:transparent;border:none;border-bottom:3px solid transparent;transition:all .15s;margin-bottom:-1px;display:flex;align-items:center;gap:8px}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--text);border-bottom-color:var(--text)}
+.tab .badge{font-size:10px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--muted);font-weight:600}
+.tab.active .badge{background:var(--text);color:#fff}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
 .status-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}.sb-item{display:flex;align-items:center;gap:6px;font-size:12px;font-family:'DM Mono',monospace;color:var(--muted)}.sb-item .dot{width:6px;height:6px}.sb-item.ok{color:var(--green)}.sb-item.ok .dot{background:var(--green)}
 .action-bar{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}.btn{padding:9px 20px;border-radius:6px;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:7px;white-space:nowrap}.btn-primary{background:var(--text);color:#fff}.btn-primary:hover{background:#333}.btn-green{background:var(--green);color:#fff}.btn-green:hover{background:#256132}.btn-secondary{background:#fff;color:var(--muted);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--text);color:var(--text)}.btn-blue{background:var(--blue);color:#fff}.btn-blue:hover{background:#2471a3}.btn:disabled{opacity:.4;cursor:not-allowed}
 .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}.card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}.card-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;font-family:'DM Mono',monospace;margin-bottom:5px}.card-val{font-size:22px;font-weight:700;font-family:'DM Mono',monospace}.card-sub{font-size:11px;color:var(--muted);margin-top:2px}.card-alert{border-color:var(--red-border);background:var(--red-light)}.card-alert .card-val{color:var(--red)}
@@ -30,11 +39,8 @@ tr.urgent-row td:first-child{border-left:3px solid var(--red);padding-left:6px}
 .cell-stack{line-height:1.3}.cell-stack .sub{font-size:10px;color:var(--muted);font-weight:400}
 .loading{text-align:center;padding:40px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px}.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px;vertical-align:middle}@keyframes spin{to{transform:rotate(360deg)}}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:7px;font-size:12px;font-family:'DM Mono',monospace;opacity:0;transform:translateY(8px);transition:all .25s;z-index:999;pointer-events:none}.toast.show{opacity:1;transform:translateY(0)}.hidden{display:none!important}
-/* inline meta edit */
 .meta-cell{cursor:pointer;min-width:130px}.meta-display{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);padding:2px 0}.meta-display.empty{color:var(--muted2)}.meta-display:hover{color:var(--text);text-decoration:underline dotted}.meta-input{width:100%;font-family:'DM Mono',monospace;font-size:11px;border:1px solid var(--green);border-radius:4px;padding:3px 6px;background:#fff;color:var(--text);outline:none;display:none}.meta-saving{font-size:10px;color:var(--muted2);font-family:'DM Mono',monospace}
-/* SKU 備註 inline edit */
 .sku-note-cell{cursor:pointer;min-width:100px}.sku-note-display{font-size:11px;color:var(--muted);padding:2px 0}.sku-note-display.empty{color:var(--muted2)}.sku-note-display:hover{color:var(--text);text-decoration:underline dotted}.sku-note-input{width:100%;font-family:'DM Mono',monospace;font-size:11px;border:1px solid var(--blue);border-radius:4px;padding:3px 6px;background:#fff;color:var(--text);outline:none;display:none}
-/* 對帳區 */
 .receive-wrap{background:#fffbf4;border-top:2px solid var(--orange);padding:16px 20px}
 .receive-title{font-size:12px;font-weight:600;color:var(--orange);font-family:'DM Mono',monospace;margin-bottom:12px;display:flex;align-items:center;gap:10px}
 .receive-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:12px;min-width:800px}
@@ -57,7 +63,6 @@ tr.urgent-row td:first-child{border-left:3px solid var(--red);padding-left:6px}
 .rs-card .rs-val{font-size:16px;font-weight:700}
 .rs-card.alert{border-color:var(--red-border);background:var(--red-light)}.rs-card.alert .rs-val{color:var(--red)}
 .rs-card.ok{border-color:var(--green-border);background:var(--green-light)}.rs-card.ok .rs-val{color:var(--green)}
-/* 採購單備註列 */
 .po-note-row{background:#f9f9f7}
 .po-note-input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-family:'Noto Sans TC',sans-serif;font-size:12px;outline:none;background:#fff}
 .po-note-input:focus{border-color:var(--green)}
@@ -90,28 +95,14 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
   <span class="dot-label" id="dotLabel">待連線</span>
 </header>
 <div class="wrap">
-  <div class="status-bar">
-    <div class="sb-item" id="sbOms"><div class="dot"></div>OMS</div>
-    <div class="sb-item" id="sbSup"><div class="dot"></div>對照表</div>
-    <div class="sb-item" id="sbStk"><div class="dot"></div>庫存</div>
-    <div class="sb-item" id="sbSal"><div class="dot"></div>銷量</div>
-    <div class="sb-item" id="sbPo"><div class="dot"></div>處理中採購</div>
-    <div class="sb-item" id="sbPre"><div class="dot"></div>訂單佔用</div>
-    <div class="sb-item" id="sbHis"><div class="dot"></div>歷史採購</div>
-  </div>
-  <div class="action-bar">
-    <button class="btn btn-primary" id="btnFetch" onclick="openLoadModeModal()">📡 從 OMS 拉取數據</button>
-    <span id="fetchSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
-    <div class="spacer"></div>
-    <button class="btn btn-green hidden" id="btnExp" onclick="exportAll()">⬇ 匯出採購建議 Excel</button>
-  </div>
-  <div id="modeBanner" class="hidden" style="background:#fff8f0;border:1px solid #fed7aa;border-radius:6px;padding:10px 14px;margin-top:10px;display:flex;align-items:center;gap:10px;font-size:12px;font-family:'DM Mono',monospace">
-    <span style="color:var(--orange);font-weight:600">⚠ 單一模式</span>
-    <span id="modeBannerText" style="color:var(--muted);flex:1"></span>
-    <button class="btn btn-secondary" onclick="openLoadModeModal()" style="padding:5px 12px;font-size:11px">重新選擇</button>
+
+  <!-- ============ Tabs ============ -->
+  <div class="tabs">
+    <button class="tab active" id="tabA" onclick="switchTab('A')">🛒 採購建議</button>
+    <button class="tab" id="tabB" onclick="switchTab('B')">📋 採購單管理</button>
   </div>
 
-  <!-- ============ by day 歷史採購單查詢 ============ -->
+  <!-- ============ by day 採購單查詢（兩個 Tab 共用） ============ -->
   <div id="historyBlock" style="background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden">
     <div id="historyHeader" style="padding:12px 18px;background:#f9fafb;cursor:pointer;display:flex;align-items:center;gap:10px;user-select:none;border-bottom:1px solid var(--border)" onclick="toggleHistoryBlock()">
       <h3 style="font-size:13px;font-weight:600">📅 by day 採購單查詢</h3>
@@ -141,65 +132,113 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
     </div>
   </div>
 
-  <div class="loading hidden" id="ldArea"><span class="spinner"></span><span id="ldMsg">讀取中...</span></div>
-  <div id="content" class="hidden">
-    <div class="summary-grid" id="sumGrid"></div>
-    <div id="vendorFilter" class="hidden" style="background:#fff;border:1px solid var(--border);border-radius:7px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px">快速篩選</span>
-      <select id="vendorFilterSel" onchange="applyVendorFilter()" style="padding:6px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
-        <option value="">全部供應商</option>
-      </select>
-      <span id="vendorFilterCount" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+  <!-- ============ Tab A: 採購建議 ============ -->
+  <div id="paneA" class="tab-pane active">
+    <div class="status-bar">
+      <div class="sb-item" id="sbOms"><div class="dot"></div>OMS</div>
+      <div class="sb-item" id="sbSup"><div class="dot"></div>對照表</div>
+      <div class="sb-item" id="sbStk"><div class="dot"></div>庫存</div>
+      <div class="sb-item" id="sbSal"><div class="dot"></div>銷量</div>
+      <div class="sb-item" id="sbPo"><div class="dot"></div>處理中採購</div>
+      <div class="sb-item" id="sbPre"><div class="dot"></div>訂單佔用</div>
     </div>
-    <div class="vendor-config">
-      <div class="vc-header" onclick="toggleCfg()">
-        <h3>⚙ 供應商交期設定</h3>
-        <span style="font-size:11px;color:var(--muted)">交期 + 安全庫存 = 再訂購點（by 供應商）</span>
-        <span class="vc-toggle" id="vcTog">▶</span>
-      </div>
-      <div class="vc-body" id="vcBody">
-        <table class="vc-table"><thead><tr><th>廠商</th><th>名稱</th><th>SKU</th><th>需採購</th><th>交期</th><th>安全</th><th>合計</th></tr></thead><tbody id="vcR"></tbody></table>
-      </div>
+    <div class="action-bar">
+      <button class="btn btn-primary" id="btnFetch" onclick="openLoadModeModal()">📡 從 OMS 拉取數據</button>
+      <span id="fetchSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+      <div class="spacer"></div>
+      <button class="btn btn-green hidden" id="btnExp" onclick="exportAll()">⬇ 匯出採購建議 Excel</button>
     </div>
-    <div class="filter-bar">
-      <span class="filter-lbl">篩選</span>
-      <div class="chip active" onclick="setF('all',this)">全部</div>
-      <div class="chip alert" onclick="setF('alert',this)">⚠ 需採購</div>
-      <div class="chip" onclick="setF('ok',this)">充足</div>
-      <input class="search-input" placeholder="搜尋..." oninput="sQ=this.value;renderTbl()">
+    <div id="modeBanner" class="hidden" style="background:#fff8f0;border:1px solid #fed7aa;border-radius:6px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;font-family:'DM Mono',monospace">
+      <span style="color:var(--orange);font-weight:600">⚠ 單一模式</span>
+      <span id="modeBannerText" style="color:var(--muted);flex:1"></span>
+      <button class="btn btn-secondary" onclick="openLoadModeModal()" style="padding:5px 12px;font-size:11px">重新選擇</button>
     </div>
-    <div id="tblArea"></div>
-    <div class="sec-upload" style="background:#fff;border:1px solid var(--border);border-radius:8px;margin-top:24px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-        <h3 style="font-size:14px;font-weight:600">📤 上傳廠商確認單 → OMS</h3>
-        <span style="font-size:11px;color:var(--muted)">上傳廠商回傳的 Excel，自動比對條碼後送 OMS 建立採購單</span>
+    <div class="loading hidden" id="ldArea"><span class="spinner"></span><span id="ldMsg">讀取中...</span></div>
+    <div id="content" class="hidden">
+      <div class="summary-grid" id="sumGrid"></div>
+      <div id="vendorFilter" class="hidden" style="background:#fff;border:1px solid var(--border);border-radius:7px;padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px">快速篩選</span>
+        <select id="vendorFilterSel" onchange="applyVendorFilter()" style="padding:6px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
+          <option value="">全部供應商</option>
+        </select>
+        <span id="vendorFilterCount" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></span>
       </div>
-      <div style="padding:18px">
-        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
-          <input type="file" id="poFile" accept=".xlsx,.xls" style="font-family:'DM Mono',monospace;font-size:12px">
-          <button class="btn btn-primary" onclick="parsePoFile()" id="btnParse">解析 Excel</button>
-          <span id="parseSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+      <div class="vendor-config">
+        <div class="vc-header" onclick="toggleCfg()">
+          <h3>⚙ 供應商交期設定</h3>
+          <span style="font-size:11px;color:var(--muted)">交期 + 安全庫存 = 再訂購點（by 供應商）</span>
+          <span class="vc-toggle" id="vcTog">▶</span>
         </div>
-        <div id="poPreview" class="hidden"></div>
-        <div id="poActions" class="hidden" style="margin-top:16px">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-            <div>
-              <label style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">追蹤單號（選填）</label>
-              <input type="text" id="poTracking" placeholder="例：黑貓 1234567890" style="width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
-            </div>
-            <div>
-              <label style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">備註（選填）</label>
-              <input type="text" id="poMemo" placeholder="例：斷貨補的、優先安排會員福利" style="width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
-            </div>
+        <div class="vc-body" id="vcBody">
+          <table class="vc-table"><thead><tr><th>廠商</th><th>名稱</th><th>SKU</th><th>需採購</th><th>交期</th><th>安全</th><th>合計</th></tr></thead><tbody id="vcR"></tbody></table>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <span class="filter-lbl">篩選</span>
+        <div class="chip active" onclick="setF('all',this)">全部</div>
+        <div class="chip alert" onclick="setF('alert',this)">⚠ 需採購</div>
+        <div class="chip" onclick="setF('ok',this)">充足</div>
+        <input class="search-input" placeholder="搜尋..." oninput="sQ=this.value;renderTbl()">
+      </div>
+      <div id="tblArea"></div>
+      <div class="sec-upload" style="background:#fff;border:1px solid var(--border);border-radius:8px;margin-top:24px;overflow:hidden">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+          <h3 style="font-size:14px;font-weight:600">📤 上傳廠商確認單 → OMS</h3>
+          <span style="font-size:11px;color:var(--muted)">上傳廠商回傳的 Excel，自動比對條碼後送 OMS 建立採購單</span>
+        </div>
+        <div style="padding:18px">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:16px">
+            <input type="file" id="poFile" accept=".xlsx,.xls" style="font-family:'DM Mono',monospace;font-size:12px">
+            <button class="btn btn-primary" onclick="parsePoFile()" id="btnParse">解析 Excel</button>
+            <span id="parseSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
           </div>
-          <div style="display:flex;gap:12px;align-items:center">
-            <button class="btn btn-green" onclick="submitToOms()" id="btnSubmit">🚀 送出到 OMS</button>
-            <span id="submitSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+          <div id="poPreview" class="hidden"></div>
+          <div id="poActions" class="hidden" style="margin-top:16px">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+              <div>
+                <label style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">追蹤單號（選填）</label>
+                <input type="text" id="poTracking" placeholder="例：黑貓 1234567890" style="width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
+              </div>
+              <div>
+                <label style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">備註（選填）</label>
+                <input type="text" id="poMemo" placeholder="例：斷貨補的、優先安排會員福利" style="width:100%;padding:7px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
+              </div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center">
+              <button class="btn btn-green" onclick="submitToOms()" id="btnSubmit">🚀 送出到 OMS</button>
+              <span id="submitSt" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- ============ Tab B: 採購單管理 ============ -->
+  <div id="paneB" class="tab-pane">
+    <div class="action-bar">
+      <button class="btn btn-primary" id="btnFetchB" onclick="fetchPOTab()">📡 載入採購單（近 30 天）</button>
+      <select id="poTabDays" onchange="onPOTabDaysChange()" style="padding:7px 12px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:12px">
+        <option value="7">近 7 天</option>
+        <option value="14">近 14 天</option>
+        <option value="30" selected>近 30 天</option>
+        <option value="60">近 60 天</option>
+        <option value="90">近 90 天</option>
+      </select>
+      <span id="fetchStB" style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+      <div class="spacer"></div>
+      <input class="search-input" id="poTabSearch" placeholder="搜尋單號、廠商..." oninput="renderPOTabList()" style="margin-left:0">
+    </div>
+    <div class="loading hidden" id="ldAreaB"><span class="spinner"></span><span id="ldMsgB">讀取中...</span></div>
+    <div id="poTabContent" class="hidden">
+      <div id="poTabSummary" class="summary-grid"></div>
+      <div id="poTabResult"></div>
+    </div>
+    <div id="poTabEmpty" class="hidden" style="text-align:center;padding:60px 20px;color:var(--muted);font-family:'DM Mono',monospace;font-size:13px">
+      尚未載入採購單<br><span style="font-size:11px;opacity:.7">點上方「📡 載入採購單」開始</span>
+    </div>
+  </div>
+
 </div>
 <div class="toast" id="toast"></div>
 <script>
@@ -209,28 +248,42 @@ const RECEIVE_API='https://enamor-oms.vercel.app/api/receive-log';
 const SEND_EMAIL_API='https://enamor-oms.vercel.app/api/send-purchase-email';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 const LK='enamor_po_oms_v2',SD=30,MARKETS_NO=[1,8,16];
-const HISTORY_DAYS_KEY='enamor_history_days';
-let HISTORY_DAYS=parseInt(localStorage.getItem(HISTORY_DAYS_KEY)||'14');
-if(![7,14,30,60,90].includes(HISTORY_DAYS))HISTORY_DAYS=14;
-let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},pendPOInfo={},preSale={},lastPO={},vendorPOs={},merged=[],vCfg={},cF='all',sQ='';
+const PO_TAB_DAYS_KEY='enamor_potab_days';
+let poTabDays=parseInt(localStorage.getItem(PO_TAB_DAYS_KEY)||'30');
+if(![7,14,30,60,90].includes(poTabDays))poTabDays=30;
+
+let supMap={},stockD=[],skuSal={},skuDates={},pendPO={},pendPOInfo={},preSale={},merged=[],vCfg={},cF='all',sQ='';
 let loadMode='all',loadVendor='';
 const LOAD_MODE_KEY='enamor_load_mode',LOAD_VENDOR_KEY='enamor_load_vendor';
 
-// SKU 備註快取 {safeId: note}
+// 採購單管理 Tab 的資料（獨立 state）
+let poTabRows=[];           // 所有採購單明細列表
+let poTabMetaCache={};      // {pn: {tracking, memo}} 雲端
+let poTabNoteCache={};      // {pn: note} 本機 localStorage
+let poTabReceiveQty={};     // {safeId: {sku: received}}
+let poTabReceiveState={};   // {safeId+'_note': string, safeId+'_loaded': true}
+
+// SKU 備註快取 {bc: note}
 let skuNoteCache={};
-// 採購單備註快取 {pn: note}
-let poNoteCache={};
-// po-meta 快取
-let poMetaCache={};
-// 對帳狀態 {safeId: 'open'|'saved'}
-let receiveState={};
-// 對帳數量暫存 {safeId: {sku: received}}
-let receiveQty={};
 
 function ldCfg(){try{vCfg=JSON.parse(localStorage.getItem(LK)||'{}')}catch(e){vCfg={}}}
 function svCfg(){localStorage.setItem(LK,JSON.stringify(vCfg))}
 function gVC(v){if(!vCfg[v])vCfg[v]={ld:7,sf:7};return vCfg[v]}
 
+// ====== Tab 切換 ======
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab'+t).classList.add('active');
+  document.getElementById('pane'+t).classList.add('active');
+  localStorage.setItem('enamor_active_tab',t);
+  // 進入 Tab B 時，如果還沒拉過資料，顯示空狀態
+  if(t==='B'&&!poTabRows.length&&document.getElementById('ldAreaB').classList.contains('hidden')){
+    document.getElementById('poTabEmpty').classList.remove('hidden');
+  }
+}
+
+// ====== 載入對話框 ======
 async function openLoadModeModal(){
   if(!Object.keys(supMap).length){try{await ldSup()}catch(e){toast('對照表載入失敗：'+e.message);return}}
   const vendors={};
@@ -247,18 +300,6 @@ async function openLoadModeModal(){
   document.querySelector(`input[name="loadMode"][value="${savedMode}"]`).checked=true;
   if(savedMode==='single'&&savedVendor){sel.value=savedVendor;sel.disabled=false;}
   onLoadModeChange();
-  // 歷史天數初始化
-  document.querySelectorAll('.hd-opt').forEach(el=>{
-    const d=parseInt(el.dataset.days);
-    if(d===HISTORY_DAYS){el.style.background='var(--text)';el.style.color='#fff';el.style.borderColor='var(--text)';}
-    else{el.style.background='#fff';el.style.color='var(--text)';el.style.borderColor='var(--border)';}
-    el.onclick=()=>{
-      document.querySelectorAll('.hd-opt').forEach(o=>{o.style.background='#fff';o.style.color='var(--text)';o.style.borderColor='var(--border)';});
-      el.style.background='var(--text)';el.style.color='#fff';el.style.borderColor='var(--text)';
-      HISTORY_DAYS=d;
-      localStorage.setItem(HISTORY_DAYS_KEY,String(d));
-    };
-  });
   document.getElementById('loadModal').style.display='flex';
 }
 function closeLoadModal(){document.getElementById('loadModal').style.display='none';}
@@ -280,10 +321,7 @@ function confirmLoadMode(){
 }
 function updateModeBanner(){
   const banner=document.getElementById('modeBanner');const text=document.getElementById('modeBannerText');
-  const parts=[];
-  if(loadMode==='single'&&loadVendor){const sp=Object.values(supMap).find(s=>s.vid===loadVendor);parts.push(`只載入「${loadVendor}${sp?' '+sp.vn:''}」`);}
-  parts.push(`歷史 ${HISTORY_DAYS} 天`);
-  if(loadMode==='single'||HISTORY_DAYS!==90){text.textContent='目前：'+parts.join(' · ');banner.classList.remove('hidden');}
+  if(loadMode==='single'&&loadVendor){const sp=Object.values(supMap).find(s=>s.vid===loadVendor);text.textContent=`目前只載入「${loadVendor}${sp?' '+sp.vn:''}」`;banner.classList.remove('hidden');}
   else{banner.classList.add('hidden');}
 }
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
@@ -299,12 +337,13 @@ function initVendorFilter(){
 }
 function applyVendorFilter(){
   const v=document.getElementById('vendorFilterSel').value;
-  document.querySelectorAll('.vendor-block').forEach(b=>{const badge=b.querySelector('.vbadge');if(!badge){b.style.display='';return;}if(!v||badge.textContent.trim()===v)b.style.display='';else b.style.display='none';});
+  document.querySelectorAll('#tblArea .vendor-block').forEach(b=>{const badge=b.querySelector('.vbadge');if(!badge){b.style.display='';return;}if(!v||badge.textContent.trim()===v)b.style.display='';else b.style.display='none';});
 }
 async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({endpoint:ep,body:b})});return r.json();}
 let revMap={};
 async function ldSup(){const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:Q?key=${SK}`;const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');const h=rows[0],ci=n=>h.indexOf(n);const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明'),iAct=ci('Shopify啟用'),iNm=ci('商品名稱');supMap={};revMap={};rows.slice(1).forEach(r=>{const c=(r[iC]||'').trim();const active=(r[iAct]||'').trim();if(c&&active==='V'&&!supMap[c]){const vs=(r[iS]||'').trim(),vc=(r[iCo]||'').trim(),vsz=(r[iSz]||'').trim(),nm=iNm>=0?(r[iNm]||'').trim():'';supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs,vsz,vc,nm};const rk=`${vs}|||${vc}|||${vsz}`;if(!revMap[rk])revMap[rk]={bc:c,nm}}});return Object.keys(supMap).length;}
 
+// ====== 採購建議 Tab：fetchAll ======
 async function fetchAll(){
   const btn=document.getElementById('btnFetch');btn.disabled=true;
   document.getElementById('ldArea').classList.remove('hidden');document.getElementById('content').classList.add('hidden');
@@ -333,26 +372,26 @@ async function fetchAll(){
     const allSkus=new Set();Object.values(mktData).forEach(d=>Object.keys(d).forEach(k=>allSkus.add(k)));
     allSkus.forEach(sku=>{const vals=MARKETS_NO.map(m=>mktData[m]?.[sku]??null).filter(v=>v!==null&&v>0);if(vals.length){const v=Math.max(...vals);if(v>0)preSale[sku]=v;}});
     sS('sbPre',1,`訂單佔用 ${Object.keys(preSale).length} SKU`);
-    sL(`拉取歷史採購單...`);const hd=new Date();hd.setDate(hd.getDate()-HISTORY_DAYS);
-    let headers=[];const statusList=['60','62','65','69'];
-    for(const st of statusList){sL(`拉取採購單 status=${st}...`);try{const hR=await oP('/api/v2/default/apiPurchaseHeaderList/searchList',{"purchase_header.status":st});const ha=(hR.retval||{}).purchase_header||hR.retval||[];if(Array.isArray(ha))headers=headers.concat(ha);}catch(e){console.warn(`status ${st} 拉取失敗`,e);}}
-    const hdMs=hd.getTime();headers=headers.filter(h=>{const d=h['purchase_header.created_at']||'';if(!d)return true;return new Date(d).getTime()>=hdMs;});
-    lastPO={};vendorPOs={};const total=headers.length;
-    for(let i=0;i<total;i++){
-      const h=headers[i];const pn=(h['purchase_header.purchase_no']||'').trim();const cd=(h['purchase_header.created_at']||'').slice(0,10);const hStatus=(h['purchase_header.status']||'').toString();
-      if(!pn)continue;
-      if(loadMode==='single'&&loadVendor){const mch=pn.match(/-([A-Z0-9]+)$/i);if(!mch||mch[1].toUpperCase()!==loadVendor.toUpperCase())continue;}
-      sL(`拉取採購單明細 ${i+1}/${total}（${pn}）...`);
-      try{
-        const dR=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.purchase_no":pn});
-        const da=(dR.retval||{}).purchase||[];const poItems=[];let poTotalQty=0,poTotalIn=0,poVid=null;
-        if(Array.isArray(da)){da.forEach(p=>{const m=(p['purchase.products_model']||'').trim();const pq=parseInt(p['purchase.purchase_quantity']||0);const sq=parseInt(p['purchase.stock_quantity']||0);const nm=(p['purchase.name']||'').trim();const vs=(p['purchase.products.supplier_model']||'').trim();const color=(p['purchase.color']||'').trim();const size=(p['purchase.size']||'').trim();const memo=(p['purchase.memo']||'').trim();if(!m||pq<=0)return;const sp=supMap[m];if(sp&&!poVid)poVid=sp.vid;poItems.push({sku:m,nm,vs,color,size,pq,sq,memo});poTotalQty+=pq;poTotalIn+=sq;if(!lastPO[m]||(cd&&cd>lastPO[m].date))lastPO[m]={qty:pq,date:cd,po:pn,status:hStatus};if(hStatus==='60'){const rem=pq-sq;if(rem>0){pendPO[m]=(pendPO[m]||0)+rem;if(!pendPOInfo[m])pendPOInfo[m]={count:0,latestDate:'',qty:0};pendPOInfo[m].count+=1;pendPOInfo[m].qty+=rem;if(cd&&cd>pendPOInfo[m].latestDate)pendPOInfo[m].latestDate=cd;}}});}
-        let vid=poVid;if(!vid){const mch=pn.match(/-([A-Z0-9]+)$/i);if(mch)vid=mch[1];}
-        if(vid&&poItems.length){if(!vendorPOs[vid])vendorPOs[vid]=[];vendorPOs[vid].push({pn,date:cd,status:hStatus,totalQty:poTotalQty,totalIn:poTotalIn,skuCount:poItems.length,items:poItems});}
-      }catch(e){console.warn(`單號 ${pn} 失敗`,e);}
-    }
-    sS('sbHis',1,`歷史 ${total} 張 / ${Object.keys(lastPO).length} SKU`);sS('sbPo',1,`處理中 ${Object.keys(pendPO).length} SKU`);
-    Object.keys(vendorPOs).forEach(vid=>{vendorPOs[vid].sort((a,b)=>(b.date||'').localeCompare(a.date||''));});
+    // 只拉 status=60 處理中的採購單，算「採購中」量
+    sL('拉取處理中採購單...');
+    try{
+      const hR=await oP('/api/v2/default/apiPurchaseHeaderList/searchList',{"purchase_header.status":"60"});
+      const ha=(hR.retval||{}).purchase_header||hR.retval||[];
+      const headers=Array.isArray(ha)?ha:[];
+      for(let i=0;i<headers.length;i++){
+        const h=headers[i];const pn=(h['purchase_header.purchase_no']||'').trim();const cd=(h['purchase_header.created_at']||'').slice(0,10);
+        if(!pn)continue;
+        if(loadMode==='single'&&loadVendor){const mch=pn.match(/-([A-Z0-9]+)$/i);if(!mch||mch[1].toUpperCase()!==loadVendor.toUpperCase())continue;}
+        sL(`拉取處理中採購單明細 ${i+1}/${headers.length}（${pn}）...`);
+        try{
+          const dR=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.purchase_no":pn});
+          const da=(dR.retval||{}).purchase||[];
+          if(Array.isArray(da)){da.forEach(p=>{const m=(p['purchase.products_model']||'').trim();const pq=parseInt(p['purchase.purchase_quantity']||0);const sq=parseInt(p['purchase.stock_quantity']||0);if(!m||pq<=0)return;const rem=pq-sq;if(rem>0){pendPO[m]=(pendPO[m]||0)+rem;if(!pendPOInfo[m])pendPOInfo[m]={count:0,latestDate:'',qty:0};pendPOInfo[m].count+=1;pendPOInfo[m].qty+=rem;if(cd&&cd>pendPOInfo[m].latestDate)pendPOInfo[m].latestDate=cd;}});}
+        }catch(e){console.warn(`單號 ${pn} 失敗`,e);}
+      }
+      sS('sbPo',1,`處理中 ${Object.keys(pendPO).length} SKU`);
+    }catch(e){console.warn('處理中採購單拉取失敗',e);sS('sbPo',0,'處理中採購');}
+
     sL('合併計算...');doMerge();initVendorFilter();
     document.getElementById('ldArea').classList.add('hidden');document.getElementById('content').classList.remove('hidden');document.getElementById('btnExp').classList.remove('hidden');
     document.getElementById('dot').className='dot ok';document.getElementById('dotLabel').textContent='數據就緒';
@@ -368,12 +407,12 @@ function doMerge(){
   merged=[];const today=new Date().toISOString().slice(0,10);
   Object.entries(sm).forEach(([bc,inf])=>{
     const sp=supMap[bc];if(!sp)return;
-    const sold=skuSal[bc]||0;const po=pendPO[bc]||0;const ps=preSale[bc]||0;const lp=lastPO[bc]||null;const pInfo=pendPOInfo[bc]||null;const vid=sp.vid;const vc=gVC(vid);
+    const sold=skuSal[bc]||0;const po=pendPO[bc]||0;const ps=preSale[bc]||0;const pInfo=pendPOInfo[bc]||null;const vid=sp.vid;const vc=gVC(vid);
     let effDays=SD;let isStockout=false;const dates=skuDates[bc];
     if(inf.stk===0&&sold>0&&dates){const lastMs=new Date(dates.last).getTime();const todayMs=new Date(today).getTime();const daysSinceLast=Math.round((todayMs-lastMs)/(86400000));if(daysSinceLast>7){const firstMs=new Date(dates.first).getTime();const span=Math.round((lastMs-firstMs)/(86400000))+1;effDays=Math.max(1,span);isStockout=true;}}
     const da=Math.round((sold/effDays)*100)/100;const rop=Math.ceil(da*(vc.ld+vc.sf));const eff=inf.stk+po-ps;const rawSug=Math.max(0,rop-eff);const sug=rawSug>0?Math.ceil(rawSug/10)*10:0;
     const need=eff<rop&&da>0;const shortage=Math.max(0,rop-eff);const dl=da>0?Math.floor(Math.max(0,inf.stk-ps)/da):999;const urgent=need&&dl<=3&&po===0;
-    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s30:sold,da,po,ps,rop,sug,shortage,need,urgent,dl,isStockout,effDays,lastPO:lp,pInfo,eff});
+    merged.push({bc,nm:inf.nm,vid,vn:sp.vn||'',vs:sp.vs||'',vc2:sp.vc||'',vsz:sp.vsz||'',stk:inf.stk,s30:sold,da,po,ps,rop,sug,shortage,need,urgent,dl,isStockout,effDays,pInfo,eff});
   });
   merged.sort((a,b)=>{if(a.urgent!==b.urgent)return a.urgent?-1:1;if(a.need!==b.need)return a.need?-1:1;return a.dl-b.dl;});
   Object.entries(sm).forEach(([bc,inf])=>{if(supMap[bc]&&inf.nm){supMap[bc].nm=inf.nm;const sp=supMap[bc];const rk=`${sp.vs}|||${sp.vc}|||${sp.vsz}`;if(revMap[rk])revMap[rk].nm=inf.nm;}});
@@ -404,9 +443,7 @@ function renderTbl(){
   if(!Object.keys(vs).length){area.innerHTML='<div class="loading">沒有符合條件的項目</div>';return;}
   Object.entries(vs).sort((a,b)=>{const aA=a[1].it.some(i=>i.need),bA=b[1].it.some(i=>i.need);if(aA!==bA)return aA?-1:1;return a[0].localeCompare(b[0]);}).forEach(([v,inf])=>{
     const al=inf.it.filter(i=>i.need);const ts=al.reduce((s,i)=>s+i.sug,0);const d=document.createElement('div');d.className='vendor-block';
-    const poCount=(vendorPOs[v]||[]).length;
-    d.innerHTML=`<div class="vendor-head" onclick="togglePOList('${v}',event)" style="cursor:pointer"><span class="vbadge">${v}</span><h3>${inf.n||v}</h3>${al.length?`<span style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;font-weight:600">⚠ ${al.length} 需採購</span>`:''}<span class="vtotal">${inf.it.length} SKU${ts?` · 建議 ${ts} 件`:''}${poCount?` · <span style="color:var(--green)">90天 ${poCount} 張採購單</span>`:''}</span>${al.length?`<button class="btn-dl" onclick="event.stopPropagation();expV('${v}')">⬇ ${v}.xlsx</button>`:''}<span style="font-size:10px;color:var(--muted2);margin-left:6px" id="poToggle-${v}">▶</span></div>
-    <div class="po-list-wrap" id="poList-${v}" style="display:none;border-bottom:1px solid var(--border);background:#fafaf8"></div>
+    d.innerHTML=`<div class="vendor-head"><span class="vbadge">${v}</span><h3>${inf.n||v}</h3>${al.length?`<span style="font-size:11px;color:var(--red);font-family:'DM Mono',monospace;font-weight:600">⚠ ${al.length} 需採購</span>`:''}<span class="vtotal">${inf.it.length} SKU${ts?` · 建議 ${ts} 件`:''}</span>${al.length?`<button class="btn-dl" onclick="event.stopPropagation();expV('${v}')">⬇ ${v}.xlsx</button>`:''}</div>
     <div class="tbl-wrap"><table><thead><tr>
       <th>商品</th><th>顏色</th><th>尺寸</th><th>品名</th>
       <th class="text-right">庫存</th><th class="text-right">採購中</th>
@@ -414,7 +451,6 @@ function renderTbl(){
       <th class="text-right">日均<br><span style="font-weight:400;opacity:.7">(30天)</span></th>
       <th class="text-right">ROP<br><span style="font-weight:400;opacity:.7">/可用天</span></th>
       <th class="text-right newcol">缺貨數</th>
-      <th class="text-right newcol">上次採購<br><span style="font-weight:400;opacity:.7">數量/日期</span></th>
       <th class="text-right" style="color:var(--green);font-weight:700">建議</th>
       <th>備註</th>
     </tr></thead>
@@ -426,7 +462,6 @@ function fmtDate(d){if(!d)return '';const m=d.match(/^(\d{4})-(\d{2})-(\d{2})/);
 function rR(i){
   const c=i.urgent?'urgent-row':(i.need?'alert-row':'');const dc=i.dl<=7?'var(--red)':i.dl<=14?'var(--orange)':'var(--muted)';
   const soTag=i.isStockout?`<span style="font-size:9px;color:#fff;background:var(--orange);padding:1px 5px;border-radius:3px;margin-left:4px">斷貨</span>`:'';
-  const lastPOCell=i.lastPO?(()=>{const stMap={'60':{txt:'處理中',color:'var(--orange)'},'62':{txt:'QC中',color:'var(--orange)'},'65':{txt:'已回寫',color:'var(--green)'},'69':{txt:'已結案',color:'var(--green)'}};const st=stMap[String(i.lastPO.status)]||{txt:i.lastPO.status||'?',color:'var(--muted)'};return `<div class="cell-stack"><div style="font-weight:600">${i.lastPO.qty}</div><div class="sub">${fmtDate(i.lastPO.date)}</div><div style="font-size:9px;color:${st.color};font-weight:500">${st.txt}</div></div>`;})():'<span style="color:var(--muted2)">—</span>';
   const shortageCell=i.shortage>0?`<span style="color:var(--red);font-weight:700">−${i.shortage}</span>`:'<span style="color:var(--muted2)">—</span>';
   const noteVal=skuNoteCache[i.bc]||'';
   return`<tr class="${c}">
@@ -440,7 +475,6 @@ function rR(i){
     <td class="mono text-right"><div class="cell-stack"><div>${i.da.toFixed(1)}${soTag}</div><div class="sub">(${i.s30})</div></div></td>
     <td class="mono text-right"><div class="cell-stack"><div>${i.rop}</div><div class="sub" style="color:${dc};font-weight:${i.dl<=14?'700':'400'}">${i.dl>=999?'∞':i.dl+'天'}</div></div></td>
     <td class="mono text-right newcol">${shortageCell}</td>
-    <td class="mono text-right newcol" style="font-size:11px">${lastPOCell}</td>
     <td class="mono text-right" style="font-weight:700;font-size:14px;color:${i.need?'var(--red)':'var(--muted)'}">${i.sug>0?i.sug:'—'}</td>
     <td class="sku-note-cell" onclick="startSkuNoteEdit('${i.bc}',event)">
       <span class="sku-note-display${noteVal?'':' empty'}" id="skuNoteDisp-${i.bc}">${noteVal||'—'}</span>
@@ -450,349 +484,26 @@ function rR(i){
     </td>
   </tr>`;
 }
-function startSkuNoteEdit(bc,event){
-  if(event)event.stopPropagation();
-  const disp=document.getElementById(`skuNoteDisp-${bc}`);
-  const inp=document.getElementById(`skuNoteInp-${bc}`);
-  if(!disp||!inp)return;
-  disp.style.display='none';inp.style.display='block';inp.focus();inp.select();
-}
-function cancelSkuNote(bc){
-  const disp=document.getElementById(`skuNoteDisp-${bc}`);const inp=document.getElementById(`skuNoteInp-${bc}`);
-  if(!disp||!inp)return;
-  inp.value=skuNoteCache[bc]||'';inp.style.display='none';disp.style.display='';
-}
-function saveSkuNote(bc){
-  const inp=document.getElementById(`skuNoteInp-${bc}`);const disp=document.getElementById(`skuNoteDisp-${bc}`);
-  if(!inp||!disp)return;
-  const val=inp.value.trim();
-  skuNoteCache[bc]=val;
-  inp.style.display='none';
-  disp.textContent=val||'—';disp.className='sku-note-display'+(val?'':' empty');
-  disp.style.display='';
-  // 存 localStorage
-  try{const all=JSON.parse(localStorage.getItem('enamor_sku_notes')||'{}');all[bc]=val;localStorage.setItem('enamor_sku_notes',JSON.stringify(all));}catch(e){}
-}
+function startSkuNoteEdit(bc,event){if(event)event.stopPropagation();const disp=document.getElementById(`skuNoteDisp-${bc}`);const inp=document.getElementById(`skuNoteInp-${bc}`);if(!disp||!inp)return;disp.style.display='none';inp.style.display='block';inp.focus();inp.select();}
+function cancelSkuNote(bc){const disp=document.getElementById(`skuNoteDisp-${bc}`);const inp=document.getElementById(`skuNoteInp-${bc}`);if(!disp||!inp)return;inp.value=skuNoteCache[bc]||'';inp.style.display='none';disp.style.display='';}
+function saveSkuNote(bc){const inp=document.getElementById(`skuNoteInp-${bc}`);const disp=document.getElementById(`skuNoteDisp-${bc}`);if(!inp||!disp)return;const val=inp.value.trim();skuNoteCache[bc]=val;inp.style.display='none';disp.textContent=val||'—';disp.className='sku-note-display'+(val?'':' empty');disp.style.display='';try{const all=JSON.parse(localStorage.getItem('enamor_sku_notes')||'{}');all[bc]=val;localStorage.setItem('enamor_sku_notes',JSON.stringify(all));}catch(e){}}
 function loadSkuNotes(){try{skuNoteCache=JSON.parse(localStorage.getItem('enamor_sku_notes')||'{}');}catch(e){skuNoteCache={};}}
-
 function setF(v,el){cF=v;document.querySelectorAll('.filter-bar .chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderTbl();}
 function toggleCfg(){const b=document.getElementById('vcBody');b.classList.toggle('open');document.getElementById('vcTog').textContent=b.classList.contains('open')?'▼':'▶';}
 function uVC(v,f,val){gVC(v)[f]=parseInt(val)||0;svCfg();doMerge();renderAll();toast(`${v} 已更新`);}
 function tdy(){return new Date().toISOString().slice(0,10).replace(/-/g,'');}
 
-// ── PO List ──
-const PO_STATUS_MAP={'60':{txt:'處理中',color:'var(--orange)'},'62':{txt:'QC中',color:'var(--orange)'},'65':{txt:'已回寫',color:'var(--green)'},'69':{txt:'已結案',color:'var(--green)'}};
-
-async function togglePOList(vid,event){
-  if(event&&event.target.tagName==='BUTTON')return;
-  const wrap=document.getElementById(`poList-${vid}`);const tog=document.getElementById(`poToggle-${vid}`);
-  if(!wrap)return;
-  if(wrap.style.display==='none'){
-    wrap.innerHTML='<div style="padding:14px 18px;font-size:12px;color:var(--muted);font-family:\'DM Mono\',monospace">讀取中...</div>';
-    wrap.style.display='block';if(tog)tog.textContent='▼';
-    const list=vendorPOs[vid]||[];
-    const pns=list.map(p=>p.pn).filter(pn=>!(pn in poMetaCache));
-    if(pns.length){
-      try{
-        const r=await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'batch_get',purchase_nos:pns})});
-        const j=await r.json();
-        if(j.ok&&j.records)pns.forEach(pn=>{poMetaCache[pn]=j.records[pn]||null;});
-      }catch(e){console.warn('讀 po-meta 失敗',e);}
-    }
-    wrap.innerHTML=renderPOList(vid);
-  }else{wrap.style.display='none';if(tog)tog.textContent='▶';}
-}
-
-function renderPOList(vid){
-  const list=vendorPOs[vid]||[];
-  if(!list.length)return`<div style="padding:14px 18px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace">90 天內沒有採購單</div>`;
-  const th=`padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);background:var(--surface2)`;
-  let html=`<div style="padding:14px 18px">
-    <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">採購單列表（90 天）· ${list.length} 張</div>
-    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:6px;overflow:hidden">
-      <thead><tr>
-        <th style="${th}">採購單號</th>
-        <th style="${th}">建立日期</th>
-        <th style="${th}">狀態</th>
-        <th style="${th};text-align:right">SKU 數</th>
-        <th style="${th};text-align:right">採購量</th>
-        <th style="${th};text-align:right">已入庫</th>
-        <th style="${th};text-align:right">待入庫</th>
-        <th style="${th};min-width:150px">追蹤單號</th>
-        <th style="${th};min-width:180px">備註</th>
-        <th style="${th}">操作</th>
-      </tr></thead><tbody>`;
-  list.forEach((p,idx)=>{
-    const st=PO_STATUS_MAP[String(p.status)]||{txt:p.status||'?',color:'var(--muted)'};
-    const remain=p.totalQty-p.totalIn;
-    const safeId=p.pn.replace(/[^a-zA-Z0-9]/g,'_');
-    const meta=poMetaCache[p.pn]||null;
-    const trackingVal=meta?.tracking||'';const memoVal=meta?.memo||'';
-    const poNoteVal=poNoteCache[p.pn]||'';
-    const td=`padding:8px 10px;font-size:12px;border-bottom:1px solid var(--surface2)`;
-    const isStatus60=p.status==='60';
-    html+=`<tr>
-      <td style="${td};font-family:'DM Mono',monospace;font-weight:600;cursor:pointer" onclick="togglePODetail('${vid}',${idx},'${safeId}')">
-        <span style="font-size:10px;color:var(--muted2);margin-right:5px" id="poDetTog-${safeId}">▶</span>${p.pn}
-      </td>
-      <td style="${td};font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer" onclick="togglePODetail('${vid}',${idx},'${safeId}')">${p.date||'—'}</td>
-      <td style="${td};cursor:pointer" onclick="togglePODetail('${vid}',${idx},'${safeId}')"><span style="color:${st.color};font-weight:600;font-family:'DM Mono',monospace">${st.txt}</span></td>
-      <td style="${td};text-align:right;font-family:'DM Mono',monospace;cursor:pointer" onclick="togglePODetail('${vid}',${idx},'${safeId}')">${p.skuCount}</td>
-      <td style="${td};text-align:right;font-family:'DM Mono',monospace;font-weight:600;cursor:pointer" onclick="togglePODetail('${vid}',${idx},'${safeId}')">${p.totalQty}</td>
-      <td style="${td};text-align:right;font-family:'DM Mono',monospace;color:var(--green);cursor:pointer" onclick="togglePODetail('${vid}',${idx},'${safeId}')">${p.totalIn}</td>
-      <td style="${td};text-align:right;font-family:'DM Mono',monospace;color:${remain>0?'var(--orange)':'var(--muted2)'};font-weight:${remain>0?'700':'400'};cursor:pointer" onclick="togglePODetail('${vid}',${idx},'${safeId}')">${remain>0?remain:'—'}</td>
-      <td style="${td}" class="meta-cell" onclick="startMetaEdit('${p.pn}','tracking','${safeId}',event)">
-        <span class="meta-display${trackingVal?'':' empty'}" id="metaDisp-tracking-${safeId}">${trackingVal||'—'}</span>
-        <input class="meta-input" id="metaInp-tracking-${safeId}" type="text" value="${trackingVal}" placeholder="例：黑貓 1234567890"
-          onblur="saveMetaField('${p.pn}','tracking','${safeId}')"
-          onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelMetaEdit('tracking','${safeId}')">
-        <span class="meta-saving" id="metaSaving-tracking-${safeId}" style="display:none">儲存中...</span>
-      </td>
-      <td style="${td}" class="meta-cell" onclick="startMetaEdit('${p.pn}','memo','${safeId}',event)">
-        <span class="meta-display${memoVal?'':' empty'}" id="metaDisp-memo-${safeId}">${memoVal||'—'}</span>
-        <input class="meta-input" id="metaInp-memo-${safeId}" type="text" value="${memoVal}" placeholder="例：斷貨補的"
-          onblur="saveMetaField('${p.pn}','memo','${safeId}')"
-          onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelMetaEdit('memo','${safeId}')">
-        <span class="meta-saving" id="metaSaving-memo-${safeId}" style="display:none">儲存中...</span>
-      </td>
-      <td style="${td}">
-        ${isStatus60?`<button style="padding:5px 12px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid var(--orange);background:#fff;color:var(--orange);border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap" onclick="toggleReceive('${vid}',${idx},'${safeId}',event)">📥 對帳</button>`:'<span style="font-size:11px;color:var(--muted2)">—</span>'}
-      </td>
-    </tr>
-    <tr id="poDet-${safeId}" style="display:none"><td colspan="10" style="padding:0;background:#fcfcfa"><div id="poDetCt-${safeId}" style="padding:10px 18px"></div></td></tr>
-    <tr id="poReceive-${safeId}" style="display:none"><td colspan="10" style="padding:0">
-      <div class="receive-wrap" id="poReceiveCt-${safeId}"></div>
-    </td></tr>
-    <tr class="po-note-row"><td colspan="10" style="padding:6px 10px;border-bottom:1px solid var(--surface2)">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px">單據備註</span>
-        <input class="po-note-input" id="poNoteInp-${safeId}" type="text" value="${poNoteVal}" placeholder="此採購單備註（存本機）"
-          onchange="savePoNote('${p.pn}','${safeId}')">
-      </div>
-    </td></tr>`;
-  });
-  html+='</tbody></table></div>';
-  return html;
-}
-
-// ── PO 單據備註（本機存 localStorage）──
-function savePoNote(pn,safeId){
-  const inp=document.getElementById(`poNoteInp-${safeId}`);if(!inp)return;
-  const val=inp.value.trim();
-  poNoteCache[pn]=val;
-  try{const all=JSON.parse(localStorage.getItem('enamor_po_notes')||'{}');all[pn]=val;localStorage.setItem('enamor_po_notes',JSON.stringify(all));}catch(e){}
-}
-function loadPoNotes(){try{const all=JSON.parse(localStorage.getItem('enamor_po_notes')||'{}');poNoteCache=all;}catch(e){poNoteCache={};}}
-
-// ── inline meta edit ──
-function startMetaEdit(pn,field,safeId,event){
-  if(event)event.stopPropagation();
-  const disp=document.getElementById(`metaDisp-${field}-${safeId}`);const inp=document.getElementById(`metaInp-${field}-${safeId}`);
-  if(!disp||!inp)return;disp.style.display='none';inp.style.display='block';inp.focus();inp.select();
-}
-function cancelMetaEdit(field,safeId){
-  const disp=document.getElementById(`metaDisp-${field}-${safeId}`);const inp=document.getElementById(`metaInp-${field}-${safeId}`);
-  if(!disp||!inp)return;inp.style.display='none';disp.style.display='';
-}
-async function saveMetaField(pn,field,safeId){
-  const inp=document.getElementById(`metaInp-${field}-${safeId}`);const disp=document.getElementById(`metaDisp-${field}-${safeId}`);const saving=document.getElementById(`metaSaving-${field}-${safeId}`);
-  if(!inp||!disp)return;
-  const newVal=inp.value.trim();inp.style.display='none';saving.style.display='inline';
-  if(!poMetaCache[pn])poMetaCache[pn]={};
-  const oldVal=poMetaCache[pn][field]||'';poMetaCache[pn][field]=newVal;
-  const tracking=field==='tracking'?newVal:(poMetaCache[pn].tracking||'');
-  const memo=field==='memo'?newVal:(poMetaCache[pn].memo||'');
-  const mch=pn.match(/-([A-Z0-9]+)$/i);const vendor_id=mch?mch[1]:'';
-  try{
-    const r=await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'save',purchase_no:pn,vendor_id,tracking,memo})});
-    const j=await r.json();
-    if(j.ok||j.success){disp.textContent=newVal||'—';disp.className='meta-display'+(newVal?'':' empty');toast('✓ 已儲存');}
-    else{poMetaCache[pn][field]=oldVal;disp.textContent=oldVal||'—';disp.className='meta-display'+(oldVal?'':' empty');toast('儲存失敗：'+(j.error||'?'));}
-  }catch(e){poMetaCache[pn][field]=oldVal;disp.textContent=oldVal||'—';disp.className='meta-display'+(oldVal?'':' empty');toast('儲存失敗：'+e.message);}
-  saving.style.display='none';disp.style.display='';
-}
-
-// ── SKU 明細展開 ──
-function togglePODetail(vid,idx,safeId){
-  const tr=document.getElementById(`poDet-${safeId}`);const tog=document.getElementById(`poDetTog-${safeId}`);const ct=document.getElementById(`poDetCt-${safeId}`);
-  if(!tr)return;
-  if(tr.style.display==='none'){
-    const po=vendorPOs[vid][idx];
-    let h=`<div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">SKU 明細</div>
-    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:4px;overflow:hidden">
-      <thead><tr style="background:var(--surface2)">
-        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">廠商貨號</th>
-        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">商品條碼</th>
-        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">顏色</th>
-        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">尺寸</th>
-        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">品名</th>
-        <th style="padding:5px 9px;text-align:right;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">採購量</th>
-        <th style="padding:5px 9px;text-align:right;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">已入庫</th>
-        <th style="padding:5px 9px;text-align:right;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">待入庫</th>
-        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">備註</th>
-      </tr></thead><tbody>`;
-    po.items.forEach(it=>{const rem=it.pq-it.sq;h+=`<tr><td style="padding:5px 9px;font-size:11px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2)">${it.vs||'—'}</td><td style="padding:5px 9px;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);border-bottom:1px solid var(--surface2)">${it.sku}</td><td style="padding:5px 9px;font-size:11px;border-bottom:1px solid var(--surface2)">${it.color||'—'}</td><td style="padding:5px 9px;font-size:11px;border-bottom:1px solid var(--surface2)">${it.size||'—'}</td><td style="padding:5px 9px;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-bottom:1px solid var(--surface2)" title="${it.nm||''}">${it.nm||'—'}</td><td style="padding:5px 9px;text-align:right;font-size:11px;font-family:'DM Mono',monospace;font-weight:600;border-bottom:1px solid var(--surface2)">${it.pq}</td><td style="padding:5px 9px;text-align:right;font-size:11px;font-family:'DM Mono',monospace;color:var(--green);border-bottom:1px solid var(--surface2)">${it.sq}</td><td style="padding:5px 9px;text-align:right;font-size:11px;font-family:'DM Mono',monospace;color:${rem>0?'var(--orange)':'var(--muted2)'};font-weight:${rem>0?'600':'400'};border-bottom:1px solid var(--surface2)">${rem>0?rem:'—'}</td><td style="padding:5px 9px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--surface2)">${it.memo||''}</td></tr>`;});
-    h+='</tbody></table>';ct.innerHTML=h;tr.style.display='table-row';if(tog)tog.textContent='▼';
-  }else{tr.style.display='none';if(tog)tog.textContent='▶';}
-}
-
-// ── 對帳功能 ──
-async function toggleReceive(vid,idx,safeId,event){
-  if(event)event.stopPropagation();
-  const tr=document.getElementById(`poReceive-${safeId}`);const ct=document.getElementById(`poReceiveCt-${safeId}`);
-  if(!tr)return;
-  if(tr.style.display==='none'){
-    const po=vendorPOs[vid][idx];
-    // 第一次展開：先讀雲端既有對帳紀錄
-    if(!receiveQty[safeId]){
-      ct.innerHTML='<div style="padding:16px 20px;font-size:12px;color:var(--muted);font-family:\'DM Mono\',monospace"><span class="spinner"></span>讀取對帳紀錄...</div>';
-      tr.style.display='table-row';
-      try{
-        const r=await fetch(`${RECEIVE_API}?action=get&purchase_no=${encodeURIComponent(po.pn)}`,{method:'GET',headers:{'x-proxy-token':T}});
-        const j=await r.json();
-        receiveQty[safeId]={};
-        if(j.ok&&j.record&&Array.isArray(j.record.items)){
-          // 用雲端的 received 預填
-          const recMap={};j.record.items.forEach(it=>{recMap[it.sku]=it.received;});
-          po.items.forEach(it=>{receiveQty[safeId][it.sku]=recMap[it.sku]??(it.pq-it.sq);});
-          // notes 寫入 receiveState
-          receiveState[safeId+'_note']=j.record.notes||'';
-          receiveState[safeId+'_loaded']=true;
-        }else{
-          // 沒紀錄就用預設 = 剩餘應到量
-          po.items.forEach(it=>{receiveQty[safeId][it.sku]=it.pq-it.sq;});
-        }
-      }catch(e){
-        console.warn('讀取對帳紀錄失敗',e);
-        po.items.forEach(it=>{receiveQty[safeId][it.sku]=it.pq-it.sq;});
-      }
-    }
-    ct.innerHTML=renderReceiveArea(vid,idx,safeId);
-    tr.style.display='table-row';
-  }else{tr.style.display='none';}
-}
-
-function renderReceiveArea(vid,idx,safeId){
-  const po=vendorPOs[vid][idx];const qMap=receiveQty[safeId]||{};
-  let totalOrdered=0,totalReceived=0,shortCount=0,overCount=0,okCount=0;
-  po.items.forEach(it=>{const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;totalOrdered+=ord;totalReceived+=rec;const d=rec-ord;if(d===0)okCount++;else if(d<0)shortCount++;else overCount++;});
-  let rows='';
-  po.items.forEach(it=>{
-    const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;const diff=rec-ord;
-    let cls='',diffHtml='';
-    if(diff===0){cls='diff-ok';diffHtml='<span class="diff-tag ok">一致</span>';}
-    else if(diff<0){cls='diff-short';diffHtml=`<span class="diff-tag short">${diff}</span>`;}
-    else{cls='diff-over';diffHtml=`<span class="diff-tag over">+${diff}</span>`;}
-    rows+=`<tr>
-      <td style="padding:6px 10px;font-size:11px;font-family:'DM Mono',monospace">${it.vs||'—'}</td>
-      <td style="padding:6px 10px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">${it.sku}</td>
-      <td style="padding:6px 10px;font-size:11px">${it.color||'—'}</td>
-      <td style="padding:6px 10px;font-size:11px">${it.size||'—'}</td>
-      <td style="padding:6px 10px;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.nm||'—'}</td>
-      <td style="padding:6px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;font-weight:600">${ord}</td>
-      <td style="padding:6px 10px;text-align:right"><input type="number" min="0" class="qty-input ${cls}" value="${rec}" oninput="updateReceiveQty('${vid}',${idx},'${safeId}','${it.sku}',this.value)"></td>
-      <td style="padding:6px 10px">${diffHtml}</td>
-    </tr>`;
-  });
-  const noteVal=receiveState[safeId+'_note']||'';
-  const loaded=receiveState[safeId+'_loaded'];
-  const sourceTag=loaded?'<span style="font-size:10px;color:var(--green);font-weight:400;margin-left:8px">✓ 已從雲端載入</span>':'<span style="font-size:10px;color:var(--muted2);font-weight:400;margin-left:8px">尚未對帳</span>';
-  return`<div class="receive-title">📥 對帳作業${sourceTag}
-    <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:auto">輸入實到量，Enter 或點別處自動更新</span>
-  </div>
-  <div class="receive-summary">
-    <div class="rs-card"><div class="rs-lbl">應到</div><div class="rs-val" id="rsOrdered-${safeId}">${totalOrdered}</div></div>
-    <div class="rs-card ${totalReceived===totalOrdered?'ok':''}"><div class="rs-lbl">實到</div><div class="rs-val" id="rsReceived-${safeId}" style="color:var(--green)">${totalReceived}</div></div>
-    <div class="rs-card ${okCount>0?'ok':''}"><div class="rs-lbl">一致</div><div class="rs-val" id="rsOk-${safeId}">${okCount}</div></div>
-    <div class="rs-card ${shortCount>0?'alert':''}"><div class="rs-lbl">短少</div><div class="rs-val" id="rsShort-${safeId}">${shortCount}</div></div>
-    <div class="rs-card ${overCount>0?'alert':''}"><div class="rs-lbl">多送</div><div class="rs-val" id="rsOver-${safeId}">${overCount}</div></div>
-  </div>
-  <div style="overflow-x:auto"><table class="receive-table">
-    <thead><tr>
-      <th>廠商貨號</th><th>條碼</th><th>顏色</th><th>尺寸</th><th>品名</th>
-      <th style="text-align:right">採購量</th><th style="text-align:right">實到量</th><th>差異</th>
-    </tr></thead>
-    <tbody id="receiveTbody-${safeId}">${rows}</tbody>
-  </table></div>
-  <div style="margin-top:10px">
-    <label style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">對帳備註</label>
-    <textarea class="receive-note-input" id="receiveNote-${safeId}" placeholder="例：司機說另一箱下週補送">${noteVal}</textarea>
-  </div>
-  <div style="margin-top:10px;display:flex;gap:10px;align-items:center">
-    <button class="btn btn-green" style="font-size:12px;padding:7px 16px" onclick="saveReceive('${vid}',${idx},'${safeId}')">💾 儲存對帳</button>
-    <span id="receiveSt-${safeId}" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></span>
-  </div>`;
-}
-
-function updateReceiveQty(vid,idx,safeId,sku,val){
-  if(!receiveQty[safeId])receiveQty[safeId]={};
-  receiveQty[safeId][sku]=parseInt(val)||0;
-  // 更新 summary 數字
-  const po=vendorPOs[vid][idx];const qMap=receiveQty[safeId];
-  let totalOrdered=0,totalReceived=0,shortCount=0,overCount=0,okCount=0;
-  po.items.forEach(it=>{const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;totalOrdered+=ord;totalReceived+=rec;const d=rec-ord;if(d===0)okCount++;else if(d<0)shortCount++;else overCount++;});
-  const s=id=>document.getElementById(id);
-  if(s(`rsOrdered-${safeId}`))s(`rsOrdered-${safeId}`).textContent=totalOrdered;
-  if(s(`rsReceived-${safeId}`))s(`rsReceived-${safeId}`).textContent=totalReceived;
-  if(s(`rsOk-${safeId}`))s(`rsOk-${safeId}`).textContent=okCount;
-  if(s(`rsShort-${safeId}`))s(`rsShort-${safeId}`).textContent=shortCount;
-  if(s(`rsOver-${safeId}`))s(`rsOver-${safeId}`).textContent=overCount;
-  // 更新該 row 的輸入框顏色 + diff tag
-  const tbody=document.getElementById(`receiveTbody-${safeId}`);
-  if(!tbody)return;
-  const rows=tbody.querySelectorAll('tr');
-  po.items.forEach((it,i)=>{
-    const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;const diff=rec-ord;
-    const inp=rows[i]?.querySelector('.qty-input');const diffTd=rows[i]?.querySelectorAll('td')[7];
-    if(inp){inp.className='qty-input '+(diff===0?'diff-ok':diff<0?'diff-short':'diff-over');}
-    if(diffTd){
-      if(diff===0)diffTd.innerHTML='<span class="diff-tag ok">一致</span>';
-      else if(diff<0)diffTd.innerHTML=`<span class="diff-tag short">${diff}</span>`;
-      else diffTd.innerHTML=`<span class="diff-tag over">+${diff}</span>`;
-    }
-  });
-}
-
-async function saveReceive(vid,idx,safeId){
-  const po=vendorPOs[vid][idx];const qMap=receiveQty[safeId]||{};
-  const noteEl=document.getElementById(`receiveNote-${safeId}`);const notes=noteEl?noteEl.value:'';
-  const stEl=document.getElementById(`receiveSt-${safeId}`);
-  if(stEl)stEl.textContent='儲存中...';
-  const items=po.items.map(it=>{
-    const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;const diff=rec-ord;
-    let status='ok',instruction='數量一致';
-    if(diff<0){status='short';instruction=`短少 ${Math.abs(diff)} 件，以實到 ${rec} 件結案`;}
-    else if(diff>0){status='over';instruction=`多送 ${diff} 件，以實到 ${rec} 件結案`;}
-    return{sku:it.sku,vs:it.vs,vc:it.color,vsz:it.size,nm:it.nm,ordered:ord,received:rec,diff,status,instruction};
-  });
-  const summary={total_ordered:items.reduce((s,i)=>s+i.ordered,0),total_received:items.reduce((s,i)=>s+i.received,0),ok_count:items.filter(i=>i.status==='ok').length,short_count:items.filter(i=>i.status==='short').length,over_count:items.filter(i=>i.status==='over').length};
-  const mch=po.pn.match(/-([A-Z0-9]+)$/i);const vendor_id=mch?mch[1]:vid;
-  const payload={action:'save',purchase_no:po.pn,vendor_id,checker:'採購平台',items,summary,notes};
-  try{
-    const r=await fetch(RECEIVE_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify(payload)});
-    const j=await r.json();
-    if(j.ok){
-      // 寫回記憶體，避免同 session 重展被清空
-      receiveState[safeId+'_note']=notes;
-      receiveState[safeId+'_loaded']=true;
-      if(stEl)stEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 已儲存（${new Date().toLocaleTimeString('zh-TW')}）</span>`;toast('✓ 對帳已儲存');
-    }
-    else{if(stEl)stEl.innerHTML=`<span style="color:var(--red)">✗ ${j.error||'儲存失敗'}</span>`;toast('儲存失敗');}
-  }catch(e){if(stEl)stEl.innerHTML=`<span style="color:var(--red)">✗ ${e.message}</span>`;toast('儲存失敗：'+e.message);}
-}
-
-// ── Excel 匯出 ──
+// ====== Excel 匯出 ======
 async function expV(v){
   const it=merged.filter(i=>i.vid===v&&i.need);if(!it.length){toast('沒有需採購項目');return;}
-  const stMapXls={'60':'處理中','62':'QC中','65':'已回寫','69':'已結案'};
   toast('準備 Excel...');try{await ensureExcelJS()}catch(e){toast('Excel 引擎載入失敗');return;}
   const wb=new ExcelJS.Workbook();const ws=wb.addWorksheet(v.substring(0,31));
-  const h=['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','建議採購量','備註'];
+  const h=['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','建議採購量','備註'];
   ws.addRow(h);
   const sorted=[...it].sort((a,b)=>{if(a.urgent!==b.urgent)return a.urgent?-1:1;return a.dl-b.dl;});
-  sorted.forEach(i=>ws.addRow([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.sug,skuNoteCache[i.bc]||'']));
-  _applyVendorSheetStyles(ws,sorted,h,[13,14,8,8,9,10,10,10,10,12,12,12,18]);
-  const totalRow=ws.addRow(['','','','','','','','合計','','','',it.reduce((s,i)=>s+i.sug,0),'']);
+  sorted.forEach(i=>ws.addRow([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.sug,skuNoteCache[i.bc]||'']));
+  _applyVendorSheetStyles(ws,sorted,h,[13,14,8,8,9,10,10,10,12,18]);
+  const totalRow=ws.addRow(['','','','','','','','合計',it.reduce((s,i)=>s+i.sug,0),'']);
   totalRow.eachCell({includeEmpty:true},c=>{c.font=_XL_STYLES.FONT_TOTAL;c.fill=_XL_STYLES.FILL_HEADER;c.border=_XL_STYLES.BORDER_THIN;});
   const buf=await wb.xlsx.writeBuffer();const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${tdy()}_採購_${v}.xlsx`;a.click();URL.revokeObjectURL(url);toast(`✓ ${v} 已下載`);
 }
@@ -804,21 +515,20 @@ const _XL_STYLES={FILL_URGENT:{type:'pattern',pattern:'solid',fgColor:{argb:'FFF
 function _applyVendorSheetStyles(ws,items,headers,widths){ws.getRow(1).eachCell({includeEmpty:true},c=>{c.fill=_XL_STYLES.FILL_HEADER;c.font=_XL_STYLES.FONT_HEADER;c.border=_XL_STYLES.BORDER_THIN;});items.forEach((i,idx)=>{const row=ws.getRow(idx+2);const fill=i.urgent?_XL_STYLES.FILL_URGENT:_XL_STYLES.FILL_NEED;const border=i.urgent?_XL_STYLES.BORDER_URGENT:_XL_STYLES.BORDER_THIN;row.eachCell({includeEmpty:true},(c,n)=>{c.fill=fill;c.border=border;});});if(widths)widths.forEach((w,i)=>{ws.getColumn(i+1).width=w;});}
 async function exportAll(){
   const al=merged.filter(i=>i.need);if(!al.length){toast('沒有需採購項目');return;}
-  const stMapXls={'60':'處理中','62':'QC中','65':'已回寫','69':'已結案'};
   toast('準備 Excel...');try{await ensureExcelJS()}catch(e){toast('Excel 引擎載入失敗：'+e.message);return;}
   const wb=new ExcelJS.Workbook();const ws1=wb.addWorksheet('採購彙整');
-  const headers1=['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','再訂購點','建議採購量'];
+  const headers1=['廠商編號','廠商名稱','廠商貨號','顏色','尺寸','商品條碼','商品名稱','庫存','採購中','訂單佔用','日均銷量','缺貨數','再訂購點','建議採購量'];
   ws1.addRow(headers1);
   const sorted=[...al].sort((a,b)=>{if(a.urgent!==b.urgent)return a.urgent?-1:1;return a.dl-b.dl;});
-  sorted.forEach(i=>ws1.addRow([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.rop,i.sug]));
-  _applyVendorSheetStyles(ws1,sorted,headers1,[10,18,12,10,8,18,30,8,9,10,10,10,10,12,12,8,10]);
+  sorted.forEach(i=>ws1.addRow([i.vid,i.vn,i.vs,i.vc2,i.vsz,i.bc,i.nm,i.stk,i.po,i.ps,i.da,i.shortage,i.rop,i.sug]));
+  _applyVendorSheetStyles(ws1,sorted,headers1,[10,18,12,10,8,18,30,8,9,10,10,10,8,10]);
   const vs={};al.forEach(i=>{if(!vs[i.vid])vs[i.vid]=[];vs[i.vid].push(i);});
-  Object.entries(vs).forEach(([v,it])=>{const ws=wb.addWorksheet(v.substring(0,31));const h2=['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','上次採購量','上次採購日','上次採購狀態','建議採購量','備註'];ws.addRow(h2);const sortedV=[...it].sort((a,b)=>{if(a.urgent!==b.urgent)return a.urgent?-1:1;return a.dl-b.dl;});sortedV.forEach(i=>ws.addRow([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.lastPO?i.lastPO.qty:'',i.lastPO?i.lastPO.date:'',i.lastPO?(stMapXls[String(i.lastPO.status)]||i.lastPO.status||''):'',i.sug,skuNoteCache[i.bc]||'']));_applyVendorSheetStyles(ws,sortedV,h2,[13,14,8,8,9,10,10,10,10,12,12,12,18]);const totalRow=ws.addRow(['','','','','','','','合計','','','',it.reduce((s,i)=>s+i.sug,0),'']);totalRow.eachCell({includeEmpty:true},c=>{c.font=_XL_STYLES.FONT_TOTAL;c.fill=_XL_STYLES.FILL_HEADER;c.border=_XL_STYLES.BORDER_THIN;});});
+  Object.entries(vs).forEach(([v,it])=>{const ws=wb.addWorksheet(v.substring(0,31));const h2=['廠商貨號','廠商顏色說明','尺寸說明','庫存','採購中','訂單佔用','日均銷量','缺貨數','建議採購量','備註'];ws.addRow(h2);const sortedV=[...it].sort((a,b)=>{if(a.urgent!==b.urgent)return a.urgent?-1:1;return a.dl-b.dl;});sortedV.forEach(i=>ws.addRow([i.vs||i.bc,i.vc2,i.vsz,i.stk,i.po,i.ps,i.da,i.shortage,i.sug,skuNoteCache[i.bc]||'']));_applyVendorSheetStyles(ws,sortedV,h2,[13,14,8,8,9,10,10,10,12,18]);const totalRow=ws.addRow(['','','','','','','','合計',it.reduce((s,i)=>s+i.sug,0),'']);totalRow.eachCell({includeEmpty:true},c=>{c.font=_XL_STYLES.FONT_TOTAL;c.fill=_XL_STYLES.FILL_HEADER;c.border=_XL_STYLES.BORDER_THIN;});});
   const buf=await wb.xlsx.writeBuffer();const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`${tdy()}_OMS採購建議.xlsx`;a.click();URL.revokeObjectURL(url);toast('✓ 已匯出');
 }
 
-// ── 上傳採購確認單 ──
-let poItems=[];let poSheetName='';let poFileName='';let revMap2={};
+// ====== 上傳採購確認單 ======
+let poItems=[];let poSheetName='';let poFileName='';
 function parsePoFile(){
   const fileEl=document.getElementById('poFile');if(!fileEl.files.length){toast('請選擇檔案');return;}
   if(Object.keys(revMap).length===0){toast('請先拉取數據');return;}
@@ -854,7 +564,7 @@ async function submitToOms(){
       st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ ${res.msg}，採購單號 ${poNo}</span>`;toast('✓ 採購單已送出');
       const tracking=document.getElementById('poTracking').value.trim();const memo=document.getElementById('poMemo').value.trim();
       if(tracking||memo){try{await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'save',purchase_no:poNo,vendor_id:vendorCode,tracking,memo})});}catch(e){}}
-      // 寄送 email 通知（失敗不影響採購單已成立的事實）
+      // 寄送 email 通知
       const supplierName=(Object.values(supMap).find(s=>s.vid===vendorCode)||{}).vn||'';
       const emailOrders=[{purchase_no:poNo,vendor:`${vendorCode}${supplierName?' '+supplierName:''}`,sku_count:matched.length,total_qty:matched.reduce((s,i)=>s+i.qty,0),tracking,memo}];
       try{
@@ -868,13 +578,386 @@ async function submitToOms(){
   btn.disabled=false;
 }
 
-// ===== by day 歷史採購單查詢 =====
+// ========================================================================
+// ====================== 採購單管理 Tab（事情 B）==========================
+// ========================================================================
+const PO_STATUS_MAP={'60':{txt:'處理中',color:'var(--orange)'},'62':{txt:'QC中',color:'var(--orange)'},'65':{txt:'已回寫',color:'var(--green)'},'69':{txt:'已結案',color:'var(--green)'}};
+
+function onPOTabDaysChange(){
+  const sel=document.getElementById('poTabDays');
+  poTabDays=parseInt(sel.value)||30;
+  localStorage.setItem(PO_TAB_DAYS_KEY,String(poTabDays));
+}
+
+async function fetchPOTab(){
+  const btn=document.getElementById('btnFetchB');btn.disabled=true;
+  document.getElementById('ldAreaB').classList.remove('hidden');
+  document.getElementById('poTabContent').classList.add('hidden');
+  document.getElementById('poTabEmpty').classList.add('hidden');
+  const t0=Date.now();
+  try{
+    document.getElementById('ldMsgB').textContent='載入供應商對照表...';
+    if(!Object.keys(supMap).length){await ldSup();}
+    // 拉 4 種狀態的採購單
+    document.getElementById('ldMsgB').textContent='拉取採購單列表...';
+    const statusList=['60','62','65','69'];let headers=[];
+    for(const st of statusList){
+      try{const hR=await oP('/api/v2/default/apiPurchaseHeaderList/searchList',{"purchase_header.status":st});const ha=(hR.retval||{}).purchase_header||hR.retval||[];if(Array.isArray(ha))headers=headers.concat(ha);}catch(e){console.warn(`status ${st} 失敗`,e);}
+    }
+    // 過濾日期範圍
+    const hd=new Date();hd.setDate(hd.getDate()-poTabDays);const hdMs=hd.getTime();
+    headers=headers.filter(h=>{const d=h['purchase_header.created_at']||'';if(!d)return false;return new Date(d).getTime()>=hdMs;});
+    // 拉每張單明細
+    poTabRows=[];
+    for(let i=0;i<headers.length;i++){
+      const h=headers[i];const pn=(h['purchase_header.purchase_no']||'').trim();const cd=(h['purchase_header.created_at']||'').slice(0,10);const hStatus=(h['purchase_header.status']||'').toString();
+      if(!pn)continue;
+      document.getElementById('ldMsgB').textContent=`拉取明細 ${i+1}/${headers.length}（${pn}）...`;
+      try{
+        const dR=await oP('/api/v2/default/apiPurchaseHeaderList/searchDetail',{"purchase_header.purchase_no":pn});
+        const da=(dR.retval||{}).purchase||[];const poItems=[];let totalQty=0,totalIn=0,vid=null;
+        if(Array.isArray(da)){da.forEach(p=>{const m=(p['purchase.products_model']||'').trim();const pq=parseInt(p['purchase.purchase_quantity']||0);const sq=parseInt(p['purchase.stock_quantity']||0);const nm=(p['purchase.name']||'').trim();const vs=(p['purchase.products.supplier_model']||'').trim();const color=(p['purchase.color']||'').trim();const size=(p['purchase.size']||'').trim();const memo=(p['purchase.memo']||'').trim();if(!m||pq<=0)return;const sp=supMap[m];if(sp&&!vid)vid=sp.vid;poItems.push({sku:m,nm,vs,color,size,pq,sq,memo});totalQty+=pq;totalIn+=sq;});}
+        if(!vid){const mch=pn.match(/-([A-Z0-9]+)$/i);if(mch)vid=mch[1];}
+        poTabRows.push({pn,date:cd,status:hStatus,totalQty,totalIn,skuCount:poItems.length,items:poItems,vid:vid||'?'});
+      }catch(e){console.warn(`${pn} 失敗`,e);}
+    }
+    poTabRows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+    // 批次拉 meta
+    document.getElementById('ldMsgB').textContent='讀取追蹤單號與備註...';
+    const pns=poTabRows.map(r=>r.pn).filter(pn=>!(pn in poTabMetaCache));
+    if(pns.length){
+      try{
+        const r=await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'batch_get',purchase_nos:pns})});
+        const j=await r.json();
+        if(j.ok&&j.records)pns.forEach(pn=>{poTabMetaCache[pn]=j.records[pn]||null;});
+      }catch(e){console.warn('讀 po-meta 失敗',e);}
+    }
+    document.getElementById('ldAreaB').classList.add('hidden');
+    document.getElementById('poTabContent').classList.remove('hidden');
+    const elapsed=Math.round((Date.now()-t0)/1000);
+    document.getElementById('fetchStB').textContent=`更新 ${new Date().toLocaleTimeString('zh-TW')}（耗時 ${elapsed}s）`;
+    renderPOTabSummary();renderPOTabList();
+  }catch(e){
+    document.getElementById('ldAreaB').classList.add('hidden');
+    document.getElementById('fetchStB').textContent='錯誤：'+e.message;
+    toast('失敗：'+e.message);console.error(e);
+  }
+  btn.disabled=false;
+}
+
+function renderPOTabSummary(){
+  const total=poTabRows.length;
+  const processing=poTabRows.filter(r=>r.status==='60').length;
+  const totalQty=poTabRows.reduce((s,r)=>s+r.totalQty,0);
+  const totalIn=poTabRows.reduce((s,r)=>s+r.totalIn,0);
+  const remain=totalQty-totalIn;
+  const vendors=new Set(poTabRows.map(r=>r.vid)).size;
+  document.getElementById('poTabSummary').innerHTML=`
+    <div class="card"><div class="card-lbl">採購單數</div><div class="card-val">${total}</div><div class="card-sub">近 ${poTabDays} 天</div></div>
+    <div class="card ${processing?'card-alert':''}"><div class="card-lbl">處理中</div><div class="card-val" style="color:${processing?'var(--orange)':'var(--muted)'}">${processing}</div><div class="card-sub">尚未結案</div></div>
+    <div class="card"><div class="card-lbl">總採購量</div><div class="card-val">${totalQty.toLocaleString()}</div><div class="card-sub">件</div></div>
+    <div class="card"><div class="card-lbl">已入庫</div><div class="card-val" style="color:var(--green)">${totalIn.toLocaleString()}</div><div class="card-sub">件</div></div>
+    <div class="card"><div class="card-lbl">待入庫</div><div class="card-val" style="color:${remain>0?'var(--orange)':'var(--muted)'}">${remain.toLocaleString()}</div><div class="card-sub">件</div></div>
+    <div class="card"><div class="card-lbl">廠商數</div><div class="card-val">${vendors}</div><div class="card-sub">家</div></div>`;
+}
+
+function renderPOTabList(){
+  const q=(document.getElementById('poTabSearch').value||'').toLowerCase().trim();
+  let rows=poTabRows;
+  if(q){rows=rows.filter(r=>r.pn.toLowerCase().includes(q)||r.vid.toLowerCase().includes(q)||(supMap[r.items[0]?.sku]?.vn||'').toLowerCase().includes(q));}
+  const area=document.getElementById('poTabResult');
+  if(!rows.length){area.innerHTML='<div class="loading">沒有符合的採購單</div>';return;}
+  // 按廠商分組
+  const vs={};rows.forEach(r=>{if(!vs[r.vid])vs[r.vid]=[];vs[r.vid].push(r);});
+  area.innerHTML='';
+  Object.entries(vs).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([vid,list])=>{
+    const sp=Object.values(supMap).find(s=>s.vid===vid);const vn=sp?sp.vn:vid;
+    const totalQty=list.reduce((s,r)=>s+r.totalQty,0);
+    const totalIn=list.reduce((s,r)=>s+r.totalIn,0);
+    const processing=list.filter(r=>r.status==='60').length;
+    const d=document.createElement('div');d.className='vendor-block';
+    d.innerHTML=`<div class="vendor-head">
+      <span class="vbadge">${vid}</span>
+      <h3>${vn||vid}</h3>
+      ${processing?`<span style="font-size:11px;color:var(--orange);font-family:'DM Mono',monospace;font-weight:600">⚠ ${processing} 處理中</span>`:''}
+      <span class="vtotal">${list.length} 張 · 採購 ${totalQty} · 已入 ${totalIn}${totalQty-totalIn>0?` · 待入 <span style="color:var(--orange)">${totalQty-totalIn}</span>`:''}</span>
+    </div>
+    <div class="po-list-wrap" style="background:#fafaf8">${renderPOTabVendorRows(vid,list)}</div>`;
+    area.appendChild(d);
+  });
+}
+
+function renderPOTabVendorRows(vid,list){
+  const th=`padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);background:var(--surface2)`;
+  let html=`<div style="padding:14px 18px">
+    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+      <thead><tr>
+        <th style="${th}">採購單號</th>
+        <th style="${th}">建立日期</th>
+        <th style="${th}">狀態</th>
+        <th style="${th};text-align:right">SKU 數</th>
+        <th style="${th};text-align:right">採購量</th>
+        <th style="${th};text-align:right">已入庫</th>
+        <th style="${th};text-align:right">待入庫</th>
+        <th style="${th};min-width:150px">追蹤單號</th>
+        <th style="${th};min-width:180px">備註</th>
+        <th style="${th}">操作</th>
+      </tr></thead><tbody>`;
+  list.forEach((p,idx)=>{
+    const st=PO_STATUS_MAP[String(p.status)]||{txt:p.status||'?',color:'var(--muted)'};
+    const remain=p.totalQty-p.totalIn;
+    const safeId=p.pn.replace(/[^a-zA-Z0-9]/g,'_');
+    const meta=poTabMetaCache[p.pn]||null;
+    const trackingVal=meta?.tracking||'';const memoVal=meta?.memo||'';
+    const poNoteVal=poTabNoteCache[p.pn]||'';
+    const td=`padding:8px 10px;font-size:12px;border-bottom:1px solid var(--surface2)`;
+    const isStatus60=p.status==='60';
+    // 我們用 vid + idx 找回採購單，但因為 fetchPOTab 是按 poTabRows 排序，要存原索引
+    const origIdx=poTabRows.indexOf(p);
+    html+=`<tr>
+      <td style="${td};font-family:'DM Mono',monospace;font-weight:600;cursor:pointer" onclick="togglePOTabDetail(${origIdx},'${safeId}')">
+        <span style="font-size:10px;color:var(--muted2);margin-right:5px" id="poTabDetTog-${safeId}">▶</span>${p.pn}
+      </td>
+      <td style="${td};font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer" onclick="togglePOTabDetail(${origIdx},'${safeId}')">${p.date||'—'}</td>
+      <td style="${td};cursor:pointer" onclick="togglePOTabDetail(${origIdx},'${safeId}')"><span style="color:${st.color};font-weight:600;font-family:'DM Mono',monospace">${st.txt}</span></td>
+      <td style="${td};text-align:right;font-family:'DM Mono',monospace;cursor:pointer" onclick="togglePOTabDetail(${origIdx},'${safeId}')">${p.skuCount}</td>
+      <td style="${td};text-align:right;font-family:'DM Mono',monospace;font-weight:600;cursor:pointer" onclick="togglePOTabDetail(${origIdx},'${safeId}')">${p.totalQty}</td>
+      <td style="${td};text-align:right;font-family:'DM Mono',monospace;color:var(--green);cursor:pointer" onclick="togglePOTabDetail(${origIdx},'${safeId}')">${p.totalIn}</td>
+      <td style="${td};text-align:right;font-family:'DM Mono',monospace;color:${remain>0?'var(--orange)':'var(--muted2)'};font-weight:${remain>0?'700':'400'};cursor:pointer" onclick="togglePOTabDetail(${origIdx},'${safeId}')">${remain>0?remain:'—'}</td>
+      <td style="${td}" class="meta-cell" onclick="startMetaEdit('${p.pn}','tracking','${safeId}',event)">
+        <span class="meta-display${trackingVal?'':' empty'}" id="metaDisp-tracking-${safeId}">${trackingVal||'—'}</span>
+        <input class="meta-input" id="metaInp-tracking-${safeId}" type="text" value="${trackingVal}" placeholder="例：黑貓 1234567890"
+          onblur="saveMetaField('${p.pn}','tracking','${safeId}')"
+          onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelMetaEdit('tracking','${safeId}')">
+        <span class="meta-saving" id="metaSaving-tracking-${safeId}" style="display:none">儲存中...</span>
+      </td>
+      <td style="${td}" class="meta-cell" onclick="startMetaEdit('${p.pn}','memo','${safeId}',event)">
+        <span class="meta-display${memoVal?'':' empty'}" id="metaDisp-memo-${safeId}">${memoVal||'—'}</span>
+        <input class="meta-input" id="metaInp-memo-${safeId}" type="text" value="${memoVal}" placeholder="例：斷貨補的"
+          onblur="saveMetaField('${p.pn}','memo','${safeId}')"
+          onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelMetaEdit('memo','${safeId}')">
+        <span class="meta-saving" id="metaSaving-memo-${safeId}" style="display:none">儲存中...</span>
+      </td>
+      <td style="${td}">
+        ${isStatus60?`<button style="padding:5px 12px;font-size:11px;font-family:'DM Mono',monospace;border:1px solid var(--orange);background:#fff;color:var(--orange);border-radius:4px;cursor:pointer;font-weight:600;white-space:nowrap" onclick="togglePOTabReceive(${origIdx},'${safeId}',event)">📥 對帳</button>`:'<span style="font-size:11px;color:var(--muted2)">—</span>'}
+      </td>
+    </tr>
+    <tr id="poTabDet-${safeId}" style="display:none"><td colspan="10" style="padding:0;background:#fcfcfa"><div id="poTabDetCt-${safeId}" style="padding:10px 18px"></div></td></tr>
+    <tr id="poTabReceive-${safeId}" style="display:none"><td colspan="10" style="padding:0"><div class="receive-wrap" id="poTabReceiveCt-${safeId}"></div></td></tr>
+    <tr class="po-note-row"><td colspan="10" style="padding:6px 10px;border-bottom:1px solid var(--surface2)">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;white-space:nowrap;text-transform:uppercase;letter-spacing:.5px">單據備註</span>
+        <input class="po-note-input" id="poTabNoteInp-${safeId}" type="text" value="${poNoteVal}" placeholder="此採購單備註（存本機）" onchange="savePOTabNote('${p.pn}','${safeId}')">
+      </div>
+    </td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  return html;
+}
+
+function togglePOTabDetail(origIdx,safeId){
+  const tr=document.getElementById(`poTabDet-${safeId}`);const tog=document.getElementById(`poTabDetTog-${safeId}`);const ct=document.getElementById(`poTabDetCt-${safeId}`);
+  if(!tr)return;
+  if(tr.style.display==='none'){
+    const po=poTabRows[origIdx];
+    let h=`<div style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">SKU 明細</div>
+    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:4px;overflow:hidden">
+      <thead><tr style="background:var(--surface2)">
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">廠商貨號</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">商品條碼</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">顏色</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">尺寸</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">品名</th>
+        <th style="padding:5px 9px;text-align:right;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">採購量</th>
+        <th style="padding:5px 9px;text-align:right;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">已入庫</th>
+        <th style="padding:5px 9px;text-align:right;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">待入庫</th>
+        <th style="padding:5px 9px;text-align:left;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;border-bottom:1px solid var(--border)">備註</th>
+      </tr></thead><tbody>`;
+    po.items.forEach(it=>{const rem=it.pq-it.sq;h+=`<tr><td style="padding:5px 9px;font-size:11px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--surface2)">${it.vs||'—'}</td><td style="padding:5px 9px;font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);border-bottom:1px solid var(--surface2)">${it.sku}</td><td style="padding:5px 9px;font-size:11px;border-bottom:1px solid var(--surface2)">${it.color||'—'}</td><td style="padding:5px 9px;font-size:11px;border-bottom:1px solid var(--surface2)">${it.size||'—'}</td><td style="padding:5px 9px;font-size:11px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-bottom:1px solid var(--surface2)" title="${it.nm||''}">${it.nm||'—'}</td><td style="padding:5px 9px;text-align:right;font-size:11px;font-family:'DM Mono',monospace;font-weight:600;border-bottom:1px solid var(--surface2)">${it.pq}</td><td style="padding:5px 9px;text-align:right;font-size:11px;font-family:'DM Mono',monospace;color:var(--green);border-bottom:1px solid var(--surface2)">${it.sq}</td><td style="padding:5px 9px;text-align:right;font-size:11px;font-family:'DM Mono',monospace;color:${rem>0?'var(--orange)':'var(--muted2)'};font-weight:${rem>0?'600':'400'};border-bottom:1px solid var(--surface2)">${rem>0?rem:'—'}</td><td style="padding:5px 9px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--surface2)">${it.memo||''}</td></tr>`;});
+    h+='</tbody></table>';ct.innerHTML=h;tr.style.display='table-row';if(tog)tog.textContent='▼';
+  }else{tr.style.display='none';if(tog)tog.textContent='▶';}
+}
+
+// ====== inline meta edit（共用，給 tab B 用）======
+function startMetaEdit(pn,field,safeId,event){
+  if(event)event.stopPropagation();
+  const disp=document.getElementById(`metaDisp-${field}-${safeId}`);const inp=document.getElementById(`metaInp-${field}-${safeId}`);
+  if(!disp||!inp)return;disp.style.display='none';inp.style.display='block';inp.focus();inp.select();
+}
+function cancelMetaEdit(field,safeId){
+  const disp=document.getElementById(`metaDisp-${field}-${safeId}`);const inp=document.getElementById(`metaInp-${field}-${safeId}`);
+  if(!disp||!inp)return;inp.style.display='none';disp.style.display='';
+}
+async function saveMetaField(pn,field,safeId){
+  const inp=document.getElementById(`metaInp-${field}-${safeId}`);const disp=document.getElementById(`metaDisp-${field}-${safeId}`);const saving=document.getElementById(`metaSaving-${field}-${safeId}`);
+  if(!inp||!disp)return;
+  const newVal=inp.value.trim();inp.style.display='none';saving.style.display='inline';
+  if(!poTabMetaCache[pn])poTabMetaCache[pn]={};
+  const oldVal=poTabMetaCache[pn][field]||'';poTabMetaCache[pn][field]=newVal;
+  const tracking=field==='tracking'?newVal:(poTabMetaCache[pn].tracking||'');
+  const memo=field==='memo'?newVal:(poTabMetaCache[pn].memo||'');
+  const mch=pn.match(/-([A-Z0-9]+)$/i);const vendor_id=mch?mch[1]:'';
+  try{
+    const r=await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'save',purchase_no:pn,vendor_id,tracking,memo})});
+    const j=await r.json();
+    if(j.ok||j.success){disp.textContent=newVal||'—';disp.className='meta-display'+(newVal?'':' empty');toast('✓ 已儲存');}
+    else{poTabMetaCache[pn][field]=oldVal;disp.textContent=oldVal||'—';disp.className='meta-display'+(oldVal?'':' empty');toast('儲存失敗：'+(j.error||'?'));}
+  }catch(e){poTabMetaCache[pn][field]=oldVal;disp.textContent=oldVal||'—';disp.className='meta-display'+(oldVal?'':' empty');toast('儲存失敗：'+e.message);}
+  saving.style.display='none';disp.style.display='';
+}
+
+function savePOTabNote(pn,safeId){
+  const inp=document.getElementById(`poTabNoteInp-${safeId}`);if(!inp)return;
+  const val=inp.value.trim();
+  poTabNoteCache[pn]=val;
+  try{const all=JSON.parse(localStorage.getItem('enamor_po_notes')||'{}');all[pn]=val;localStorage.setItem('enamor_po_notes',JSON.stringify(all));}catch(e){}
+}
+function loadPOTabNotes(){try{const all=JSON.parse(localStorage.getItem('enamor_po_notes')||'{}');poTabNoteCache=all;}catch(e){poTabNoteCache={};}}
+
+// ====== 對帳功能 ======
+async function togglePOTabReceive(origIdx,safeId,event){
+  if(event)event.stopPropagation();
+  const tr=document.getElementById(`poTabReceive-${safeId}`);const ct=document.getElementById(`poTabReceiveCt-${safeId}`);
+  if(!tr)return;
+  if(tr.style.display==='none'){
+    const po=poTabRows[origIdx];
+    if(!poTabReceiveQty[safeId]){
+      ct.innerHTML='<div style="padding:16px 20px;font-size:12px;color:var(--muted);font-family:\'DM Mono\',monospace"><span class="spinner"></span>讀取對帳紀錄...</div>';
+      tr.style.display='table-row';
+      try{
+        const r=await fetch(`${RECEIVE_API}?action=get&purchase_no=${encodeURIComponent(po.pn)}`,{method:'GET',headers:{'x-proxy-token':T}});
+        const j=await r.json();
+        poTabReceiveQty[safeId]={};
+        if(j.ok&&j.record&&Array.isArray(j.record.items)){
+          const recMap={};j.record.items.forEach(it=>{recMap[it.sku]=it.received;});
+          po.items.forEach(it=>{poTabReceiveQty[safeId][it.sku]=recMap[it.sku]??(it.pq-it.sq);});
+          poTabReceiveState[safeId+'_note']=j.record.notes||'';
+          poTabReceiveState[safeId+'_loaded']=true;
+        }else{
+          po.items.forEach(it=>{poTabReceiveQty[safeId][it.sku]=it.pq-it.sq;});
+        }
+      }catch(e){
+        console.warn('讀取對帳紀錄失敗',e);
+        po.items.forEach(it=>{poTabReceiveQty[safeId][it.sku]=it.pq-it.sq;});
+      }
+    }
+    ct.innerHTML=renderPOTabReceiveArea(origIdx,safeId);
+    tr.style.display='table-row';
+  }else{tr.style.display='none';}
+}
+
+function renderPOTabReceiveArea(origIdx,safeId){
+  const po=poTabRows[origIdx];const qMap=poTabReceiveQty[safeId]||{};
+  let totalOrdered=0,totalReceived=0,shortCount=0,overCount=0,okCount=0;
+  po.items.forEach(it=>{const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;totalOrdered+=ord;totalReceived+=rec;const d=rec-ord;if(d===0)okCount++;else if(d<0)shortCount++;else overCount++;});
+  let rows='';
+  po.items.forEach(it=>{
+    const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;const diff=rec-ord;
+    let cls='',diffHtml='';
+    if(diff===0){cls='diff-ok';diffHtml='<span class="diff-tag ok">一致</span>';}
+    else if(diff<0){cls='diff-short';diffHtml=`<span class="diff-tag short">${diff}</span>`;}
+    else{cls='diff-over';diffHtml=`<span class="diff-tag over">+${diff}</span>`;}
+    rows+=`<tr>
+      <td style="padding:6px 10px;font-size:11px;font-family:'DM Mono',monospace">${it.vs||'—'}</td>
+      <td style="padding:6px 10px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">${it.sku}</td>
+      <td style="padding:6px 10px;font-size:11px">${it.color||'—'}</td>
+      <td style="padding:6px 10px;font-size:11px">${it.size||'—'}</td>
+      <td style="padding:6px 10px;font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.nm||'—'}</td>
+      <td style="padding:6px 10px;text-align:right;font-size:12px;font-family:'DM Mono',monospace;font-weight:600">${ord}</td>
+      <td style="padding:6px 10px;text-align:right"><input type="number" min="0" class="qty-input ${cls}" value="${rec}" oninput="updatePOTabReceiveQty(${origIdx},'${safeId}','${it.sku}',this.value)"></td>
+      <td style="padding:6px 10px">${diffHtml}</td>
+    </tr>`;
+  });
+  const noteVal=poTabReceiveState[safeId+'_note']||'';
+  const loaded=poTabReceiveState[safeId+'_loaded'];
+  const sourceTag=loaded?'<span style="font-size:10px;color:var(--green);font-weight:400;margin-left:8px">✓ 已從雲端載入</span>':'<span style="font-size:10px;color:var(--muted2);font-weight:400;margin-left:8px">尚未對帳</span>';
+  return`<div class="receive-title">📥 對帳作業${sourceTag}
+    <span style="font-size:10px;font-weight:400;color:var(--muted);margin-left:auto">輸入實到量，Enter 或點別處自動更新</span>
+  </div>
+  <div class="receive-summary">
+    <div class="rs-card"><div class="rs-lbl">應到</div><div class="rs-val" id="rsOrdered-${safeId}">${totalOrdered}</div></div>
+    <div class="rs-card ${totalReceived===totalOrdered?'ok':''}"><div class="rs-lbl">實到</div><div class="rs-val" id="rsReceived-${safeId}" style="color:var(--green)">${totalReceived}</div></div>
+    <div class="rs-card ${okCount>0?'ok':''}"><div class="rs-lbl">一致</div><div class="rs-val" id="rsOk-${safeId}">${okCount}</div></div>
+    <div class="rs-card ${shortCount>0?'alert':''}"><div class="rs-lbl">短少</div><div class="rs-val" id="rsShort-${safeId}">${shortCount}</div></div>
+    <div class="rs-card ${overCount>0?'alert':''}"><div class="rs-lbl">多送</div><div class="rs-val" id="rsOver-${safeId}">${overCount}</div></div>
+  </div>
+  <div style="overflow-x:auto"><table class="receive-table">
+    <thead><tr>
+      <th>廠商貨號</th><th>條碼</th><th>顏色</th><th>尺寸</th><th>品名</th>
+      <th style="text-align:right">採購量</th><th style="text-align:right">實到量</th><th>差異</th>
+    </tr></thead>
+    <tbody id="receiveTbody-${safeId}">${rows}</tbody>
+  </table></div>
+  <div style="margin-top:10px">
+    <label style="font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">對帳備註</label>
+    <textarea class="receive-note-input" id="receiveNote-${safeId}" placeholder="例：司機說另一箱下週補送">${noteVal}</textarea>
+  </div>
+  <div style="margin-top:10px;display:flex;gap:10px;align-items:center">
+    <button class="btn btn-green" style="font-size:12px;padding:7px 16px" onclick="savePOTabReceive(${origIdx},'${safeId}')">💾 儲存對帳</button>
+    <span id="receiveSt-${safeId}" style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace"></span>
+  </div>`;
+}
+
+function updatePOTabReceiveQty(origIdx,safeId,sku,val){
+  if(!poTabReceiveQty[safeId])poTabReceiveQty[safeId]={};
+  poTabReceiveQty[safeId][sku]=parseInt(val)||0;
+  const po=poTabRows[origIdx];const qMap=poTabReceiveQty[safeId];
+  let totalOrdered=0,totalReceived=0,shortCount=0,overCount=0,okCount=0;
+  po.items.forEach(it=>{const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;totalOrdered+=ord;totalReceived+=rec;const d=rec-ord;if(d===0)okCount++;else if(d<0)shortCount++;else overCount++;});
+  const s=id=>document.getElementById(id);
+  if(s(`rsOrdered-${safeId}`))s(`rsOrdered-${safeId}`).textContent=totalOrdered;
+  if(s(`rsReceived-${safeId}`))s(`rsReceived-${safeId}`).textContent=totalReceived;
+  if(s(`rsOk-${safeId}`))s(`rsOk-${safeId}`).textContent=okCount;
+  if(s(`rsShort-${safeId}`))s(`rsShort-${safeId}`).textContent=shortCount;
+  if(s(`rsOver-${safeId}`))s(`rsOver-${safeId}`).textContent=overCount;
+  const tbody=document.getElementById(`receiveTbody-${safeId}`);
+  if(!tbody)return;
+  const rows=tbody.querySelectorAll('tr');
+  po.items.forEach((it,i)=>{
+    const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;const diff=rec-ord;
+    const inp=rows[i]?.querySelector('.qty-input');const diffTd=rows[i]?.querySelectorAll('td')[7];
+    if(inp){inp.className='qty-input '+(diff===0?'diff-ok':diff<0?'diff-short':'diff-over');}
+    if(diffTd){
+      if(diff===0)diffTd.innerHTML='<span class="diff-tag ok">一致</span>';
+      else if(diff<0)diffTd.innerHTML=`<span class="diff-tag short">${diff}</span>`;
+      else diffTd.innerHTML=`<span class="diff-tag over">+${diff}</span>`;
+    }
+  });
+}
+
+async function savePOTabReceive(origIdx,safeId){
+  const po=poTabRows[origIdx];const qMap=poTabReceiveQty[safeId]||{};
+  const noteEl=document.getElementById(`receiveNote-${safeId}`);const notes=noteEl?noteEl.value:'';
+  const stEl=document.getElementById(`receiveSt-${safeId}`);
+  if(stEl)stEl.textContent='儲存中...';
+  const items=po.items.map(it=>{
+    const ord=it.pq-it.sq;const rec=qMap[it.sku]??ord;const diff=rec-ord;
+    let status='ok',instruction='數量一致';
+    if(diff<0){status='short';instruction=`短少 ${Math.abs(diff)} 件，以實到 ${rec} 件結案`;}
+    else if(diff>0){status='over';instruction=`多送 ${diff} 件，以實到 ${rec} 件結案`;}
+    return{sku:it.sku,vs:it.vs,vc:it.color,vsz:it.size,nm:it.nm,ordered:ord,received:rec,diff,status,instruction};
+  });
+  const summary={total_ordered:items.reduce((s,i)=>s+i.ordered,0),total_received:items.reduce((s,i)=>s+i.received,0),ok_count:items.filter(i=>i.status==='ok').length,short_count:items.filter(i=>i.status==='short').length,over_count:items.filter(i=>i.status==='over').length};
+  const mch=po.pn.match(/-([A-Z0-9]+)$/i);const vendor_id=mch?mch[1]:po.vid;
+  const payload={action:'save',purchase_no:po.pn,vendor_id,checker:'採購平台',items,summary,notes};
+  try{
+    const r=await fetch(RECEIVE_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify(payload)});
+    const j=await r.json();
+    if(j.ok){
+      poTabReceiveState[safeId+'_note']=notes;
+      poTabReceiveState[safeId+'_loaded']=true;
+      if(stEl)stEl.innerHTML=`<span style="color:var(--green);font-weight:600">✓ 已儲存（${new Date().toLocaleTimeString('zh-TW')}）</span>`;toast('✓ 對帳已儲存');
+    }
+    else{if(stEl)stEl.innerHTML=`<span style="color:var(--red)">✗ ${j.error||'儲存失敗'}</span>`;toast('儲存失敗');}
+  }catch(e){if(stEl)stEl.innerHTML=`<span style="color:var(--red)">✗ ${e.message}</span>`;toast('儲存失敗：'+e.message);}
+}
+
+// ===== by day 歷史採購單查詢（兩個 Tab 共用）=====
 let historyRows=[];
 function toggleHistoryBlock(){
   const body=document.getElementById('historyBody');const tog=document.getElementById('historyToggle');
   if(body.style.display==='none'){
     body.style.display='block';tog.textContent='▼ 收合';
-    // 第一次展開時，設預設日期為近 30 天
     if(!document.getElementById('historyStartDate').value){
       const today=new Date();const ago30=new Date();ago30.setDate(today.getDate()-30);
       document.getElementById('historyStartDate').value=ago30.toISOString().slice(0,10);
@@ -896,16 +979,13 @@ async function searchHistory(){
   if(!start){toast('請選擇開始日期');return;}
   btn.disabled=true;status.innerHTML='<span class="spinner"></span> 查詢中…';result.innerHTML='';
   try{
-    // 拉 4 種狀態的採購單
     const statusList=['60','62','65','69'];let headers=[];
     for(const st of statusList){
       try{const hR=await oP('/api/v2/default/apiPurchaseHeaderList/searchList',{"purchase_header.status":st});const ha=(hR.retval||{}).purchase_header||hR.retval||[];if(Array.isArray(ha))headers=headers.concat(ha);}catch(e){console.warn(`status ${st} 失敗`,e);}
     }
-    // 過濾日期範圍
     const startMs=new Date(start+'T00:00:00').getTime();
     const endMs=end?new Date(end+'T23:59:59').getTime():Infinity;
     headers=headers.filter(h=>{const d=h['purchase_header.created_at']||'';if(!d)return false;const ts=new Date(d).getTime();return ts>=startMs&&ts<=endMs;});
-    // 拉每張單明細，組成 historyRows
     historyRows=[];
     for(let i=0;i<headers.length;i++){
       const h=headers[i];const pn=(h['purchase_header.purchase_no']||'').trim();const cd=(h['purchase_header.created_at']||'').slice(0,10);const hStatus=(h['purchase_header.status']||'').toString();
@@ -920,7 +1000,6 @@ async function searchHistory(){
       }catch(e){console.warn(`${pn} 失敗`,e);}
     }
     historyRows.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-    // 更新廠商下拉
     const vs={};historyRows.forEach(r=>{vs[r.vid]=(vs[r.vid]||0)+1});
     const sel=document.getElementById('historyVendorFilter');const curVal=sel.value;
     sel.innerHTML='<option value="">全部廠商</option>'+Object.entries(vs).sort((a,b)=>a[0].localeCompare(b[0])).map(([v,c])=>`<option value="${v}">${v} (${c})</option>`).join('');
@@ -959,7 +1038,21 @@ function renderHistoryResult(){
 }
 
 // 初始化
-ldCfg();loadSkuNotes();loadPoNotes();
+ldCfg();loadSkuNotes();loadPOTabNotes();
+// 預設 Tab：採購建議（A）
+const savedTab=localStorage.getItem('enamor_active_tab');
+if(savedTab==='B'){switchTab('B');}
+// 設定 Tab B 的日期下拉預設值
+document.addEventListener('DOMContentLoaded',()=>{
+  const sel=document.getElementById('poTabDays');
+  if(sel)sel.value=String(poTabDays);
+});
+// 上面 DOMContentLoaded 可能太晚，直接補一次
+setTimeout(()=>{const sel=document.getElementById('poTabDays');if(sel)sel.value=String(poTabDays);},100);
+// 初始顯示採購單管理 Tab 的空狀態
+if(savedTab==='B'){
+  document.getElementById('poTabEmpty').classList.remove('hidden');
+}
 </script>
 
 <!-- 載入模式對話框 -->
@@ -970,29 +1063,18 @@ ldCfg();loadSkuNotes();loadPoNotes();
     <label style="display:block;border:1.5px solid var(--border);border-radius:7px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .15s" id="modeOptAll">
       <input type="radio" name="loadMode" value="all" checked onchange="onLoadModeChange()" style="margin-right:8px">
       <span style="font-weight:600;font-size:13px">全部供應商</span>
-      <span style="font-size:11px;color:var(--muted);margin-left:6px;font-family:'DM Mono',monospace">~ 2-3 分鐘</span>
+      <span style="font-size:11px;color:var(--muted);margin-left:6px;font-family:'DM Mono',monospace">~ 30-50 秒</span>
       <div style="font-size:11px;color:var(--muted);margin-top:5px;margin-left:22px">完整統計、可切換篩選</div>
     </label>
     <label style="display:block;border:1.5px solid var(--border);border-radius:7px;padding:14px 16px;cursor:pointer;transition:all .15s" id="modeOptSingle">
       <input type="radio" name="loadMode" value="single" onchange="onLoadModeChange()" style="margin-right:8px">
       <span style="font-weight:600;font-size:13px">單一供應商</span>
-      <span style="font-size:11px;color:var(--green);margin-left:6px;font-family:'DM Mono',monospace">~ 30-60 秒</span>
+      <span style="font-size:11px;color:var(--green);margin-left:6px;font-family:'DM Mono',monospace">~ 20-40 秒</span>
       <div style="font-size:11px;color:var(--muted);margin-top:5px;margin-left:22px">只載入該供應商</div>
       <select id="loadVendorSel" disabled style="margin-top:10px;margin-left:22px;padding:6px 10px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;width:calc(100% - 22px)">
         <option value="">— 對照表載入後選擇 —</option>
       </select>
     </label>
-    <div style="margin-top:18px;padding:14px 16px;background:var(--surface2);border-radius:7px">
-      <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">歷史採購天數</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap" id="historyDaysRadios">
-        <label class="hd-opt" data-days="7" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">7 天</label>
-        <label class="hd-opt" data-days="14" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">14 天</label>
-        <label class="hd-opt" data-days="30" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">30 天</label>
-        <label class="hd-opt" data-days="60" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">60 天</label>
-        <label class="hd-opt" data-days="90" style="flex:1;min-width:60px;text-align:center;padding:8px 6px;border:1.5px solid var(--border);background:#fff;border-radius:5px;cursor:pointer;font-family:'DM Mono',monospace;font-size:12px;font-weight:600">90 天</label>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:6px;font-family:'DM Mono',monospace">影響「採購單列表」「上次採購」資料範圍。需要更長期可用上方「by day 查詢」</div>
-    </div>
     <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
       <button class="btn btn-secondary" onclick="closeLoadModal()">取消</button>
       <button class="btn btn-primary" onclick="confirmLoadMode()">確定載入</button>
