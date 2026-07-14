@@ -75,7 +75,7 @@ async function getSystemPrompt() {
   const now = Date.now();
   if (sheetCache && now - sheetCacheTime < CACHE_TTL) return sheetCache;
   try {
-    const r = await fetch(SHEET_READER_URL);
+    const r = await fetch(SHEET_READER_URL, { signal: AbortSignal.timeout(2000) });
     const res = await r.json();
     if (!res.success || !res.data) return SYSTEM_DEFAULT;
     const data = res.data;
@@ -110,16 +110,14 @@ async function getSystemPrompt() {
 const sessions = new Map();
 const humanRequestSessions = new Map();
 const contactSessions = new Map();
-const ratingSessionUsers = new Set();
 const closingPendingSessions = new Set();
-const ratingPendingSessions = new Set();
 
 function getSession(userId) {
   if (!sessions.has(userId)) sessions.set(userId, []);
   return sessions.get(userId);
 }
 
-// ── Claude API（含 retry 5 次 + 8 秒單次超時）────────────────────────
+// ── Claude API（retry 2 次 + 3 秒單次超時）────────────────────────────
 async function callClaude(messages, systemPrompt) {
   const callOnce = async () => {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -135,7 +133,7 @@ async function callClaude(messages, systemPrompt) {
         system: systemPrompt,
         messages: messages.slice(-12)
       }),
-      signal: AbortSignal.timeout(8000)
+      signal: AbortSignal.timeout(3000)
     });
     const data = await res.json();
     const text = data.content?.[0]?.text;
@@ -144,16 +142,16 @@ async function callClaude(messages, systemPrompt) {
   };
 
   let lastErr = null;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 2; i++) {
     try {
       return await callOnce();
     } catch (e) {
       lastErr = e;
-      console.warn(`Claude API retry ${i + 1}/5 failed:`, e.message);
-      if (i < 4) await new Promise(r => setTimeout(r, 600));
+      console.warn(`Claude API retry ${i + 1}/2 failed:`, e.message);
+      if (i < 1) await new Promise(r => setTimeout(r, 300));
     }
   }
-  console.error('Claude API failed after 5 retries:', lastErr?.message);
+  console.error('Claude API failed after 2 retries:', lastErr?.message);
   return '抱歉，我現在無法回覆，請稍後再試。';
 }
 
@@ -190,22 +188,6 @@ async function notifySheet(userId, userMsg, botReply, type = 'human_handoff') {
   }).catch(() => {});
 }
 
-// ── 評分寫入 Sheet ─────────────────────────────────────────────────────
-async function saveRating(userId, rating) {
-  if (!SHEET_URL) return;
-  await fetch(SHEET_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      timestamp: new Date().toISOString(),
-      source: 'LINE Bot',
-      type: 'rating',
-      answers: JSON.stringify([{ q: '滿意度評分', a: rating }]),
-      summary: `LINE 用戶 ${userId} 評分：${rating}`
-    })
-  }).catch(() => {});
-}
-
 // ── 快選單 ─────────────────────────────────────────────────────────────
 const QUICK_MENU = `請輸入數字選擇服務：
 1. 免運說明
@@ -221,23 +203,14 @@ const QUICK_REPLIES = {
   '3': '7天鑑賞期內未拆封可申請退貨，登入官網 > 會員中心 > 訂單查詢申請，取得 7-11 退貨便代號後 3 天內到 IBON 操作就完成了。已拆封的貼身衣物基於衛生考量無法退換。詳細說明：https://enamorshop.com/pages/return_policy',
   '4': '現貨商品 1~3 個工作天出貨，出貨後超商或宅配約再 2~4 天到。預購商品需等備齊後才出貨，萊卡抗菌無縫系列約 14 天，其他預購款約 7 天。有其他問題歡迎繼續問我 😊',
   '5': '下單後 12 小時內可自助取消：\nhttps://enamor-line-bot.vercel.app/cancel.html\n\n超過 12 小時請輸入「真人」由客服協助。',
-  '6': '訂單查詢需人工協助，請輸入「真人」，客服將於工作時間（週一～週五 9:00–17:00）回覆您。###NEED_HUMAN###'
+  '6': '訂單查詢需人工協助，請輸入「真人」，客服將於工作時間（週一～週五 9:00–17:00）回覆您。'
 };
 
 // ── 歡迎語 ─────────────────────────────────────────────────────────────
-const WELCOME_MESSAGE = `嗨！我是 EnamoR 客服茉兒，有什麼可以幫您的嗎？
+const WELCOME_MESSAGE = `嗨！我是 EnamoR 客服茉兒，有什麼可以幫您的嗎？\n\n${QUICK_MENU}`;
 
-${QUICK_MENU}`;
-
-// ── 評分訊息 ───────────────────────────────────────────────────────────
-const RATING_MESSAGE = `很高興能為您服務\n請為這次服務評分，您的回饋對我們很有幫助 😊\n\n1. 😞 不滿意\n2. 😐 尚可\n3. 🙂 算滿意\n4. 😍 非常滿意\n\n（直接輸入數字即可）`;
-
-const RATING_MAP = {
-  '1': '😞 不滿意',
-  '2': '😐 尚可',
-  '3': '🙂 算滿意',
-  '4': '😍 非常滿意'
-};
+// ── 收尾語 ─────────────────────────────────────────────────────────────
+const CLOSING_MESSAGE = '感謝您的聯繫，有需要隨時找我 😊';
 
 // ── 主 Handler ─────────────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
@@ -262,33 +235,13 @@ module.exports = async function handler(req, res) {
     const replyToken = event.replyToken;
     const messages = getSession(userId);
 
-    // ── 評分收集中 ────────────────────────────────────────────────────
-    if (ratingPendingSessions.has(userId)) {
-      const ratingLabel = RATING_MAP[userText];
-      if (ratingLabel) {
-        ratingPendingSessions.delete(userId);
-        await saveRating(userId, ratingLabel);
-        await replyToLine(replyToken, `感謝您的評分 💕\n期待下次再為您服務 🌸`);
-      } else {
-        ratingPendingSessions.delete(userId);
-        messages.push({ role: 'user', content: userText });
-        const systemPrompt = await getSystemPrompt();
-        let reply = await callClaude(messages, systemPrompt);
-        reply = reply.replace('###CLOSING###', '').replace('###NEED_HUMAN###', '').trim();
-        messages.push({ role: 'assistant', content: reply });
-        await replyToLine(replyToken, reply);
-      }
-      continue;
-    }
-
     // ── 結束關懷後，等待確認是否真的結束 ─────────────────────────────
     if (closingPendingSessions.has(userId)) {
       closingPendingSessions.delete(userId);
       const endingWords = ['沒了', '不用', '不用了', '沒有', '沒其他', '謝謝', '感謝', '好', 'OK', 'ok', '掰', '再見', '拜拜'];
       const isReallyDone = endingWords.some(w => userText.includes(w));
       if (isReallyDone) {
-        ratingPendingSessions.add(userId);
-        await replyToLine(replyToken, RATING_MESSAGE);
+        await replyToLine(replyToken, CLOSING_MESSAGE);
       } else {
         messages.push({ role: 'user', content: userText });
         const systemPrompt = await getSystemPrompt();
@@ -301,19 +254,6 @@ module.exports = async function handler(req, res) {
           closingPendingSessions.add(userId);
         }
         await replyToLine(replyToken, reply);
-      }
-      continue;
-    }
-
-    // ── 評分回覆處理（轉人工後觸發）────────────────────────────────
-    if (ratingSessionUsers.has(userId)) {
-      const ratingMap = { '1': '😞 不滿意', '2': '😐 尚可', '3': '🙂 算滿意', '4': '😍 非常滿意' };
-      if (ratingMap[userText]) {
-        ratingSessionUsers.delete(userId);
-        await saveRating(userId, ratingMap[userText]);
-        await replyToLine(replyToken, '感謝您的回饋 💕');
-      } else {
-        await replyToLine(replyToken, '請輸入 1～4 的數字進行評分 🙏');
       }
       continue;
     }
@@ -350,8 +290,6 @@ module.exports = async function handler(req, res) {
           'human_handoff'
         );
         await replyToLine(replyToken, `已收到您的請求\n類型：${cs.caseType}\n手機：${cs.phone}\nLINE：${lineName}\n\n人工客服將於工作時間（週一～週五 9:00–17:00）與您聯繫，請耐心等候。\n如為非服務時間，工作日會盡快回覆您。\n客服信箱：service@enamor.com.tw`);
-        ratingSessionUsers.add(userId);
-        await replyToLine(replyToken, RATING_MESSAGE);
       }
       continue;
     }
@@ -365,7 +303,7 @@ module.exports = async function handler(req, res) {
 
     // ── 主動要求真人 ──────────────────────────────────────────────────
     const HUMAN_TRIGGERS = ['真人', '人工', '真人客服', '客服', '克服', '找人', '找客服'];
-    if (HUMAN_TRIGGERS.some(w => userText === w || userText.startsWith(w))) {
+    if (HUMAN_TRIGGERS.some(w => userText.includes(w))) {
       humanRequestSessions.set(userId, true);
       await replyToLine(replyToken, '好的，請問是哪類問題？\n1. 退換貨\n2. 商品問題\n3. 訂單問題\n4. 其他');
       continue;
@@ -379,18 +317,20 @@ module.exports = async function handler(req, res) {
 
     // ── 數字快捷 ──────────────────────────────────────────────────────
     if (QUICK_REPLIES[userText]) {
-      const quickReply = QUICK_REPLIES[userText];
-      const needHuman = quickReply.includes('###NEED_HUMAN###');
-      const cleanReply = quickReply.replace('###NEED_HUMAN###', '').trim();
-      if (needHuman) await notifySheet(userId, userText, cleanReply);
-      await replyToLine(replyToken, cleanReply);
+      await replyToLine(replyToken, QUICK_REPLIES[userText]);
       continue;
     }
 
-    // ── 第一則訊息：歡迎語 ────────────────────────────────────────────
+    // ── 第一則訊息：歡迎語 + 繼續處理問題 ───────────────────────────
     if (messages.length === 0) {
       messages.push({ role: 'user', content: '__init__' });
       await replyToLine(replyToken, WELCOME_MESSAGE);
+      // 若第一則訊息不是純打招呼，存進 session 等下次觸發 AI
+      const greetings = ['嗨', '你好', '哈囉', 'hi', 'hello', '您好', '早安', '晚安'];
+      const isGreeting = greetings.some(g => userText.toLowerCase().includes(g));
+      if (!isGreeting) {
+        messages.push({ role: 'user', content: userText });
+      }
       continue;
     }
 
