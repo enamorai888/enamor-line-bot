@@ -78,8 +78,28 @@ table{width:100%;border-collapse:collapse}th{padding:8px 14px;text-align:left;fo
   </div>
 </div>
 <script>
-function authCheck(){if(document.getElementById('authPw').value==='28447208'){document.getElementById('authWall').style.display='none';sessionStorage.setItem('enamor_auth','1')}else{document.getElementById('authErr').style.display='block'}}
-if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall').style.display='none';
+// 密碼改由 /api/admin-login 在伺服器端驗證（Vercel 環境變數 ADMIN_PASSWORD）。
+// 通過後會拿到一個 HttpOnly cookie，JavaScript 讀不到，所以偷不走。
+async function authCheck(){
+  var pw=document.getElementById('authPw').value;
+  var err=document.getElementById('authErr');
+  err.style.display='none';
+  try{
+    var r=await fetch('/api/admin-login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({password:pw})
+    });
+    if(!r.ok){err.style.display='block';document.getElementById('authPw').value='';return;}
+  }catch(e){err.style.display='block';return;}
+  document.getElementById('authWall').style.display='none';
+}
+// 開頁時問伺服器目前是否還在登入狀態（cookie 有效期 12 小時）
+fetch('/api/admin-login',{credentials:'include'})
+  .then(function(r){return r.json();})
+  .then(function(d){if(d&&d.authenticated)document.getElementById('authWall').style.display='none';})
+  .catch(function(){});
 </script>
 
 <header>
@@ -182,6 +202,9 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
 <div class="toast" id="toast"></div>
 
 <script>
+// TODO（尚未處理）：enamor-oms 是另一個 Vercel 專案，不在這個倉庫裡，
+// 它的 oms-proxy 仍然靠下面這串前端 token 驗證，所以這串目前還是公開的。
+// 等 enamor-oms 也改成 cookie 驗證後，這一行就能整個刪掉。
 const P='https://enamor-oms.vercel.app/api/oms-proxy',TK='28447208';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 let supMap={},items=[],orders=[],days=7,skuQ='',seriesF='all',selected=new Set();
@@ -655,8 +678,8 @@ ${excludeNote}
   let copy={headline:'穿了就忘了',sub:'不緊繃的自由感\n不捲邊的舒適度',caption:'杜邦萊卡高彈力，一整天不捲不滑',cta:'了解更多'};
   try{
     const r=await fetch('https://enamor-line-bot.vercel.app/api/claude-proxy',{
-      method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':'28447208'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})
+      method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',
+      body:JSON.stringify({task:'admin',model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})
     });
     const data=await r.json();
     let txt=(data.content?.map(c=>c.text||'').join('')||'').trim();
