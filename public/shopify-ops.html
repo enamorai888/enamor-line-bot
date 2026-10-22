@@ -435,9 +435,15 @@
 <script>
 // ── 設定 ──────────────────────────────────────────────
 const PROXY_URL = '/api/claude-proxy';
-const PROXY_TOKEN = '28447208';
+const LOGIN_URL = '/api/admin-login';
 const OMS_PROXY = 'https://enamor-oms.vercel.app/api/oms-proxy';
-const PASSWORD = '28447208';
+// 密碼已移到 Vercel 環境變數 ADMIN_PASSWORD，由 /api/admin-login 驗證。
+// claude-proxy 的 token 已完全移除。
+//
+// TODO（尚未處理）：enamor-oms 是另一個 Vercel 專案，不在這個倉庫裡，
+// 它的 oms-proxy 仍然靠下面這串前端 token 驗證，所以這串目前還是公開的。
+// 等 enamor-oms 也改成 cookie 驗證後，這一行就能刪掉。
+const OMS_TOKEN = '28447208';
 const MODEL = 'claude-sonnet-4-6';
 const CASE_COLLECTOR_URL = '/api/case-collector';
 const SHEET_ID = '1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
@@ -534,12 +540,38 @@ loadProductSheet();
 document.getElementById('loginBtn').addEventListener('click', doLogin);
 document.getElementById('loginInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-function doLogin() {
+async function doLogin() {
   const pw = document.getElementById('loginInput').value;
   const staff = document.getElementById('staffSelect').value;
   const err = document.getElementById('loginError');
   if (!staff) { err.textContent = '請選擇操作人員'; return; }
-  if (pw !== PASSWORD) { err.textContent = '密碼錯誤'; document.getElementById('loginInput').value = ''; return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  err.textContent = '驗證中…';
+  try {
+    const r = await fetch(LOGIN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ password: pw })
+    });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      err.textContent = r.status === 429 ? '嘗試次數過多，請 15 分鐘後再試'
+        : d.error === 'server_not_configured' ? '伺服器尚未設定密碼'
+        : '密碼錯誤';
+      document.getElementById('loginInput').value = '';
+      return;
+    }
+  } catch (e) {
+    err.textContent = '連線異常，請稍後再試';
+    return;
+  } finally {
+    btn.disabled = false;
+  }
+
+  err.textContent = '';
   currentStaff = staff;
   document.getElementById('loginOverlay').classList.add('hidden');
   document.getElementById('staffBadge').textContent = staff;
@@ -653,8 +685,9 @@ async function sendShopifyMessage() {
     }
     const res = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
-      body: JSON.stringify({ model: MODEL, max_tokens: 4096, system: SHOPIFY_SYSTEM, messages: msgs })
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ task: 'admin', model: MODEL, max_tokens: 4096, system: SHOPIFY_SYSTEM, messages: msgs })
     });
     const data = await res.json();
     typing.remove();
@@ -718,7 +751,7 @@ async function queryOmsStock(skuKeyword) {
   try {
     const res = await fetch(OMS_PROXY, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+      headers: { 'Content-Type': 'application/json', 'x-proxy-token': OMS_TOKEN },
       body: JSON.stringify({
         endpoint: '/api/v2/default/getStocksData/searchList',
         body: { 'view_products_stock.stock_group': '10' }
@@ -763,8 +796,10 @@ async function sendCSMessage() {
 
     const res = await fetch(PROXY_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
+        task: 'admin',
         model: MODEL, max_tokens: 1000,
         system: CS_SYSTEM,
         messages: [{ role: 'user', content: userContent }]
