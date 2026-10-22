@@ -449,8 +449,7 @@
 
 <script>
 const BASE = 'https://enamor-line-bot.vercel.app';
-const PROXY_TOKEN = '28447208';
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzyw6mrRUK6HcoJeObWHg77NFZ5WG7o9vJMb262faHvncrAztJQpoFj9ZalUo4XcwTzxA/exec';
+const SHEET_URL ='https://script.google.com/macros/s/AKfycbzyw6mrRUK6HcoJeObWHg77NFZ5WG7o9vJMb262faHvncrAztJQpoFj9ZalUo4XcwTzxA/exec';
 
 // ── Crisp ────────────────────────────────────────────────
 window.$crisp = [];
@@ -526,24 +525,9 @@ function exitFeature() {
 }
 
 // ── AI System Prompt ─────────────────────────────────────
-const AI_SYSTEM = `你是 EnamoR 恩娜茉兒的 AI 客服，專業、親切、簡潔。
-
-品牌資訊：
-- 台灣MIT女性內衣褲品牌，主力為 ZERO-TEX 萊卡抗菌系列
-- 免運門檻：折扣後滿 NT$999（外島除外）
-- 客服時間：週一至週五 09:00–17:00
-- 現貨出貨：1-3個工作天，宅配1-2天
-- 預購類型：A1（生產製程中）、A2（長銷補貨）、B（流行性商品）
-- 退貨：收到7天內、未拆封、未洗滌可申請；內衣褲拆封後不可退
-- 換貨：尺寸、顏色可換，已穿著不受理
-- 取消訂單：下單12小時內可自助取消
-- 已付款退款：7-14個工作天退回
-
-回覆原則：
-- 用繁體中文，語氣溫柔有質感
-- 簡短直接，不超過3段
-- 無法確認的事項（如特定訂單）請引導使用下方功能查詢
-- 結尾可視情況引導加入 LINE @enamorshop`;
+// 已搬到伺服器端（api/claude-proxy.js 的 SUPPORT_SYSTEM）。
+// 放在前端等於公開，任何人都能改掉客服設定來濫用這支端點。
+// 以後要調客服口氣或品牌資訊，改 api/claude-proxy.js，不是這裡。
 
 // ── AI 對話 ──────────────────────────────────────────────
 const chatHistory = [];
@@ -569,20 +553,24 @@ async function sendChat() {
   try {
     const r = await fetch(`${BASE}/api/claude-proxy`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-proxy-token': PROXY_TOKEN },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        system: AI_SYSTEM,
-        messages: chatHistory.slice(-10),
-        max_tokens: 500
+        task: 'support',
+        messages: chatHistory.slice(-10)
       })
     });
-    const d = await r.json();
-    const reply = d.content?.[0]?.text || '抱歉，暫時無法回覆，請稍後再試。';
-    aiEl.innerHTML = reply.replace(/\n/g, '<br>');
-    chatHistory.push({ role: 'assistant', content: reply });
+
+    if (r.status === 429) {
+      setMsgText(aiEl, '訊息太頻繁了，請稍等一下再問。');
+      aiEl.style.color = 'var(--err)';
+    } else {
+      const d = await r.json();
+      const reply = d.text || d.content?.[0]?.text || '抱歉，暫時無法回覆，請稍後再試。';
+      setMsgText(aiEl, reply);
+      chatHistory.push({ role: 'assistant', content: reply });
+    }
   } catch(e) {
-    aiEl.innerHTML = '連線異常，請稍後再試。';
+    setMsgText(aiEl, '連線異常，請稍後再試。');
     aiEl.style.color = 'var(--err)';
   }
 
@@ -591,11 +579,22 @@ async function sendChat() {
   box.scrollTop = box.scrollHeight;
 }
 
+// 以文字節點寫入，換行用真的 <br> 元素。
+// 不要用 innerHTML：訪客輸入的內容會被當成 HTML 執行（XSS）。
+function setMsgText(el, text) {
+  el.textContent = '';
+  const lines = String(text).split('\n');
+  lines.forEach((line, i) => {
+    if (i > 0) el.appendChild(document.createElement('br'));
+    el.appendChild(document.createTextNode(line));
+  });
+}
+
 function addMsg(role, text) {
   const box = document.getElementById('chat-messages');
   const el = document.createElement('div');
   el.className = 'msg ' + role;
-  el.innerHTML = text.replace(/\n/g, '<br>');
+  setMsgText(el, text);
   box.appendChild(el);
   box.scrollTop = box.scrollHeight;
   return el;
