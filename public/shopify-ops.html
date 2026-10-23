@@ -436,14 +436,11 @@
 // ── 設定 ──────────────────────────────────────────────
 const PROXY_URL = '/api/claude-proxy';
 const LOGIN_URL = '/api/admin-login';
-const OMS_PROXY = 'https://enamor-oms.vercel.app/api/oms-proxy';
+// OMS 改走同網域的中轉站 /api/oms-call，由伺服器端補 x-proxy-token。
+// 前端不再持有任何 OMS 憑證（token 在 Vercel 環境變數 OMS_PROXY_TOKEN）。
+const OMS_PROXY = '/api/oms-call?target=oms-proxy';
 // 密碼已移到 Vercel 環境變數 ADMIN_PASSWORD，由 /api/admin-login 驗證。
 // claude-proxy 的 token 已完全移除。
-//
-// TODO（尚未處理）：enamor-oms 是另一個 Vercel 專案，不在這個倉庫裡，
-// 它的 oms-proxy 仍然靠下面這串前端 token 驗證，所以這串目前還是公開的。
-// 等 enamor-oms 也改成 cookie 驗證後，這一行就能刪掉。
-const OMS_TOKEN = '28447208';
 const MODEL = 'claude-sonnet-4-6';
 const CASE_COLLECTOR_URL = '/api/case-collector';
 const SHEET_ID = '1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
@@ -751,7 +748,8 @@ async function queryOmsStock(skuKeyword) {
   try {
     const res = await fetch(OMS_PROXY, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-proxy-token': OMS_TOKEN },
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         endpoint: '/api/v2/default/getStocksData/searchList',
         body: { 'view_products_stock.stock_group': '10' }
