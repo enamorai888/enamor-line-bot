@@ -245,6 +245,8 @@
 
 <script>
 const API = 'https://enamor-line-bot.vercel.app/api';
+// verify-otp 簽發的取消通行證，confirmCancel 時要帶上
+let cancelTicket = '';
 let currentEmail = '';
 let selectedOrder = null;
 
@@ -337,6 +339,7 @@ async function verifyOtp() {
       throw new Error(errMap[data.error] || '驗證失敗');
     }
 
+    cancelTicket = data.ticket || '';
     renderOrders(data.orders);
     goStep(3);
 
@@ -412,10 +415,18 @@ async function confirmCancel() {
     const res = await fetch(API + '/cancel-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order_id: selectedOrder.id, order_token: selectedOrder.token })
+      body: JSON.stringify({ order_id: selectedOrder.id, ticket: cancelTicket })
     });
     const data = await res.json();
     const isPending = selectedOrder.financial_status === 'pending';
+
+    if (!data.success && (data.error === 'ticket_invalid' || data.error === 'order_not_in_ticket' || data.error === 'order_not_yours')) {
+      cancelTicket = '';
+      showError('step4Error', '這次的驗證已失效，請從頭重新收取驗證碼。');
+      btn.disabled = false;
+      btn.textContent = '確認取消訂單';
+      return;
+    }
 
     if (data.success) {
       document.getElementById('resultContent').innerHTML = `
