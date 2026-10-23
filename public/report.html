@@ -104,7 +104,7 @@ header .ub{font-family:'DM Mono',monospace;font-size:11px;color:#5C5C58;backgrou
     <div class="lt">問題回報</div>
     <input type="text" id="inName" placeholder="你的名字">
     <input type="password" id="inPwd" placeholder="密碼">
-    <button onclick="tryLogin()">進入</button>
+    <button id="loginBtn" onclick="tryLogin()">進入</button>
     <div id="loginErr"></div>
   </div>
 </div>
@@ -161,18 +161,38 @@ header .ub{font-family:'DM Mono',monospace;font-size:11px;color:#5C5C58;backgrou
 
 <script>
 var SU='https://script.google.com/macros/s/AKfycbz6KCr64lsHly0HVSE70fZ8lKdU315dbspcQoYxyT9Ow0nq6hLhL82S5XFXpRsVX65c/exec';
-var PW='28447208';
+// 密碼已移除：改由 /api/admin-login 驗證（密碼存在 Vercel 環境變數 ADMIN_PASSWORD）
 var user='';
 var selTag='';
 var selUrg='一般';
 
 /* LOGIN */
-function tryLogin(){
+async function tryLogin(){
   var n=document.getElementById('inName').value.trim();
   var p=document.getElementById('inPwd').value.trim();
   var err=document.getElementById('loginErr');
+  var btn=document.getElementById('loginBtn');
   if(!n){err.textContent='請輸入名字';err.style.display='block';return}
-  if(p!==PW){err.textContent='密碼錯誤';err.style.display='block';return}
+  if(!p){err.textContent='請輸入密碼';err.style.display='block';return}
+  err.style.display='none';
+  if(btn){btn.disabled=true;btn.textContent='驗證中…'}
+  try{
+    var r=await fetch('/api/admin-login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({password:p})
+    });
+    if(!r.ok){
+      err.textContent=(r.status===429)?'嘗試太多次，請稍後再試':'密碼錯誤';
+      err.style.display='block';
+      return;
+    }
+  }catch(e){
+    err.textContent='連線異常，請稍後再試';err.style.display='block';return;
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='進入'}
+  }
   user=n;
   try{sessionStorage.setItem('rpt_user',n)}catch(e){}
   go();
@@ -184,7 +204,17 @@ function go(){
   loadHist();
 }
 /* auto-login */
-try{var sv=sessionStorage.getItem('rpt_user');if(sv){user=sv;go()}}catch(e){}
+// 自動登入：先向伺服器確認 cookie 仍有效，sessionStorage 只用來記名字
+(async function(){
+  var sv='';
+  try{sv=sessionStorage.getItem('rpt_user')||''}catch(e){}
+  if(!sv)return;
+  try{
+    var r=await fetch('/api/admin-login',{credentials:'include'});
+    var d=await r.json();
+    if(d&&d.authenticated){user=sv;go()}
+  }catch(e){}
+})();
 /* enter keys */
 document.getElementById('inPwd').onkeydown=function(e){if(e.key==='Enter')tryLogin()};
 document.getElementById('inName').onkeydown=function(e){if(e.key==='Enter')document.getElementById('inPwd').focus()};
