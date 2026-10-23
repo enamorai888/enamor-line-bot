@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EnamoR 銷售分析</title>
+<!--
+  狀態：沉睡（2026-10-23 標記）
+  這一頁目前沒有在日常使用，保留不刪。
+  未來規劃：併入 Purchase-oms.html 成為第三個分頁（兩邊已經在吃同一份訂單資料與同一本供應商對照表）。
+  併入後這支才會刪除。
+-->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -202,16 +208,15 @@ fetch('/api/admin-login',{credentials:'include'})
 <div class="toast" id="toast"></div>
 
 <script>
-// TODO（尚未處理）：enamor-oms 是另一個 Vercel 專案，不在這個倉庫裡，
-// 它的 oms-proxy 仍然靠下面這串前端 token 驗證，所以這串目前還是公開的。
-// 等 enamor-oms 也改成 cookie 驗證後，這一行就能整個刪掉。
-const P='https://enamor-oms.vercel.app/api/oms-proxy',TK='28447208';
+// OMS 改走同網域的中轉站 /api/oms-call，由伺服器端補 x-proxy-token。
+// 前端不再持有任何 OMS 憑證（token 在 Vercel 環境變數 OMS_PROXY_TOKEN）。
+const P='/api/oms-call?target=oms-proxy';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 let supMap={},items=[],orders=[],days=7,skuQ='',seriesF='all',selected=new Set();
 const COLORS=['#2d7a3a','#6c5ce7','#e67e22','#c0392b','#0984e3','#00b894','#d63031','#636e72','#fdcb6e','#e17055'];
 const SKIP=new Set(['999999','platform_coin','SHIPFEE','seller_discount','Discount','universal_products']);
 
-async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':TK},body:JSON.stringify({endpoint:ep,body:b})});return r.json()}
+async function oP(ep,b){const r=await fetch(P,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:ep,body:b})});return r.json()}
 
 async function ldSup(){
   const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:Q?key=${SK}`;
