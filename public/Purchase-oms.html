@@ -79,13 +79,37 @@ tr.urgent-row td:first-child{border-left:3px solid var(--red);padding-left:6px}
   </div>
 </div>
 <script>
-function authCheck(){
-  if(document.getElementById('authPw').value==='28447208'){
-    document.getElementById('authWall').style.display='none';
-    sessionStorage.setItem('enamor_auth','1');
-  }else{document.getElementById('authErr').style.display='block'}
+// 密碼已移到 Vercel 環境變數 ADMIN_PASSWORD，由 /api/admin-login 驗證。
+async function authCheck(){
+  const pw=document.getElementById('authPw').value;
+  const err=document.getElementById('authErr');
+  if(!pw){err.textContent='請輸入密碼';err.style.display='block';return;}
+  err.style.display='none';
+  try{
+    const r=await fetch('/api/admin-login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({password:pw})
+    });
+    if(!r.ok){
+      err.textContent=(r.status===429)?'嘗試太多次，請稍後再試':'密碼錯誤';
+      err.style.display='block';
+      return;
+    }
+  }catch(e){
+    err.textContent='連線異常，請稍後再試';err.style.display='block';return;
+  }
+  document.getElementById('authWall').style.display='none';
 }
-if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall').style.display='none';
+// 重新整理後不再用 sessionStorage 直接放行，改向伺服器確認 cookie 還有效
+(async function(){
+  try{
+    const r=await fetch('/api/admin-login',{credentials:'include'});
+    const d=await r.json();
+    if(d&&d.authenticated)document.getElementById('authWall').style.display='none';
+  }catch(e){}
+})();
 </script>
 <header>
   <img class="logo-img" src="https://raw.githubusercontent.com/enamorai888/enamor-line-bot/main/public/EnamoR-logo-PNG-LOGO-B.png" alt="EnamoR" onerror="this.style.display='none'">
@@ -242,10 +266,12 @@ if(sessionStorage.getItem('enamor_auth')==='1')document.getElementById('authWall
 </div>
 <div class="toast" id="toast"></div>
 <script>
-const P='https://enamor-oms.vercel.app/api/oms-proxy',T='28447208';
-const PO_META_API='https://enamor-oms.vercel.app/api/po-meta';
-const RECEIVE_API='https://enamor-oms.vercel.app/api/receive-log';
-const SEND_EMAIL_API='https://enamor-oms.vercel.app/api/send-purchase-email';
+// OMS 改走同網域的中轉站 /api/oms-call，由伺服器端補 x-proxy-token。
+// 前端不再持有任何 OMS 憑證（token 在 Vercel 環境變數 OMS_PROXY_TOKEN）。
+const P='/api/oms-call?target=oms-proxy';
+const PO_META_API='/api/oms-call?target=po-meta';
+const RECEIVE_API='/api/oms-call?target=receive-log';
+const SEND_EMAIL_API='/api/oms-call?target=send-purchase-email';
 const SID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8',SK='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 const LK='enamor_po_oms_v2',SD=30,MARKETS_NO=[1,8,16];
 const PO_TAB_DAYS_KEY='enamor_potab_days';
@@ -338,7 +364,7 @@ function applyVendorFilter(){
   const v=document.getElementById('vendorFilterSel').value;
   document.querySelectorAll('#tblArea .vendor-block').forEach(b=>{const badge=b.querySelector('.vbadge');if(!badge){b.style.display='';return;}if(!v||badge.textContent.trim()===v)b.style.display='';else b.style.display='none';});
 }
-async function oP(ep,b){const r=await fetch(P,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({endpoint:ep,body:b})});return r.json();}
+async function oP(ep,b){const r=await fetch(P,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint:ep,body:b})});return r.json();}
 let revMap={};
 async function ldSup(){const u=`https://sheets.googleapis.com/v4/spreadsheets/${SID}/values/A:Q?key=${SK}`;const r=await fetch(u);if(!r.ok)throw new Error('Sheet '+r.status);const j=await r.json();const rows=j.values||[];if(rows.length<2)throw new Error('Sheet空');const h=rows[0],ci=n=>h.indexOf(n);const iC=ci('商品條碼'),iV=ci('廠商編號'),iN=ci('廠商名稱'),iS=ci('廠商貨號'),iSz=ci('尺寸說明'),iCo=ci('廠商顏色說明'),iAct=ci('Shopify啟用'),iNm=ci('商品名稱');supMap={};revMap={};rows.slice(1).forEach(r=>{const c=(r[iC]||'').trim();const active=(r[iAct]||'').trim();if(c&&active==='V'&&!supMap[c]){const vs=(r[iS]||'').trim(),vc=(r[iCo]||'').trim(),vsz=(r[iSz]||'').trim(),nm=iNm>=0?(r[iNm]||'').trim():'';supMap[c]={vid:(r[iV]||'').trim(),vn:(r[iN]||'').trim(),vs,vsz,vc,nm};const rk=`${vs}|||${vc}|||${vsz}`;if(!revMap[rk])revMap[rk]={bc:c,nm}}});return Object.keys(supMap).length;}
 
@@ -562,12 +588,12 @@ async function submitToOms(){
     if(ok){
       st.innerHTML=`<span style="color:var(--green);font-weight:600">✓ ${res.msg}，採購單號 ${poNo}</span>`;toast('✓ 採購單已送出');
       const tracking=document.getElementById('poTracking').value.trim();const memo=document.getElementById('poMemo').value.trim();
-      if(tracking||memo){try{await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'save',purchase_no:poNo,vendor_id:vendorCode,tracking,memo})});}catch(e){}}
+      if(tracking||memo){try{await fetch(PO_META_API,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save',purchase_no:poNo,vendor_id:vendorCode,tracking,memo})});}catch(e){}}
       // 寄送 email 通知
       const supplierName=(Object.values(supMap).find(s=>s.vid===vendorCode)||{}).vn||'';
       const emailOrders=[{purchase_no:poNo,vendor:`${vendorCode}${supplierName?' '+supplierName:''}`,sku_count:matched.length,total_qty:matched.reduce((s,i)=>s+i.qty,0),tracking,memo}];
       try{
-        const er=await fetch(SEND_EMAIL_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({orders:emailOrders})});
+        const er=await fetch(SEND_EMAIL_API,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({orders:emailOrders})});
         const ej=await er.json();
         if(ej.ok||ej.result){st.innerHTML+=`<span style="color:var(--green);font-size:11px;margin-left:8px">✉ 通知信已寄出</span>`;}
         else{st.innerHTML+=`<span style="color:var(--orange);font-size:11px;margin-left:8px">⚠ 通知信寄送失敗（採購單已建立）</span>`;console.warn('Email 失敗:',ej);}
@@ -626,7 +652,7 @@ async function fetchPOTab(){
     const pns=poTabRows.map(r=>r.pn).filter(pn=>!(pn in poTabMetaCache));
     if(pns.length){
       try{
-        const r=await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'batch_get',purchase_nos:pns})});
+        const r=await fetch(PO_META_API,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'batch_get',purchase_nos:pns})});
         const j=await r.json();
         if(j.ok&&j.records)pns.forEach(pn=>{poTabMetaCache[pn]=j.records[pn]||null;});
       }catch(e){console.warn('讀 po-meta 失敗',e);}
@@ -782,7 +808,7 @@ async function saveMetaField(pn,field,safeId){
   const memo=field==='memo'?newVal:(poTabMetaCache[pn].memo||'');
   const mch=pn.match(/-([A-Z0-9]+)$/i);const vendor_id=mch?mch[1]:'';
   try{
-    const r=await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'save',purchase_no:pn,vendor_id,tracking,memo})});
+    const r=await fetch(PO_META_API,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save',purchase_no:pn,vendor_id,tracking,memo})});
     const j=await r.json();
     if(j.ok||j.success){disp.textContent=newVal||'—';disp.className='meta-display'+(newVal?'':' empty');toast('✓ 已儲存');}
     else{poTabMetaCache[pn][field]=oldVal;disp.textContent=oldVal||'—';disp.className='meta-display'+(oldVal?'':' empty');toast('儲存失敗：'+(j.error||'?'));}
@@ -803,7 +829,7 @@ async function savePOTabNote(pn,safeId){
   const memo=poTabMetaCache[pn].memo||'';
   const mch=pn.match(/-([A-Z0-9]+)$/i);const vendor_id=mch?mch[1]:'';
   try{
-    const r=await fetch(PO_META_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify({action:'save',purchase_no:pn,vendor_id,tracking,memo,note:newVal})});
+    const r=await fetch(PO_META_API,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'save',purchase_no:pn,vendor_id,tracking,memo,note:newVal})});
     const j=await r.json();
     if(j.ok||j.success){
       if(stEl){stEl.textContent='✓ 已儲存';stEl.style.color='var(--green)';setTimeout(()=>{if(stEl)stEl.textContent='';},2500);}
@@ -832,7 +858,7 @@ async function togglePOTabReceive(origIdx,safeId,event){
       ct.innerHTML='<div style="padding:16px 20px;font-size:12px;color:var(--muted);font-family:\'DM Mono\',monospace"><span class="spinner"></span>讀取對帳紀錄...</div>';
       tr.style.display='table-row';
       try{
-        const r=await fetch(`${RECEIVE_API}?action=get&purchase_no=${encodeURIComponent(po.pn)}`,{method:'GET',headers:{'x-proxy-token':T}});
+        const r=await fetch(`${RECEIVE_API}&action=get&purchase_no=${encodeURIComponent(po.pn)}`,{method:'GET',credentials:'include'});
         const j=await r.json();
         poTabReceiveQty[safeId]={};
         if(j.ok&&j.record&&Array.isArray(j.record.items)){
@@ -948,7 +974,7 @@ async function savePOTabReceive(origIdx,safeId){
   const mch=po.pn.match(/-([A-Z0-9]+)$/i);const vendor_id=mch?mch[1]:po.vid;
   const payload={action:'save',purchase_no:po.pn,vendor_id,checker:'採購平台',items,summary,notes};
   try{
-    const r=await fetch(RECEIVE_API,{method:'POST',headers:{'Content-Type':'application/json','x-proxy-token':T},body:JSON.stringify(payload)});
+    const r=await fetch(RECEIVE_API,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     const j=await r.json();
     if(j.ok){
       poTabReceiveState[safeId+'_note']=notes;
