@@ -106,18 +106,41 @@ tr:hover td{background:#faf9f8}
 </div>
 
 <script>
-function authCheck(){
-  if(document.getElementById('authPw').value==='28447208'){
-    document.getElementById('authWall').style.display='none';
-    sessionStorage.setItem('enamor_auth','1');
-    promptChecker();
-  }else{
-    document.getElementById('authErr').style.display='block';
+// 密碼已移到 Vercel 環境變數 ADMIN_PASSWORD，由 /api/admin-login 驗證。
+async function authCheck(){
+  const pw=document.getElementById('authPw').value;
+  const err=document.getElementById('authErr');
+  if(!pw){err.textContent='請輸入密碼';err.style.display='block';return;}
+  err.style.display='none';
+  try{
+    const r=await fetch('/api/admin-login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({password:pw})
+    });
+    if(!r.ok){
+      err.textContent=(r.status===429)?'嘗試太多次，請稍後再試':'密碼錯誤';
+      err.style.display='block';
+      return;
+    }
+  }catch(e){
+    err.textContent='連線異常，請稍後再試';err.style.display='block';return;
   }
-}
-if(sessionStorage.getItem('enamor_auth')==='1'){
   document.getElementById('authWall').style.display='none';
+  promptChecker();
 }
+// 重新整理後不再用 sessionStorage 直接放行，改向伺服器確認 cookie 還有效
+(async function(){
+  try{
+    const r=await fetch('/api/admin-login',{credentials:'include'});
+    const d=await r.json();
+    if(d&&d.authenticated){
+      document.getElementById('authWall').style.display='none';
+      promptChecker();
+    }
+  }catch(e){}
+})();
 function promptChecker(){
   const c=sessionStorage.getItem('enamor_checker');
   if(!c){
@@ -241,9 +264,10 @@ window.addEventListener('DOMContentLoaded',()=>{
 <div class="toast" id="toast"></div>
 
 <script>
-const PROXY='https://enamor-oms.vercel.app/api/oms-proxy';
-const RECEIVE_API='https://enamor-oms.vercel.app/api/receive-log';
-const TOKEN='28447208';
+// OMS 改走同網域的中轉站 /api/oms-call，由伺服器端補 x-proxy-token。
+// 前端不再持有任何 OMS 憑證（token 在 Vercel 環境變數 OMS_PROXY_TOKEN）。
+const PROXY='/api/oms-call?target=oms-proxy';
+const RECEIVE_API='/api/oms-call?target=receive-log';
 const SHEET_ID='1jYnzBWyvF23asaPFjqYaEl5LXOg77inIaJlCMkzdOS8';
 const SHEET_KEY='AIzaSyCrFGNy_-YgRWsrOw0H_tfTqeCbnIkVZA8';
 const PO_STATUS_MAP={'60':'處理中','62':'QC中','65':'已回寫','69':'已結案'};
@@ -258,7 +282,8 @@ let receiveItems=[];// 對帳行 [{sku, vs, vc, vsz, nm, ordered, received, isEx
 async function omsCall(ep, body){
   const r=await fetch(PROXY,{
     method:'POST',
-    headers:{'Content-Type':'application/json','x-proxy-token':TOKEN},
+    credentials:'include',
+    headers:{'Content-Type':'application/json'},
     body:JSON.stringify({endpoint:ep, body})
   });
   return r.json();
@@ -428,8 +453,8 @@ async function onPOChange(){
   
   // 嘗試讀已存的對帳紀錄（如果有的話）
   try{
-    const r=await fetch(`${RECEIVE_API}?action=get&purchase_no=${encodeURIComponent(pn)}`,{
-      headers:{'x-proxy-token':TOKEN}
+    const r=await fetch(`${RECEIVE_API}&action=get&purchase_no=${encodeURIComponent(pn)}`,{
+      credentials:'include'
     });
     const j=await r.json();
     if(j.ok&&j.record){
@@ -610,7 +635,8 @@ async function saveReceive(){
   try{
     const r=await fetch(RECEIVE_API,{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-proxy-token':TOKEN},
+      credentials:'include',
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify(payload)
     });
     const j=await r.json();
@@ -677,8 +703,8 @@ async function loadHistory(){
   const area=document.getElementById('historyArea');
   area.innerHTML='<div class="loading"><span class="spinner"></span>讀取中...</div>';
   try{
-    const r=await fetch(`${RECEIVE_API}?action=list&limit=50`,{
-      headers:{'x-proxy-token':TOKEN}
+    const r=await fetch(`${RECEIVE_API}&action=list&limit=50`,{
+      credentials:'include'
     });
     const j=await r.json();
     if(!j.ok){
@@ -729,8 +755,8 @@ async function viewHistory(pn){
     },50);
   }else{
     // 已不是處理中、只顯示歷史紀錄
-    const r=await fetch(`${RECEIVE_API}?action=get&purchase_no=${encodeURIComponent(pn)}`,{
-      headers:{'x-proxy-token':TOKEN}
+    const r=await fetch(`${RECEIVE_API}&action=get&purchase_no=${encodeURIComponent(pn)}`,{
+      credentials:'include'
     });
     const j=await r.json();
     if(j.ok&&j.record){
