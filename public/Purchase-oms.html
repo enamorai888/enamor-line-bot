@@ -378,14 +378,40 @@ async function fetchAll(){
     let skuFilter=null;
     if(loadMode==='single'&&loadVendor){skuFilter=new Set();Object.entries(supMap).forEach(([bc,sp])=>{if(sp.vid===loadVendor)skuFilter.add(bc)});sL(`單一模式：${loadVendor}（${skuFilter.size} SKU）`);}
     sL('拉取庫存...');const sr=await oP('/api/v2/default/getStocksData/searchList',{"view_products_stock.stock_group":"10"});
+    if(sr&&sr.error){sS('sbOms',0,'OMS 失敗');throw new Error(`庫存拉取失敗（${sr.error}）`);}
     let _allStk=sr.retval||[];
+    if(!_allStk.length){sS('sbStk',0,'庫存 0');throw new Error('庫存回傳 0 筆，OMS 可能逾時，請再按一次拉取');}
     if(skuFilter)_allStk=_allStk.filter(s=>skuFilter.has((s['view_products_stock.products_model']||'').trim()));
     stockD=_allStk;sS('sbOms',1,'OMS 正常');sS('sbStk',1,`庫存 ${stockD.length}`);
-    sL('拉取30天訂單明細...');const dd=new Date();dd.setDate(dd.getDate()-SD);const ds=dd.toISOString().slice(0,10);
-    const or=await oP('/api/v2/default/apiOrderList/searchDetail',{"orders.created_at@start":[">=",ds]});
-    const rv=or.retval||{};const oi=rv['訂單明細']||[];const ob=rv['基本資料']||[];
+
+    // ── 訂單明細：切成 CHUNK_DAYS 天一段，分批拉 ──
+    // 2026-11-05 修正：一次拉 30 天的 payload 約 35MB，上游常常超過 30 秒被中轉站切斷。
+    // 舊版把回來的 504 當成「0 筆明細」而且還亮綠燈，於是日均銷量 0 → 再訂購點 0 →
+    // 「需採購」永遠是 0，採購建議整個空掉。分段後每段約 10~15 秒，穩定得多。
+    // 任何一段失敗就整個中止並亮紅燈，寧可沒報表，也不要一份看起來正常的假報表。
+    const CHUNK_DAYS=6;
+    const _iso=dt=>dt.toISOString().slice(0,10);
+    const _addD=(dt,n)=>{const x=new Date(dt);x.setDate(x.getDate()+n);return x;};
+    const _base=_addD(new Date(),-SD);
+    const seenLine=new Set(),seenOrd=new Set();
+    const oi=[],odMap={};
+    const chunkTotal=Math.ceil(SD/CHUNK_DAYS);
+    for(let ci=0,off=0;off<SD;off+=CHUNK_DAYS,ci++){
+      // @end 的比較是字串比對，'2026-11-05 14:30' > '2026-11-05'，所以結束日當天會被排除。
+      // 剛好讓每段不重疊；最後一段改用「明天」當結束日，今天的訂單才算得進來。
+      const s=_iso(_addD(_base,off));
+      const e=_iso(_addD(_base,(off+CHUNK_DAYS>=SD)?SD+1:off+CHUNK_DAYS));
+      sL(`拉取訂單明細 ${ci+1}/${chunkTotal}（${s} ~ ${e}）...`);
+      const cr=await oP('/api/v2/default/apiOrderList/searchDetail',{"orders.created_at@start":[">=",s],"orders.created_at@end":["<=",e]});
+      if(!cr||cr.error){sS('sbSal',0,'銷量失敗');throw new Error(`訂單明細第 ${ci+1}/${chunkTotal} 段失敗（${(cr&&cr.error)||'無回應'}），請再按一次拉取`);}
+      const crv=cr.retval||{};
+      (crv['訂單明細']||[]).forEach(x=>{const k=x['orders_products.orders_products_id'];if(k){if(seenLine.has(k))return;seenLine.add(k);}oi.push(x);});
+      // 注意：orders.created_at 在「狀態日期」這一塊，不在「基本資料」裡。
+      // 舊版讀錯地方，odMap 永遠是空的，所以「斷貨修正」從來沒有生效過。
+      (crv['狀態日期']||[]).forEach(o=>{const id=(o['orders.orders_id']||'').trim();const dt=(o['orders.created_at']||'').slice(0,10);if(id&&dt&&!seenOrd.has(id)){seenOrd.add(id);odMap[id]=dt;}});
+    }
+    if(!oi.length){sS('sbSal',0,'明細 0');throw new Error(`${SD} 天訂單明細 0 筆，請再按一次拉取`);}
     sS('sbSal',1,`明細 ${oi.length}（${SD}天）`);
-    const odMap={};ob.forEach(o=>{const oid=(o['orders.orders_id']||'').trim();const dt=(o['orders.created_at']||'').slice(0,10);if(oid&&dt)odMap[oid]=dt;});
     skuSal={};skuDates={};
     oi.forEach(i=>{const m=(i['orders_products.products_model']||'').trim();const q=parseInt(i['orders_products.products_quantity']||0);const oid=(i['orders_products.orders_id']||'').trim();if(m&&q>0){skuSal[m]=(skuSal[m]||0)+q;const dt=odMap[oid];if(dt){if(!skuDates[m])skuDates[m]={first:dt,last:dt};if(dt<skuDates[m].first)skuDates[m].first=dt;if(dt>skuDates[m].last)skuDates[m].last=dt;}}});
     pendPO={};pendPOInfo={};
