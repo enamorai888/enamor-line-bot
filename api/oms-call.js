@@ -18,6 +18,17 @@
 //   POST /api/oms-call?target=send-purchase-email  body: { orders }
 //
 // 回應：原樣回傳 enamor-oms 的狀態碼與內容，方便排錯。
+//
+// ── 2026-11-05 修正：逾時與重試 ──
+// 症狀：採購建議的「需採購」永遠是 0。
+// 原因：apiOrderList/searchDetail 的上游回應時間不穩定（實測 12s ~ 30s+），
+//       舊的 25 秒硬上限會把一半的請求切斷回 504，前端把 504 當成「0 筆明細」，
+//       於是日均銷量 0 → 再訂購點 0 → 什麼都不用採購。
+// 做法：(1) 單次逾時放寬到 30 秒；
+//       (2) 讀取類端點（searchList / searchDetail）失敗後自動再試一次，
+//           整體有 52 秒的總預算，不會超過 maxDuration；
+//       (3) 寫入類端點（createPurchase 等）永遠只打一次，絕不重試。
+// 搭配：vercel.json 要幫這支開 maxDuration: 60。
 
 const crypto = require('crypto');
 
@@ -38,7 +49,13 @@ const ALLOWED_ORIGINS = [
 ];
 
 const COOKIE_NAME = 'enamor_admin';
-const UPSTREAM_TIMEOUT_MS = 25000;
+
+// 單次嘗試的逾時（毫秒）
+const ATTEMPT_TIMEOUT_MS = 30000;
+// 含重試在內的總預算，必須明顯小於 vercel.json 的 maxDuration(60s)
+const TOTAL_BUDGET_MS = 52000;
+// 讀取類端點最多打幾次
+const MAX_READ_ATTEMPTS = 2;
 
 function timingSafeEqual(a, b) {
   const ba = Buffer.from(String(a));
@@ -68,6 +85,23 @@ function readSession(req, secret) {
   if (!timingSafeEqual(sig, sign(exp, secret))) return null;
 
   return { expiresAt: Number(exp) };
+}
+
+// 這次請求可不可以安全地重試？
+// 只有「查詢」可以。建立採購單之類的寫入動作重打一次會變成兩張單。
+function isRetryableRead(target, method, parsedBody) {
+  if (method === 'GET') return true;              // GET 本來就是查詢
+  if (target !== 'oms-proxy') return false;       // po-meta / receive-log / send-email 一律不重試
+  const ep = parsedBody && typeof parsedBody.endpoint === 'string' ? parsedBody.endpoint : '';
+  return /\/(searchList|searchDetail)$/i.test(ep.trim());
+}
+
+function parseBody(raw) {
+  if (raw == null) return {};
+  if (typeof raw === 'string') {
+    try { return JSON.parse(raw); } catch (e) { return {}; }
+  }
+  return raw;
 }
 
 module.exports = async function handler(req, res) {
@@ -128,36 +162,80 @@ module.exports = async function handler(req, res) {
   const qs = url.searchParams.toString();
   const upstreamUrl = UPSTREAM_BASE + target + (qs ? '?' + qs : '');
 
-  const init = {
-    method: req.method,
-    headers: { 'x-proxy-token': omsToken },
-  };
+  const parsedBody = req.method === 'POST' ? parseBody(req.body) : null;
+  const bodyText = req.method === 'POST' ? JSON.stringify(parsedBody == null ? {} : parsedBody) : null;
+  const maxAttempts = isRetryableRead(target, req.method, parsedBody) ? MAX_READ_ATTEMPTS : 1;
 
-  if (req.method === 'POST') {
-    const body = req.body;
-    init.headers['Content-Type'] = 'application/json';
-    init.body = typeof body === 'string' ? body : JSON.stringify(body == null ? {} : body);
-  }
+  const startedAt = Date.now();
+  let lastError = null;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-  init.signal = controller.signal;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const remaining = TOTAL_BUDGET_MS - (Date.now() - startedAt);
+    // 剩下的時間不夠再打一次像樣的請求，就別浪費了
+    if (remaining < 4000) break;
+    const thisTimeout = Math.min(ATTEMPT_TIMEOUT_MS, remaining);
 
-  try {
-    const upstream = await fetch(upstreamUrl, init);
-    const text = await upstream.text();
-    const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
-
-    res.status(upstream.status);
-    res.setHeader('Content-Type', contentType);
-    return res.send(text);
-  } catch (e) {
-    if (e.name === 'AbortError') {
-      return res.status(504).json({ error: 'upstream_timeout', target });
+    const init = {
+      method: req.method,
+      headers: { 'x-proxy-token': omsToken },
+    };
+    if (req.method === 'POST') {
+      init.headers['Content-Type'] = 'application/json';
+      init.body = bodyText;
     }
-    console.error('oms-call error:', target, e.message);
-    return res.status(502).json({ error: 'upstream_unreachable', target, detail: e.message });
-  } finally {
-    clearTimeout(timer);
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), thisTimeout);
+    init.signal = controller.signal;
+
+    try {
+      const upstream = await fetch(upstreamUrl, init);
+      const text = await upstream.text();
+      const contentType = upstream.headers.get('content-type') || 'application/json; charset=utf-8';
+
+      // 上游自己回 5xx，而且還有重試額度，就再試一次
+      if (upstream.status >= 500 && attempt < maxAttempts) {
+        lastError = { kind: 'upstream_5xx', status: upstream.status };
+        continue;
+      }
+
+      res.status(upstream.status);
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('x-oms-attempts', String(attempt));
+      res.setHeader('x-oms-elapsed-ms', String(Date.now() - startedAt));
+      return res.send(text);
+    } catch (e) {
+      lastError = { kind: e.name === 'AbortError' ? 'timeout' : 'network', detail: e.message };
+      if (attempt < maxAttempts) {
+        console.warn(`oms-call retry: ${target} attempt ${attempt} ${lastError.kind}`);
+        continue;
+      }
+    } finally {
+      clearTimeout(timer);
+    }
   }
+
+  const elapsed = Date.now() - startedAt;
+  res.setHeader('x-oms-attempts', String(maxAttempts));
+  res.setHeader('x-oms-elapsed-ms', String(elapsed));
+
+  if (lastError && lastError.kind === 'timeout') {
+    console.error('oms-call timeout:', target, elapsed + 'ms');
+    return res.status(504).json({
+      error: 'upstream_timeout',
+      target,
+      attempts: maxAttempts,
+      elapsed_ms: elapsed,
+      hint: 'OMS 上游回應太慢，請再按一次拉取',
+    });
+  }
+
+  console.error('oms-call error:', target, lastError && lastError.detail);
+  return res.status(502).json({
+    error: 'upstream_unreachable',
+    target,
+    attempts: maxAttempts,
+    elapsed_ms: elapsed,
+    detail: lastError ? lastError.detail || lastError.kind : 'unknown',
+  });
 };
