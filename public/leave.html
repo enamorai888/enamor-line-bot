@@ -97,6 +97,33 @@ const CONFIG = {
 };
 
 const state = { userId:null, userName:null, todayPunch:{in:null,out:null}, leaveType:"事假", fileBase64:null, fileName:null };
+
+/* ───────── 2026-11-05 修正：時間與日期工具（一律台北時區） ─────────
+   GAS 把 Sheet 的時間格回傳成 1899-12-30T00:47:00.000Z 這種 Date 物件，
+   以前直接印出來會變亂碼；日期以前用 UTC 算，早上 8 點前打卡會記到前一天。 */
+function fmtTime(v) {
+  if (v === null || v === undefined || v === "") return "";
+  if (typeof v === "string" && /^\d{1,2}:\d{2}/.test(v)) return v.slice(0,5);
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v);
+  return d.toLocaleTimeString("zh-TW", {hour12:false, hour:"2-digit", minute:"2-digit", timeZone:"Asia/Taipei"});
+}
+function localDate(d) {
+  d = d || new Date();
+  const p = n => String(n).padStart(2,"0");
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+}
+function localMonth(d) { return localDate(d).slice(0,7); }
+function fmtDate(v) {
+  if (v === null || v === undefined || v === "") return "";
+  if (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  const d = new Date(v);
+  if (isNaN(d.getTime())) return String(v);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    year:"numeric", month:"2-digit", day:"2-digit", timeZone:"Asia/Taipei"
+  }).format(d);
+  return parts;
+}
 </script>
 
 <div class="topbar">
@@ -306,7 +333,7 @@ function showMain() {
     o.value = o.textContent = n;
     agentSel.appendChild(o);
   });
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDate();
   document.getElementById("leaveStart").value = today;
   document.getElementById("leaveEnd").value = today;
   document.getElementById("mainContent").style.display = "block";
@@ -330,24 +357,37 @@ function updateClock() {
 }
 
 function loadTodayPunch() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = localDate();
   const key = "punch_" + state.userName + "_" + today;
   const saved = localStorage.getItem(key);
-  if (saved) { state.todayPunch = JSON.parse(saved); renderPunchUI(); }
+  if (saved) { try { state.todayPunch = JSON.parse(saved); } catch(e) {} renderPunchUI(); }
   gasGet({action:"getTodayPunch", name:state.userName, date:today})
-    .then(r => { if(r && r.in){ state.todayPunch={in:r.in,out:r.out||null}; localStorage.setItem(key,JSON.stringify(state.todayPunch)); renderPunchUI(); }}).catch(()=>{});
+    .then(r => {
+      if (!r) return;
+      if (r.in) {
+        state.todayPunch = {in:r.in, out:r.out||null};
+        localStorage.setItem(key, JSON.stringify(state.todayPunch));
+      } else {
+        // 後端說今天沒有紀錄 → 清掉本機殘留的狀態，避免按鈕被鎖住
+        state.todayPunch = {in:null, out:null};
+        localStorage.removeItem(key);
+      }
+      renderPunchUI();
+    }).catch(()=>{});
 }
 
 function renderPunchUI() {
   const p = state.todayPunch;
-  document.getElementById("badgeInVal").textContent = p.in || "—";
-  document.getElementById("badgeOutVal").textContent = p.out || "—";
+  document.getElementById("badgeInVal").textContent = fmtTime(p.in) || "—";
+  document.getElementById("badgeOutVal").textContent = fmtTime(p.out) || "—";
   document.getElementById("badgeIn").className = "punch-badge" + (p.in ? " done-in" : "");
   document.getElementById("badgeOut").className = "punch-badge" + (p.out ? " done-out" : "");
   const btn = document.getElementById("punchBtn");
-  if (!p.in) { btn.textContent="上班打卡"; btn.className="punch-btn in"; btn.disabled=false; }
-  else if (!p.out) { btn.textContent="下班打卡"; btn.className="punch-btn out"; btn.disabled=false; }
-  else { btn.textContent="今日已完成打卡"; btn.className="punch-btn done"; btn.disabled=true; }
+  btn.dataset.confirm = "";            // 清掉「再按一次確認」的狀態
+  btn.disabled = false;                // 任何情況下都不把人鎖死
+  if (!p.in) { btn.textContent="上班打卡"; btn.className="punch-btn in"; }
+  else if (!p.out) { btn.textContent="下班打卡"; btn.className="punch-btn out"; }
+  else { btn.textContent="今日已完成打卡（可重打下班卡）"; btn.className="punch-btn done"; }
 }
 
 async function prefetchGPS() {
@@ -359,8 +399,8 @@ async function prefetchGPS() {
       const lng = pos.coords.longitude.toFixed(6);
       el.textContent = `${lat}, ${lng}　偵測中...`;
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=zh-TW`);
-        const data = await res.json();
+        const data = await reverseGeocode(lat, lng);
+        if (!data) throw new Error("timeout");
         const addr = data.display_name ? data.display_name.split(",").slice(0,3).join(" ").trim() : `${lat}, ${lng}`;
         el.textContent = addr;
         el.title = `${lat}, ${lng}`;
@@ -371,53 +411,94 @@ async function prefetchGPS() {
   );
 }
 
+/* ★ 2026-11-05 修正：反查地址加 5 秒硬性逾時。
+   OpenStreetMap 會對瀏覽器端查詢限流，原本的 fetch 沒有 timeout，
+   一旦它不回應，打卡流程就會永遠停在「打卡中...」。 */
+async function reverseGeocode(lat, lng, ms) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms || 5000);
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=zh-TW`,
+      {signal: ctrl.signal}
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch(e) {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getLocation() {
-  return new Promise((resolve) => {
+  const core = new Promise((resolve) => {
     if (!navigator.geolocation) { resolve({lat:"",lng:"",addr:"無法取得"}); return; }
     navigator.geolocation.getCurrentPosition(
       async pos => {
         const lat = pos.coords.latitude.toFixed(6);
         const lng = pos.coords.longitude.toFixed(6);
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=zh-TW`);
-          const data = await res.json();
-          const addr = data.display_name ? data.display_name.split(",").slice(0,3).join("").trim() : `${lat},${lng}`;
-          resolve({lat, lng, addr});
-        } catch(e) { resolve({lat, lng, addr:`${lat},${lng}`}); }
+        const data = await reverseGeocode(lat, lng);
+        const addr = (data && data.display_name)
+          ? data.display_name.split(",").slice(0,3).join("").trim()
+          : `${lat},${lng}`;
+        resolve({lat, lng, addr});
       },
       () => resolve({lat:"",lng:"",addr:"拒絕定位"}),
       {timeout:8000, enableHighAccuracy:true}
     );
   });
+  // 總時限保險：不管定位發生什麼事，14 秒後一定放行，打卡照送
+  const guard = new Promise(resolve =>
+    setTimeout(() => resolve({lat:"", lng:"", addr:"定位逾時"}), 14000)
+  );
+  return Promise.race([core, guard]);
 }
 
 async function doPunch() {
   const btn = document.getElementById("punchBtn");
+  const p = state.todayPunch;
+
+  // 今天已經有上下班紀錄 → 要重打下班卡，先按一次確認，避免誤觸覆蓋
+  if (p.in && p.out && btn.dataset.confirm !== "1") {
+    btn.dataset.confirm = "1";
+    btn.textContent = "確定要重打下班卡？再按一次";
+    setTimeout(() => { if (btn.dataset.confirm === "1") renderPunchUI(); }, 6000);
+    return;
+  }
+
   btn.disabled = true; btn.textContent = "定位中...";
   const now = new Date();
   const timeStr = now.toTimeString().slice(0,5);
-  const type = !state.todayPunch.in ? "in" : "out";
-  const today = now.toISOString().slice(0,10);
+  const type = !p.in ? "in" : "out";
+  const today = localDate(now);
   let lateMin = 0;
   if (type === "in") {
     const [sh,sm] = CONFIG.CLOCK_IN_TIME.split(":").map(Number);
     lateMin = Math.max(0, now.getHours()*60+now.getMinutes() - (sh*60+sm));
   }
-  btn.textContent = "打卡中...";
-  const loc = await getLocation();
   try {
+    btn.textContent = "定位中...";
+    const loc = await getLocation();
+    btn.textContent = "打卡中...";
     await gasPost({action:"punch", name:state.userName, date:today, time:timeStr, type, lateMin, lat:loc.lat, lng:loc.lng, addr:loc.addr});
     if (type==="in") state.todayPunch.in = timeStr; else state.todayPunch.out = timeStr;
     localStorage.setItem("punch_"+state.userName+"_"+today, JSON.stringify(state.todayPunch));
-    renderPunchUI(); loadMonthStats();
-    const locMsg = loc.addr && loc.addr !== "拒絕定位" ? `\n位置：${loc.addr}` : "";
+    loadMonthStats();
     showToast(type==="in" ? (lateMin>0?`上班打卡成功（遲到${lateMin}分鐘）`:"上班打卡成功") : "下班打卡成功");
-    if (locMsg) setTimeout(()=>showToast("📍 " + loc.addr), 2400);
-  } catch(e) { showToast("打卡失敗，請重試"); btn.disabled=false; renderPunchUI(); }
+    if (loc.addr && loc.addr !== "拒絕定位" && loc.addr !== "定位逾時") {
+      setTimeout(()=>showToast("📍 " + loc.addr), 2400);
+    }
+  } catch(e) {
+    showToast("打卡失敗，請重試");
+  } finally {
+    // ★ 不管成功或失敗，按鈕一定恢復可按，絕不把人鎖在「打卡中...」
+    renderPunchUI();
+  }
 }
 
 async function loadMonthStats() {
-  const ym = new Date().toISOString().slice(0,7);
+  const ym = localMonth();
   try {
     const r = await gasGet({action:"getMonthStats", name:state.userName, ym});
     if (!r) return;
@@ -429,7 +510,7 @@ async function loadMonthStats() {
     if (!r.history||!r.history.length) { el.innerHTML='<div class="empty">本月尚無紀錄</div>'; return; }
     el.innerHTML = r.history.slice(-7).reverse().map(h=>`
       <div class="history-item">
-        <div><div class="hi-date">${h.date}</div><div class="hi-sub">${h.in||"—"} → ${h.out||"—"}</div>${h.addr?`<div style="font-size:10px;color:#888;margin-top:2px">${h.addr}</div>`:''}</div>
+        <div><div class="hi-date">${fmtDate(h.date)}</div><div class="hi-sub">${fmtTime(h.in)||"—"} → ${fmtTime(h.out)||"—"}</div>${h.addr?`<div style="font-size:10px;color:#888;margin-top:2px">${h.addr}</div>`:''}</div>
         <div style="text-align:right"><span class="tag ${h.lateMin>0?'tag-late':'tag-normal'}">${h.lateMin>0?'遲到':'正常'}</span>${h.lateMin>0?`<div class="hi-late">+${h.lateMin}分</div>`:''}</div>
       </div>`).join("");
   } catch(e) {}
@@ -489,11 +570,11 @@ async function loadRecords() {
     ll.innerHTML = leaves.length ? leaves.slice(-20).reverse().map(l=>`
       <div class="leave-item">
         <div class="li-header"><span class="li-type">${l.type}</span><span class="tag tag-normal" style="font-size:10px">已送出</span></div>
-        <div class="li-detail">${l.start}${l.end&&l.end!==l.start?' ~ '+l.end:''} ${l.hours?'（'+l.hours+'HR）':''} | 代理：${l.agent}</div>
+        <div class="li-detail">${fmtDate(l.start)}${l.end&&fmtDate(l.end)!==fmtDate(l.start)?' ~ '+fmtDate(l.end):''} ${l.hours?'（'+l.hours+'HR）':''} | 代理：${l.agent}</div>
       </div>`).join("") : '<div class="empty">尚無請假紀錄</div>';
     pl.innerHTML = punches.length ? punches.slice(-20).reverse().map(p=>`
       <div class="history-item">
-        <div><div class="hi-date">${p.date}</div><div class="hi-sub">${p.in||"—"} → ${p.out||"—"}</div></div>
+        <div><div class="hi-date">${fmtDate(p.date)}</div><div class="hi-sub">${fmtTime(p.in)||"—"} → ${fmtTime(p.out)||"—"}</div></div>
         <div style="text-align:right"><span class="tag ${p.lateMin>0?'tag-late':'tag-normal'}">${p.lateMin>0?'遲到':'正常'}</span>${p.lateMin>0?`<div class="hi-late">+${p.lateMin}分</div>`:''}</div>
       </div>`).join("") : '<div class="empty">尚無打卡紀錄</div>';
   } catch(e) {
